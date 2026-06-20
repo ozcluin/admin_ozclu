@@ -318,6 +318,22 @@ async function seedDatabase(db: Db) {
           createdAt: new Date()
         },
         {
+          email: "pkumar@cluso.in",
+          password: hashedAdminPassword,
+          fullName: "P Kumar",
+          role: "admin",
+          orgName: "Cluso",
+          createdAt: new Date()
+        },
+        {
+          email: "indiaops@cluso.in",
+          password: hashedAdminPassword,
+          fullName: "India Ops",
+          role: "admin",
+          orgName: "Cluso",
+          createdAt: new Date()
+        },
+        {
           email: "client@test.com",
           password: hashedClientPassword,
           fullName: "Client User",
