@@ -62,8 +62,11 @@ export default function AdminLoginPage() {
       {/* Top Header */}
       <header className="h-16 bg-white/40 backdrop-blur-md border-b border-[#42C2FF]/15 flex justify-between items-center px-8 z-10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-sky-500/10">A</div>
-          <span className="font-headline-md text-slate-800 font-extrabold tracking-tight">Verify with Cluso</span>
+          <img 
+            src="/cluso-infolink.png" 
+            alt="Cluso Infolink Logo" 
+            className="h-12 w-auto object-contain"
+          />
         </div>
         <div>
           <span className="font-label-caps text-[#0369a1] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 px-3 py-1 rounded-full text-xs font-semibold">

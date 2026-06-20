@@ -79,11 +79,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="w-[280px] h-screen fixed left-0 top-0 glass-sidebar flex flex-col py-8 z-30 hidden md:flex">
         <div className="px-6 mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] rounded-xl flex items-center justify-center text-white font-black shadow-md shadow-sky-500/10">A</div>
-            <div className="flex flex-col">
-              <h1 className="font-headline-md font-extrabold text-slate-900 leading-none tracking-tight">Cluso Console</h1>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#0ea5e9] mt-1">Admin Portal</span>
-            </div>
+            <img 
+              src="/cluso-infolink.png" 
+              alt="Cluso Infolink Logo" 
+              className="h-10 w-auto object-contain"
+            />
           </div>
         </div>
 
@@ -158,11 +158,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <div className="px-6 mb-8 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] rounded-xl flex items-center justify-center text-white font-black shadow-md shadow-sky-500/10">A</div>
-                <div className="flex flex-col">
-                  <h1 className="font-headline-md font-extrabold text-slate-900 leading-none tracking-tight">Cluso Console</h1>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#0ea5e9] mt-1">Admin Portal</span>
-                </div>
+                <img 
+                  src="/cluso-infolink.png" 
+                  alt="Cluso Infolink Logo" 
+                  className="h-10 w-auto object-contain"
+                />
               </div>
               <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 p-1.5 rounded-full hover:bg-slate-200/50 cursor-pointer">
                 <span className="material-symbols-outlined">close</span>
