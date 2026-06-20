@@ -1,0 +1,176 @@
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { connectToDatabase } from "./mongodb";
+import bcrypt from "bcryptjs";
+import { logAuthEvent } from "shared/audit";
+import { isAccountLocked, recordFailedLogin, resetLoginFailures } from "shared/rateLimit";
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials, req) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Missing email or password");
+        }
+
+        const { db } = await connectToDatabase();
+        const email = credentials.email.toLowerCase().trim();
+
+        // Extract IP and user-agent for audit/rate-limit
+        const ip = (req?.headers?.["x-forwarded-for"] as string)?.split(",")[0]?.trim()
+          || (req?.headers?.["x-real-ip"] as string)
+          || "unknown";
+        const userAgent = (req?.headers?.["user-agent"] as string) || "unknown";
+
+        // Check account lockout
+        const locked = await isAccountLocked(db, email);
+        if (locked) {
+          await logAuthEvent(db, {
+            email,
+            portal: "admin",
+            action: "login_lockout",
+            outcome: "failure",
+            reason: "Account temporarily locked due to too many failed attempts",
+            ip,
+            userAgent,
+          });
+          throw new Error("Account temporarily locked. Please try again later.");
+        }
+
+        const user = await db.collection("users").findOne({ email, isDeleted: { $ne: true } });
+
+        if (!user) {
+          await logAuthEvent(db, {
+            email,
+            portal: "admin",
+            action: "login_failure",
+            outcome: "failure",
+            reason: "User not found or deleted",
+            ip,
+            userAgent,
+          });
+          throw new Error("No user found with this email");
+        }
+
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isPasswordValid) {
+          const { locked: nowLocked } = await recordFailedLogin(db, email);
+          await logAuthEvent(db, {
+            email,
+            portal: "admin",
+            action: nowLocked ? "login_lockout" : "login_failure",
+            outcome: "failure",
+            reason: nowLocked ? "Account locked after too many failed attempts" : "Incorrect password",
+            ip,
+            userAgent,
+            userId: user._id.toString(),
+            role: user.role,
+          });
+          throw new Error("Incorrect password");
+        }
+
+        if (user.role !== "admin") {
+          await logAuthEvent(db, {
+            email,
+            portal: "admin",
+            action: "login_failure",
+            outcome: "failure",
+            reason: `Role mismatch: ${user.role}`,
+            ip,
+            userAgent,
+            userId: user._id.toString(),
+            role: user.role,
+          });
+          throw new Error("Access denied. This portal is restricted to admin accounts.");
+        }
+
+        // Successful login — reset failure counters
+        await resetLoginFailures(db, email);
+
+        // Check MFA status
+        const mfaEnabled = user.mfaEnabled === true;
+
+        await logAuthEvent(db, {
+          email,
+          portal: "admin",
+          action: "login_success",
+          outcome: "success",
+          ip,
+          userAgent,
+          userId: user._id.toString(),
+          role: user.role,
+        });
+
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.fullName,
+          role: user.role,
+          orgName: user.orgName || "",
+          // MFA state — passed through JWT/session callbacks
+          mfaEnabled,
+          mfaPending: mfaEnabled, // true if MFA required but not yet verified
+          mfaVerified: !mfaEnabled, // true only if MFA not required (will be upgraded after TOTP)
+        };
+      }
+    })
+  ],
+  callbacks: {
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        token.role = (user as any).role;
+        token.orgName = (user as any).orgName;
+        token.fullName = user.name;
+        token.mfaEnabled = (user as any).mfaEnabled || false;
+        token.mfaPending = (user as any).mfaPending || false;
+        token.mfaVerified = (user as any).mfaVerified || false;
+      }
+      // Allow MFA verification to upgrade the session
+      if (trigger === "update" && session) {
+        if (session.mfaVerified === true) {
+          token.mfaVerified = true;
+          token.mfaPending = false;
+        }
+        if (session.mfaEnabled !== undefined) {
+          token.mfaEnabled = session.mfaEnabled;
+        }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as any).id = token.sub;
+        (session.user as any).role = token.role;
+        (session.user as any).orgName = token.orgName;
+        (session.user as any).fullName = token.fullName;
+        (session.user as any).mfaEnabled = token.mfaEnabled || false;
+        (session.user as any).mfaPending = token.mfaPending || false;
+        (session.user as any).mfaVerified = token.mfaVerified || false;
+      }
+      return session;
+    }
+  },
+  session: {
+    strategy: "jwt"
+  },
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token.admin",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production"
+      }
+    }
+  },
+  secret: process.env.NEXTAUTH_SECRET!,
+  pages: {
+    signIn: "/"
+  }
+};

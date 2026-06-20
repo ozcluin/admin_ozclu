@@ -1,0 +1,286 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "src/context/AuthContext";
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, isLoading, logout, profile, user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Route protection — redirect to login if not authenticated, or to MFA verification if pending
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/");
+      } else if (profile?.mfaPending) {
+        router.push("/mfa-verify");
+      }
+    }
+  }, [isAuthenticated, isLoading, profile, router]);
+
+  const navItems = [
+    {
+      name: "Verification Roster",
+      path: "/admin/roster",
+      icon: "assignment",
+    },
+    {
+      name: "Candidate Database",
+      path: "/admin/candidates",
+      icon: "folder_shared",
+    },
+    {
+      name: "Manage Invoices",
+      path: "/admin/invoices",
+      icon: "account_balance_wallet",
+    },
+    {
+      name: "Verifier Accounts",
+      path: "/admin/verifiers",
+      icon: "badge",
+    },
+  ];
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+  };
+
+  // Show loading spinner while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#f4f9fc]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-[#42C2FF] border-t-transparent rounded-full animate-spin"></div>
+          <span className="font-body-sm text-[#5e7285] animate-pulse">Syncing console data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render layout if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  const displayName = profile?.full_name || user?.email || "Admin";
+
+  if (pathname.includes("/admin/report")) {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="flex min-h-screen bg-[#f4f9fc] text-slate-800 font-sans">
+      {/* Sidebar - Desktop */}
+      <aside className="w-[280px] h-screen fixed left-0 top-0 glass-sidebar flex flex-col py-8 z-30 hidden md:flex">
+        <div className="px-6 mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] rounded-xl flex items-center justify-center text-white font-black shadow-md shadow-sky-500/10">A</div>
+            <div className="flex flex-col">
+              <h1 className="font-headline-md font-extrabold text-slate-900 leading-none tracking-tight">Cluso Console</h1>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#0ea5e9] mt-1">Admin Portal</span>
+            </div>
+          </div>
+        </div>
+
+        <nav className="flex-1 flex flex-col gap-1.5 px-3 mt-4 font-body-sm">
+          {navItems.map((item) => {
+            const isActive = pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer ${
+                  isActive
+                    ? "bg-gradient-to-r from-[#B8FFF9]/50 to-[#EFFFFD]/50 border border-[#85F4FF]/30 text-[#0369a1] font-semibold shadow-[0_2px_10px_rgba(66,194,255,0.05)]"
+                    : "text-slate-500 hover:bg-white/60 hover:text-slate-950 border border-transparent"
+                }`}
+              >
+                <span 
+                  className={`material-symbols-outlined text-xl transition-colors duration-200 ${
+                    isActive ? "text-[#42C2FF]" : "text-slate-400 group-hover:text-slate-600"
+                  }`} 
+                  style={{ fontVariationSettings: `'FILL' ${isActive ? 1 : 0}` }}
+                >
+                  {item.icon}
+                </span>
+                <span className="text-sm font-medium">{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User info + Footer logout */}
+        <div className="mx-3 px-4 py-4 bg-white/50 border border-white/60 rounded-2xl flex flex-col gap-3.5 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] rounded-full flex items-center justify-center text-[#0284c7] text-sm font-black border border-[#85F4FF]/30 shadow-inner">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-body-sm font-bold text-slate-800 truncate leading-tight">{displayName}</span>
+              <span className="text-[10px] text-slate-400 truncate mt-0.5">{user?.email}</span>
+            </div>
+          </div>
+          {profile?.mfaEnabled !== true ? (
+            <Link
+              href="/admin/mfa-setup"
+              className="flex items-center justify-center gap-2 py-2 border border-[#42C2FF]/20 hover:border-[#42C2FF]/40 bg-[#B8FFF9]/20 hover:bg-[#85F4FF]/20 text-[#0284c7] rounded-xl transition-all duration-200 w-full text-center font-bold text-[10px] uppercase tracking-wider cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm">security</span>
+              <span>Setup MFA</span>
+            </Link>
+          ) : (
+            <div className="flex items-center justify-center gap-2 py-2 bg-emerald-500/5 border border-emerald-500/10 text-emerald-600 rounded-xl w-full text-center font-bold text-[10px] uppercase tracking-wider">
+              <span className="material-symbols-outlined text-sm font-bold">verified_user</span>
+              <span>MFA Secured</span>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-center gap-2 py-2 border border-red-500/10 hover:border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-600 rounded-xl transition-all duration-200 w-full text-center font-button-text text-xs cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-base">logout</span>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Sidebar - Mobile Menu Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-xs z-40 md:hidden" onClick={() => setMobileMenuOpen(false)}>
+          <aside
+            className="w-72 h-full bg-[#f4f9fc] border-r border-[#42C2FF]/15 flex flex-col py-8 animate-slide-right"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 mb-8 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] rounded-xl flex items-center justify-center text-white font-black shadow-md shadow-sky-500/10">A</div>
+                <div className="flex flex-col">
+                  <h1 className="font-headline-md font-extrabold text-slate-900 leading-none tracking-tight">Cluso Console</h1>
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#0ea5e9] mt-1">Admin Portal</span>
+                </div>
+              </div>
+              <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 p-1.5 rounded-full hover:bg-slate-200/50 cursor-pointer">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <nav className="flex-1 flex flex-col gap-1.5 px-3 font-body-sm">
+              {navItems.map((item) => {
+                const isActive = pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer ${
+                      isActive
+                        ? "bg-gradient-to-r from-[#B8FFF9]/50 to-[#EFFFFD]/50 border border-[#85F4FF]/30 text-[#0369a1] font-semibold shadow-[0_2px_10px_rgba(66,194,255,0.05)]"
+                        : "text-slate-500 hover:bg-white/60 hover:text-slate-950 border border-transparent"
+                    }`}
+                  >
+                    <span 
+                      className={`material-symbols-outlined text-xl transition-colors duration-200 ${
+                        isActive ? "text-[#42C2FF]" : "text-slate-400 group-hover:text-slate-600"
+                      }`} 
+                      style={{ fontVariationSettings: `'FILL' ${isActive ? 1 : 0}` }}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="text-sm font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mx-3 px-4 py-4 bg-white/50 border border-white/60 rounded-2xl flex flex-col gap-3.5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] rounded-full flex items-center justify-center text-[#0284c7] text-sm font-black border border-[#85F4FF]/30">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-body-sm font-bold text-slate-800 truncate leading-tight">{displayName}</span>
+                  <span className="text-[10px] text-slate-400 truncate mt-0.5">{user?.email}</span>
+                </div>
+              </div>
+              {profile?.mfaEnabled !== true ? (
+                <Link
+                  href="/admin/mfa-setup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 py-2 border border-[#42C2FF]/20 hover:border-[#42C2FF]/40 bg-[#B8FFF9]/20 hover:bg-[#85F4FF]/20 text-[#0284c7] rounded-xl transition-all duration-200 w-full text-center font-bold text-[10px] uppercase tracking-wider cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">security</span>
+                  <span>Setup MFA</span>
+                </Link>
+              ) : (
+                <div className="flex items-center justify-center gap-2 py-2 bg-emerald-500/5 border border-emerald-500/10 text-emerald-600 rounded-xl w-full text-center font-bold text-[10px] uppercase tracking-wider">
+                  <span className="material-symbols-outlined text-sm font-bold">verified_user</span>
+                  <span>MFA Secured</span>
+                </div>
+              )}
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center gap-2 py-2 border border-red-500/10 hover:border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-600 rounded-xl transition-all duration-200 w-full text-center font-button-text text-xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">logout</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Page Canvas Container */}
+      <div className="flex-1 md:ml-[280px] flex flex-col min-h-screen">
+        {/* Top AppBar */}
+        <header className="h-16 fixed top-0 right-0 w-full md:w-[calc(100%-280px)] glass-header z-20 flex justify-between items-center px-8 transition-all duration-200">
+          <div className="flex items-center gap-4">
+            {/* Mobile menu toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 -ml-2 text-slate-600 hover:bg-slate-200/40 rounded-xl md:hidden cursor-pointer"
+            >
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+            <span className="font-headline-md font-extrabold text-slate-900 flex items-center gap-3">
+              <span className="tracking-tight text-slate-900">Verify Console</span>
+              <span className="text-[10px] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 text-[#0369a1] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider font-label-caps">
+                Online
+              </span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button aria-label="notifications" className="text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer">
+              <span className="material-symbols-outlined text-xl">notifications</span>
+            </button>
+            
+            {/* User info badge */}
+            <div className="hidden sm:flex flex-col text-right mr-1">
+              <span className="font-body-sm font-bold text-slate-800 leading-tight">{displayName}</span>
+              <span className="text-[9px] text-[#0ea5e9] font-bold tracking-wider mt-0.5 uppercase">SYSTEM ANALYST</span>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              aria-label="Sign out"
+              className="text-slate-500 hover:text-red-500 hover:bg-red-500/5 p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer"
+              title="Sign Out"
+            >
+              <span className="material-symbols-outlined text-xl">power_settings_new</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="flex-1 mt-16 p-margin-mobile md:p-8 max-w-container-max mx-auto w-full">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

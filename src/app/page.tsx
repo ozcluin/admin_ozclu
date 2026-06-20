@@ -1,65 +1,176 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "src/context/AuthContext";
+
+export default function AdminLoginPage() {
+  const router = useRouter();
+  const { login, isAuthenticated, isLoading: authLoading, profile } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && profile) {
+      if (profile.mfaPending) {
+        router.push("/mfa-verify");
+      } else {
+        router.push("/admin/roster");
+      }
+    }
+  }, [isAuthenticated, authLoading, profile, router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg("");
+
+    try {
+      await login(email, password);
+      // Wait for session update to happen before routing
+      // The useEffect will handle redirecting correctly
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Invalid credentials or insufficient permissions.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#f4f9fc] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-[#42C2FF] border-t-transparent rounded-full animate-spin"></div>
+          <span className="font-body-sm text-[#5e7285] animate-pulse">Loading secure session...</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-[#EFFFFD] via-[#f4f9fc] to-[#B8FFF9] text-on-background relative overflow-hidden font-sans">
+      {/* Decorative gradient glowing spheres */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-[#85F4FF]/20 to-transparent blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tl from-[#42C2FF]/15 to-transparent blur-3xl pointer-events-none"></div>
+
+      {/* Top Header */}
+      <header className="h-16 bg-white/40 backdrop-blur-md border-b border-[#42C2FF]/15 flex justify-between items-center px-8 z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-sky-500/10">A</div>
+          <span className="font-headline-md text-slate-800 font-extrabold tracking-tight">Verify with Cluso</span>
+        </div>
+        <div>
+          <span className="font-label-caps text-[#0369a1] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 px-3 py-1 rounded-full text-xs font-semibold">
+            Admin Console
+          </span>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col justify-center items-center px-4 py-12 relative z-10">
+        <div className="w-full max-w-md bg-white/75 backdrop-blur-xl border border-white/60 rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(66,194,255,0.08)] transition-all duration-500 animate-fade-in">
+          <div className="text-center mb-8 flex flex-col items-center">
+            {/* Visual Icon */}
+            <div className="w-14 h-14 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] border border-[#85F4FF]/30 rounded-2xl flex items-center justify-center mb-4 shadow-sm shadow-[#42C2FF]/10 text-[#0284c7]">
+              <span className="material-symbols-outlined text-3xl font-light">admin_panel_settings</span>
+            </div>
+            <h2 className="font-display-lg text-slate-900 mb-2">Welcome Back</h2>
+            <p className="font-body-lg text-[#5e7285]">Sign in to access your administrative workspace.</p>
+          </div>
+
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="mb-6 bg-red-500/5 text-red-600 border border-red-500/10 rounded-xl p-4 font-body-sm flex items-center gap-3 animate-fade-in">
+              <span className="material-symbols-outlined text-lg">error_outline</span>
+              <span className="font-medium">{errorMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="flex flex-col gap-5">
+            {/* Email Field */}
+            <div className="flex flex-col gap-2">
+              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold" htmlFor="email">
+                Admin Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-slate-200/80 rounded-xl p-3.5 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white placeholder-slate-400"
+                placeholder="admin@cluso.in"
+              />
+            </div>
+
+            {/* Password Field */}
+            <div className="flex flex-col gap-2">
+              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold" htmlFor="password">
+                Password
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border border-slate-200/80 rounded-xl p-3.5 pr-12 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white placeholder-slate-400"
+                  placeholder="••••••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center p-1 cursor-pointer focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <span className="material-symbols-outlined text-xl select-none">
+                    {showPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-4 py-3.5 apple-button-primary rounded-xl font-button-text hover:brightness-105 transition-all duration-200 flex justify-center items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed text-sm"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Authenticating console...</span>
+                </div>
+              ) : (
+                <>
+                  <span>Unlock Console</span>
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Admin Notice */}
+          <div className="mt-8 text-center border-t border-slate-100 pt-5">
+            <div className="flex items-center justify-center gap-2 text-xs text-[#5e7285]">
+              <span className="material-symbols-outlined text-base text-[#42C2FF]">shield</span>
+              <span className="font-body-sm">Protected environment for verified specialists only.</span>
+            </div>
+          </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="h-14 bg-white/20 backdrop-blur-sm border-t border-[#42C2FF]/10 flex justify-center items-center font-body-sm text-[#5e7285] text-xs font-medium">
+        <span>&copy; {new Date().getFullYear()} Cluso Infolink. All Rights Reserved.</span>
+      </footer>
     </div>
   );
 }
