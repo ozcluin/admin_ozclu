@@ -80,7 +80,7 @@ function ReportContent() {
     ? new Date(verification.completedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase()
     : new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase();
 
-  const generatedBy = verification.verifier || "Prabir Kumar";
+  const generatedBy = verification.verifier || "Cluso Infolink";
   const verifiedBy = (verification.digilockerStatus === "Verified" || !!verification.digilockerName)
     ? "DigiLocker"
     : generatedBy;
@@ -181,7 +181,7 @@ function ReportContent() {
         </div>
 
         {/* Personal Details Table */}
-        <div className="mb-8">
+        <div className="mb-8 print-avoid-break">
           <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-2">Personal Details</h3>
           <div className="overflow-x-auto border border-slate-200 rounded-xl">
             <table className="w-full text-left text-xs border-collapse">
@@ -251,7 +251,7 @@ function ReportContent() {
               </div>
 
               {/* MeitY DigiLocker Secured Note */}
-              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl flex items-start gap-3 mb-4">
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl flex items-start gap-3 mb-4 print-avoid-break">
                 <div className="p-2 bg-emerald-100/70 text-emerald-800 rounded-xl mt-0.5">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -268,7 +268,7 @@ function ReportContent() {
 
               {/* Retrieved Documents Sub-grid */}
               {verification.digilockerDocuments && verification.digilockerDocuments.length > 0 && (
-                <div className="mb-4">
+                <div className="mb-4 print-avoid-break">
                   <h4 className="text-xs font-bold text-[#1B365D] mb-2">Verified Government Documents Retrieved</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {verification.digilockerDocuments.map((doc: any) => (
@@ -288,7 +288,7 @@ function ReportContent() {
               )}
 
               {/* Attempts Timeline Audit Table */}
-              <div>
+              <div className="print-avoid-break">
                 <h4 className="text-xs font-bold text-[#1B365D] mb-2">Audit Attempt History Log</h4>
                 <div className="overflow-x-auto border border-slate-200 rounded-xl">
                   <table className="w-full text-left text-xs border-collapse">
@@ -335,7 +335,7 @@ function ReportContent() {
         </div>
 
         {/* Signatures */}
-        <div className="flex justify-between items-center my-10 px-4 text-xs font-bold text-slate-700">
+        <div className="flex justify-between items-center my-10 px-4 text-xs font-bold text-slate-700 print-avoid-break">
           <div className="text-center">
             <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900">{generatedBy}</div>
             <div>Created By</div>
@@ -347,7 +347,7 @@ function ReportContent() {
         </div>
 
         {/* Disclaimer / End of Report Box */}
-        <div className="border border-slate-300 rounded-lg p-5 text-[10px] text-slate-600 bg-white font-medium leading-relaxed">
+        <div className="border border-slate-300 rounded-lg p-5 text-[10px] text-slate-600 bg-white font-medium leading-relaxed print-avoid-break">
           <div className="text-center font-bold text-slate-900 mb-2">--END OF REPORT--</div>
           <div className="font-bold text-slate-950 mb-1 uppercase tracking-wider">Important Notice &amp; Disclaimer</div>
           <p className="mb-2">
@@ -379,9 +379,23 @@ function ReportContent() {
           body {
             background-color: white !important;
             color: black !important;
+            width: 100% !important;
           }
           @page {
-            margin: 1.2cm;
+            size: A4;
+            margin: 1.5cm 1.2cm;
+          }
+          .print-avoid-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          table, tr, td, th, img {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         }
       `}</style>
