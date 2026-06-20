@@ -81,6 +81,9 @@ function ReportContent() {
     : new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase();
 
   const generatedBy = verification.verifier || "Prabir Kumar";
+  const verifiedBy = (verification.digilockerStatus === "Verified" || !!verification.digilockerName)
+    ? "DigiLocker"
+    : generatedBy;
 
   const statusColor = verification.status === "Completed" || verification.status === "Verified"
     ? "text-emerald-600"
@@ -330,7 +333,7 @@ function ReportContent() {
             <div>Created By</div>
           </div>
           <div className="text-center">
-            <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900">{generatedBy}</div>
+            <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900">{verifiedBy}</div>
             <div>Verified By</div>
           </div>
         </div>
