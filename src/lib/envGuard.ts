@@ -83,6 +83,7 @@ export function validateEnvironment(): void {
       "",
     ].join("\n");
     console.error(msg);
+    throw new Error(`[ENV] Admin portal has ${errors.length} configuration error(s). See logs above.`);
   }
 
   console.log("[ENV] Admin portal environment validation passed.");
