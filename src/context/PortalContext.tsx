@@ -111,7 +111,7 @@ interface PortalContextType {
   addInvoice: (orgName: string, amount: number, dueDate: string) => Promise<void>;
   assignVerifier: (verificationId: string, verifierName: string | null) => Promise<void>;
   updateVerificationStatus: (verificationId: string, status: "Completed" | "Processing" | "Needs Attention", notes?: string) => Promise<void>;
-  addOrganisation: (name: string, monthlyRate: number, billingDay: number) => Promise<void>;
+  addOrganisation: (name: string, monthlyRate: number) => Promise<void>;
   updateOrganisation: (id: string, updates: Partial<Organisation>) => Promise<void>;
   deleteOrganisation: (id: string) => Promise<void>;
   deactivateOrganisation: (id: string, invoiceOption: "keep" | "default") => Promise<void>;
@@ -453,14 +453,14 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // ── Organisation CRUD ──
 
-  const addOrganisation = async (name: string, monthlyRate: number, billingDay: number) => {
+  const addOrganisation = async (name: string, monthlyRate: number) => {
     const newId = `ORG-${Math.floor(1000 + Math.random() * 9000)}`;
     const newOrg: Organisation = {
       id: newId,
       name,
       paymentPlan: "monthly",
       monthlyRate,
-      billingDay,
+      billingDay: 0,
       createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
     };
 
@@ -567,9 +567,10 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const newId = `INV-${org.name.replace(/\s+/g, "").substring(0, 4).toUpperCase()}-${year}-${month.substring(0, 3).toUpperCase()}`;
     const generatedDate = new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
-    // Due date is billing day of the next month
+    // Due date is last day of the billing month
     const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-    const dueDate = new Date(year, monthIndex + 1, org.billingDay).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+    const lastDayOfMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const dueDate = new Date(year, monthIndex, lastDayOfMonth, 23, 59).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 
     const newInvoice: Invoice = {
       id: newId,

@@ -33,7 +33,7 @@ export default function ManageInvoicesPage() {
   // ── Create Organisation form ──
   const [newOrgName, setNewOrgName] = useState("");
   const [newOrgRate, setNewOrgRate] = useState("");
-  const [newOrgBillingDay, setNewOrgBillingDay] = useState("1");
+
   const [orgError, setOrgError] = useState("");
   const [orgSuccess, setOrgSuccess] = useState("");
 
@@ -157,12 +157,10 @@ export default function ManageInvoicesPage() {
     if (!newOrgName.trim()) { setOrgError("Organisation name is required"); return; }
     const rate = parseFloat(newOrgRate);
     if (!newOrgRate || isNaN(rate) || rate <= 0) { setOrgError("Enter a valid monthly rate"); return; }
-    const day = parseInt(newOrgBillingDay);
-    if (isNaN(day) || day < 1 || day > 28) { setOrgError("Date of every month must be between 1 and 28"); return; }
 
-    await addOrganisation(newOrgName.trim(), rate, day);
+    await addOrganisation(newOrgName.trim(), rate);
     setOrgSuccess(`Organisation "${newOrgName.trim()}" created successfully!`);
-    setNewOrgName(""); setNewOrgRate(""); setNewOrgBillingDay("1");
+    setNewOrgName(""); setNewOrgRate("");
     setTimeout(() => setOrgSuccess(""), 4000);
   };
 
@@ -375,7 +373,7 @@ export default function ManageInvoicesPage() {
                       </span>
                       <span className="flex items-center gap-1.5 ml-auto">
                         <span className="material-symbols-outlined text-[15px] text-slate-400">event</span>
-                        Day {org.billingDay}
+                        End of Month
                       </span>
                     </div>
                   </div>
@@ -426,19 +424,12 @@ export default function ManageInvoicesPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">
-                Select Date of Every Month (1–28)
-              </label>
-              <select
-                value={newOrgBillingDay}
-                onChange={(e) => setNewOrgBillingDay(e.target.value)}
-                className="w-full p-3 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all cursor-pointer"
-              >
-                {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
-                  <option key={d} value={d}>Day {d}</option>
-                ))}
-              </select>
+            {/* Auto-billing info */}
+            <div className="flex items-center gap-2.5 bg-[#B8FFF9]/15 border border-[#85F4FF]/20 rounded-xl px-4 py-3">
+              <span className="material-symbols-outlined text-[#0ea5e9] text-base">schedule</span>
+              <p className="font-body-sm text-[#0369a1] font-medium leading-snug">
+                Invoices auto-generate on the <span className="font-extrabold">last day</span> of each month at <span className="font-extrabold">11:59 PM</span>.
+              </p>
             </div>
 
             {/* Payment Plan Display (read-only) */}
@@ -606,7 +597,7 @@ export default function ManageInvoicesPage() {
                       <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Billing Cycle</span>
                     </div>
                     <p className="font-body-sm text-slate-600 leading-normal">
-                      Automated invoice created on Day <span className="font-extrabold text-slate-900">{selectedOrg.billingDay}</span> of every month.
+                      Invoices are automatically generated on the <span className="font-extrabold text-slate-900">last day</span> of every month at <span className="font-extrabold text-slate-900">11:59 PM</span>.
                     </p>
                     <div className="mt-5 flex items-center gap-4">
                       <div className="text-center flex-1">
