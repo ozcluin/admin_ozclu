@@ -133,7 +133,7 @@ function ReportContent() {
       {/* Repeating Fixed Border on Every Printed Page */}
       <div className="hidden print:block fixed inset-0 border-[6px] border-double border-[#8B0000] pointer-events-none z-50" />
       {/* Print Control Toolbar */}
-      <div className="no-print w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
+      <div className="no-print print:hidden w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-800">Verification Report Viewer</span>
           <span className="text-xs text-slate-500">Ready to save or print on standard A4 paper size.</span>
@@ -425,6 +425,9 @@ function ReportContent() {
           .print-avoid-break {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+          }
+          .no-print {
+            display: none !important;
           }
           .print-border {
             box-decoration-break: clone !important;
