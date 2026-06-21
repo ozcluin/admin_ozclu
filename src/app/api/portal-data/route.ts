@@ -240,6 +240,11 @@ export async function POST(req: NextRequest) {
         const verification = await db.collection("verifications").findOne({ id: verificationId });
         const verifierName = verification?.verifier || "Admin";
 
+        // Set completedAt when marking as Completed
+        if (status === "Completed") {
+          updateDoc.completedAt = new Date();
+        }
+
         const newAttempt = {
           date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
           verifier: verifierName,
@@ -254,6 +259,58 @@ export async function POST(req: NextRequest) {
             $push: { attempts: newAttempt } as any
           }
         );
+
+        // Auto-create/update invoice when verification is completed
+        if (status === "Completed" && verification) {
+          const orgName = verification.orgName;
+          const org = await db.collection("organisations").findOne({
+            name: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") },
+            isDeleted: { $ne: true }
+          });
+
+          if (org && org.monthlyRate) {
+            const now = new Date();
+            const currentMonth = now.toLocaleDateString("en-US", { month: "long" });
+            const currentYear = now.getFullYear();
+            const invoiceId = `INV-${orgName.replace(/\s+/g, "").substring(0, 4).toUpperCase()}-${currentYear}-${currentMonth.substring(0, 3).toUpperCase()}`;
+
+            // Check if an unpaid invoice already exists for this org + month + year
+            const existingInvoice = await db.collection("invoices").findOne({
+              orgName,
+              month: currentMonth,
+              year: currentYear,
+              status: { $ne: "Paid" },
+              isDeleted: { $ne: true }
+            });
+
+            if (existingInvoice) {
+              // Increment the existing invoice amount
+              await db.collection("invoices").updateOne(
+                { _id: existingInvoice._id },
+                { $inc: { amount: org.monthlyRate } }
+              );
+            } else {
+              // Create a new invoice for this month
+              const generatedDate = now.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+              const monthIndex = now.getMonth();
+              const lastDayOfMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
+              const dueDate = new Date(currentYear, monthIndex, lastDayOfMonth, 23, 59).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+
+              await db.collection("invoices").insertOne({
+                id: invoiceId,
+                orgName,
+                organisationId: org.id || org._id.toString(),
+                date: generatedDate,
+                dueDate,
+                amount: org.monthlyRate,
+                status: "Unpaid",
+                month: currentMonth,
+                year: currentYear,
+              });
+            }
+          }
+        }
+
         break;
       }
       case "updateVerifierRate": {
