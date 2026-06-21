@@ -93,6 +93,10 @@ export interface CompanySettings {
   cin: string;
   lut: string;
   tin: string;
+  gstin: string;
+  invoiceEmail: string;
+  billingSameAsCompany: boolean;
+  billingAddress: string;
 }
 
 interface PortalContextType {
@@ -101,6 +105,7 @@ interface PortalContextType {
   verifiers: Verifier[];
   organisations: Organisation[];
   settings: CompanySettings;
+  allSettings: CompanySettings[];
   addVerification: (name: string, email: string, orgName: string) => Promise<any>;
   updateSettings: (newSettings: CompanySettings) => Promise<void>;
   inviteVerifier: (name: string, email: string, org: string, password?: string, ratePerVerification?: number, organisationId?: string, designation?: string) => Promise<void>;
@@ -136,7 +141,11 @@ const defaultSettings: CompanySettings = {
   billingOption: "invoice",
   cin: "",
   lut: "",
-  tin: ""
+  tin: "",
+  gstin: "",
+  invoiceEmail: "",
+  billingSameAsCompany: true,
+  billingAddress: ""
 };
 
 export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -146,6 +155,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [verifiers, setVerifiers] = useState<Verifier[]>([]);
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [settings, setSettings] = useState<CompanySettings>(defaultSettings);
+  const [allSettings, setAllSettings] = useState<CompanySettings[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   // Sync / Fetch function from MongoDB API route
@@ -173,7 +183,11 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           billingOption: data.settings.billingOption,
           cin: data.settings.cin || "",
           lut: data.settings.lut || "",
-          tin: data.settings.tin || ""
+          tin: data.settings.tin || "",
+          gstin: data.settings.gstin || "",
+          invoiceEmail: data.settings.invoiceEmail || "",
+          billingSameAsCompany: data.settings.billingSameAsCompany !== undefined ? data.settings.billingSameAsCompany : true,
+          billingAddress: data.settings.billingAddress || ""
         });
       }
 
@@ -196,6 +210,9 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (data.organisations) {
         setOrganisations(data.organisations);
       }
+      if (data.allSettings) {
+        setAllSettings(data.allSettings);
+      }
     } catch (err) {
       console.error("Error reading tables from API:", err);
     } finally {
@@ -211,6 +228,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setInvoices([]);
       setVerifiers([]);
       setOrganisations([]);
+      setAllSettings([]);
       setSettings(defaultSettings);
     }
   }, [isAuthenticated]);
@@ -644,6 +662,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verifiers,
         organisations,
         settings,
+        allSettings,
         addVerification,
         updateSettings,
         inviteVerifier,

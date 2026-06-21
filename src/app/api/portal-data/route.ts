@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     const { db } = await connectToDatabase();
 
     const settings = await db.collection("settings").findOne({ id: "acme" });
+    const allSettings = await db.collection("settings").find({}).toArray();
     // Admin has global view — return all records but strip password hashes and filter soft-deleted
     const verifications = await db.collection("verifications").find(
       { isDeleted: { $ne: true } },
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
 
     // Sanitize _id fields
     const cleanSettings = settings ? { ...settings, _id: settings._id.toString() } : null;
+    const cleanAllSettings = allSettings.map(s => ({ ...s, _id: s._id.toString() }));
     const cleanVerifications = verifications.map(sanitizeVerification);
     const cleanInvoices = invoices.map(sanitizeInvoice);
     const cleanVerifiers = verifiers.map(v => ({ ...v, _id: v._id.toString() }));
@@ -48,6 +50,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       settings: cleanSettings,
+      allSettings: cleanAllSettings,
       verifications: cleanVerifications,
       invoices: cleanInvoices,
       verifiers: cleanVerifiers,
@@ -146,12 +149,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, setupUrl });
       }
       case "updateSettings": {
-        const { companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin } = payload;
+        const { companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin, gstin, invoiceEmail, billingSameAsCompany, billingAddress } = payload;
         await db.collection("settings").updateOne(
           { id: "acme" },
           {
             $set: {
-              companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin
+              companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin, gstin, invoiceEmail, billingSameAsCompany, billingAddress
             }
           },
           { upsert: true }
