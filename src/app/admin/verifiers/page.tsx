@@ -349,191 +349,199 @@ export default function VerifiersPage() {
         </section>
       </div>
 
-      {/* Verifier Profile Drawer / Modal */}
+      {/* Verifier Profile Fullscreen Popup */}
       {selectedVerifier && (
         <div
-          className="fixed inset-0 bg-slate-950/25 backdrop-blur-xs z-50 flex justify-end animate-fade-in"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center animate-fade-in"
           onClick={closeProfile}
         >
           <div
-            className="w-full max-w-md h-full bg-white shadow-3xl border-l border-[#42C2FF]/12 flex flex-col animate-slide-right"
+            className="w-full h-full bg-white flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Drawer Header */}
-            <div className="flex items-center gap-3 p-6 border-b border-slate-100 bg-slate-50/30 shrink-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] rounded-xl flex items-center justify-center text-white font-black text-lg shadow-sm">
-                {selectedVerifier.name.charAt(0).toUpperCase()}
+            {/* Popup Header */}
+            <div className="border-b border-slate-100 bg-slate-50/30 shrink-0">
+              <div className="max-w-5xl mx-auto w-full flex items-center justify-between p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] rounded-xl flex items-center justify-center text-white font-black text-lg shadow-sm">
+                    {selectedVerifier.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-headline-md text-slate-900 font-extrabold text-base leading-none">{selectedVerifier.name}</h3>
+                    <span className="text-[10px] text-slate-400 font-bold font-mono block mt-1.5">{selectedVerifier.id}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={closeProfile}
+                  className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-headline-md text-slate-900 font-extrabold text-base leading-none">{selectedVerifier.name}</h3>
-                <span className="text-[10px] text-slate-400 font-bold font-mono block mt-1.5">{selectedVerifier.id}</span>
-              </div>
-              <button
-                onClick={closeProfile}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
             </div>
 
-            {/* Drawer Body */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-              {/* Avatar + Name Section */}
-              <div className="flex flex-col items-center gap-3 py-4 border-b border-slate-100">
-                <div className="w-20 h-20 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] border border-[#85F4FF]/30 text-[#0284c7] rounded-full flex items-center justify-center font-black text-3xl shadow-inner">
-                  {selectedVerifier.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="text-center">
-                  <h4 className="font-headline-md text-slate-900 font-extrabold text-lg leading-tight">{selectedVerifier.name}</h4>
-                  <p className="font-body-sm text-slate-500 font-mono text-xs mt-1">{selectedVerifier.email}</p>
-                </div>
-                <span
-                  className={`inline-flex items-center px-3.5 py-1 rounded-full text-[9.5px] font-bold tracking-wide uppercase border ${
-                    selectedVerifier.status === "Active"
-                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
-                      : selectedVerifier.status === "Inactive"
-                      ? "bg-red-500/10 text-red-600 border-red-500/15"
-                      : "bg-slate-100 text-slate-400 border-slate-200/50"
-                  }`}
-                >
-                  {selectedVerifier.status}
-                </span>
-              </div>
-
-              {/* Detail Cards */}
-              <div className="flex flex-col gap-3.5">
-                {/* Organization */}
-                <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/50">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-slate-400 font-bold">business</span>
-                    <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Organization</span>
+            {/* Popup Body */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="max-w-5xl mx-auto w-full flex flex-col gap-6">
+                {/* Avatar + Name Section */}
+                <div className="flex flex-col items-center gap-3 py-4 border-b border-slate-100">
+                  <div className="w-20 h-20 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] border border-[#85F4FF]/30 text-[#0284c7] rounded-full flex items-center justify-center font-black text-3xl shadow-inner">
+                    {selectedVerifier.name.charAt(0).toUpperCase()}
                   </div>
-                  <p className="font-body-sm font-bold text-slate-800">{selectedVerifier.org}</p>
-                </div>
-
-                {/* Email */}
-                <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/50">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-slate-400 font-bold">email</span>
-                    <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Email Address</span>
+                  <div className="text-center">
+                    <h4 className="font-headline-md text-slate-900 font-extrabold text-lg leading-tight">{selectedVerifier.name}</h4>
+                    <p className="font-body-sm text-slate-500 font-mono text-xs mt-1">{selectedVerifier.email}</p>
                   </div>
-                  <p className="font-body-sm font-bold text-slate-800 font-mono text-xs">{selectedVerifier.email}</p>
+                  <span
+                    className={`inline-flex items-center px-3.5 py-1 rounded-full text-[9.5px] font-bold tracking-wide uppercase border ${
+                      selectedVerifier.status === "Active"
+                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
+                        : selectedVerifier.status === "Inactive"
+                        ? "bg-red-500/10 text-red-600 border-red-500/15"
+                        : "bg-slate-100 text-slate-400 border-slate-200/50"
+                    }`}
+                  >
+                    {selectedVerifier.status}
+                  </span>
                 </div>
 
-                {/* Rate per Verification (Editable) */}
-                <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[15px] text-slate-400 font-bold">payments</span>
-                      <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Rate per Verification</span>
+                {/* Detail Cards */}
+                <div className="flex flex-col gap-3.5">
+                  {/* Organization */}
+                  <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/50">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="material-symbols-outlined text-[15px] text-slate-400 font-bold">business</span>
+                      <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Organization</span>
                     </div>
-                    {!editingRate && (
-                      <button
-                        onClick={() => {
-                          setEditingRate(true);
-                          setEditRateValue(String(selectedVerifier.ratePerVerification ?? 0));
-                        }}
-                        className="text-[11px] text-[#0ea5e9] hover:underline font-bold cursor-pointer flex items-center gap-1"
-                      >
-                        <span className="material-symbols-outlined text-[13px] font-bold">edit</span>
-                        <span>Edit Rate</span>
-                      </button>
+                    <p className="font-body-sm font-bold text-slate-800">{selectedVerifier.org}</p>
+                  </div>
+
+                  {/* Email */}
+                  <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/50">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="material-symbols-outlined text-[15px] text-slate-400 font-bold">email</span>
+                      <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Email Address</span>
+                    </div>
+                    <p className="font-body-sm font-bold text-slate-800 font-mono text-xs">{selectedVerifier.email}</p>
+                  </div>
+
+                  {/* Rate per Verification (Editable) */}
+                  <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-slate-400 font-bold">payments</span>
+                        <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Rate per Verification</span>
+                      </div>
+                      {!editingRate && (
+                        <button
+                          onClick={() => {
+                            setEditingRate(true);
+                            setEditRateValue(String(selectedVerifier.ratePerVerification ?? 0));
+                          }}
+                          className="text-[11px] text-[#0ea5e9] hover:underline font-bold cursor-pointer flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-[13px] font-bold">edit</span>
+                          <span>Edit Rate</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {editingRate ? (
+                      <div className="flex items-center gap-2 mt-2 animate-fade-in">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={editRateValue}
+                            onChange={(e) => setEditRateValue(e.target.value)}
+                            autoFocus
+                            className="w-full p-2 pl-7 border border-slate-200 rounded-xl font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                          />
+                        </div>
+                        <button
+                          onClick={handleSaveRate}
+                          disabled={rateSaving}
+                          className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 shadow-sm"
+                        >
+                          {rateSaving ? (
+                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <span className="material-symbols-outlined text-[14px] font-bold">check</span>
+                          )}
+                          <span>Save</span>
+                        </button>
+                        <button
+                          onClick={() => setEditingRate(false)}
+                          className="px-3.5 py-2 border border-slate-200 text-slate-500 hover:bg-slate-100 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="font-body-md font-extrabold text-slate-900 text-lg">
+                        ${(selectedVerifier.ratePerVerification ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </p>
                     )}
                   </div>
 
-                  {editingRate ? (
-                    <div className="flex items-center gap-2 mt-2 animate-fade-in">
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={editRateValue}
-                          onChange={(e) => setEditRateValue(e.target.value)}
-                          autoFocus
-                          className="w-full p-2 pl-7 border border-slate-200 rounded-xl font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
-                        />
-                      </div>
-                      <button
-                        onClick={handleSaveRate}
-                        disabled={rateSaving}
-                        className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 shadow-sm"
-                      >
-                        {rateSaving ? (
-                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <span className="material-symbols-outlined text-[14px] font-bold">check</span>
-                        )}
-                        <span>Save</span>
-                      </button>
-                      <button
-                        onClick={() => setEditingRate(false)}
-                        className="px-3.5 py-2 border border-slate-200 text-slate-500 hover:bg-slate-100 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                      >
-                        Cancel
-                      </button>
+                  {/* Verifier ID */}
+                  <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/50">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="material-symbols-outlined text-[15px] text-slate-400 font-bold">badge</span>
+                      <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">System Verifier ID</span>
                     </div>
-                  ) : (
-                    <p className="font-body-md font-extrabold text-slate-900 text-lg">
-                      ${(selectedVerifier.ratePerVerification ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </p>
-                  )}
-                </div>
-
-                {/* Verifier ID */}
-                <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/50">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-slate-400 font-bold">badge</span>
-                    <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">System Verifier ID</span>
+                    <p className="font-mono text-xs font-bold text-slate-800">{selectedVerifier.id}</p>
                   </div>
-                  <p className="font-mono text-xs font-bold text-slate-800">{selectedVerifier.id}</p>
                 </div>
               </div>
             </div>
 
-            {/* Drawer Footer */}
-            <div className="p-6 border-t border-slate-100 bg-slate-50/30 shrink-0 flex flex-col gap-3">
-              {/* Action Buttons */}
-              <div className="flex gap-2">
+            {/* Popup Footer */}
+            <div className="border-t border-slate-100 bg-slate-50/30 shrink-0">
+              <div className="max-w-5xl mx-auto w-full p-6 flex flex-col gap-3">
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (!selectedVerifier) return;
+                      const newStatus = selectedVerifier.status === "Inactive" ? "Active" : "Inactive";
+                      updateVerifierStatus(selectedVerifier.id, newStatus);
+                      setSelectedVerifier((prev) => prev ? { ...prev, status: newStatus } : null);
+                    }}
+                    className={`flex-1 py-2.5 font-button-text rounded-xl transition-all cursor-pointer flex justify-center items-center gap-1.5 text-xs font-bold border ${
+                      selectedVerifier.status === "Inactive"
+                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15 hover:bg-emerald-500/20"
+                        : "bg-amber-500/5 text-amber-600 border-amber-500/15 hover:bg-amber-500/10"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {selectedVerifier.status === "Inactive" ? "toggle_on" : "toggle_off"}
+                    </span>
+                    <span>{selectedVerifier.status === "Inactive" ? "Activate" : "Deactivate"}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!selectedVerifier) return;
+                      if (confirm(`Delete verifier "${selectedVerifier.name}"? This action cannot be undone.`)) {
+                        deleteVerifier(selectedVerifier.id);
+                        closeProfile();
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-red-500/5 hover:bg-red-500/10 text-red-650 border border-red-500/15 font-button-text rounded-xl transition-colors cursor-pointer flex justify-center items-center gap-1.5 text-xs font-bold"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    <span>Delete Account</span>
+                  </button>
+                </div>
                 <button
-                  onClick={() => {
-                    if (!selectedVerifier) return;
-                    const newStatus = selectedVerifier.status === "Inactive" ? "Active" : "Inactive";
-                    updateVerifierStatus(selectedVerifier.id, newStatus);
-                    setSelectedVerifier((prev) => prev ? { ...prev, status: newStatus } : null);
-                  }}
-                  className={`flex-1 py-2.5 font-button-text rounded-xl transition-all cursor-pointer flex justify-center items-center gap-1.5 text-xs font-bold border ${
-                    selectedVerifier.status === "Inactive"
-                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15 hover:bg-emerald-500/20"
-                      : "bg-amber-500/5 text-amber-600 border-amber-500/15 hover:bg-amber-500/10"
-                  }`}
+                  onClick={closeProfile}
+                  className="w-full py-2.5 border border-slate-200 text-slate-700 font-button-text rounded-xl hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold"
                 >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {selectedVerifier.status === "Inactive" ? "toggle_on" : "toggle_off"}
-                  </span>
-                  <span>{selectedVerifier.status === "Inactive" ? "Activate" : "Deactivate"}</span>
-                </button>
-                <button
-                  onClick={() => {
-                    if (!selectedVerifier) return;
-                    if (confirm(`Delete verifier "${selectedVerifier.name}"? This action cannot be undone.`)) {
-                      deleteVerifier(selectedVerifier.id);
-                      closeProfile();
-                    }
-                  }}
-                  className="flex-1 py-2.5 bg-red-500/5 hover:bg-red-500/10 text-red-650 border border-red-500/15 font-button-text rounded-xl transition-colors cursor-pointer flex justify-center items-center gap-1.5 text-xs font-bold"
-                >
-                  <span className="material-symbols-outlined text-[18px]">delete</span>
-                  <span>Delete Account</span>
+                  Close Profile
                 </button>
               </div>
-              <button
-                onClick={closeProfile}
-                className="w-full py-2.5 border border-slate-200 text-slate-700 font-button-text rounded-xl hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold"
-              >
-                Close Profile
-              </button>
             </div>
           </div>
         </div>

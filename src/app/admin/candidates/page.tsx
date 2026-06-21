@@ -397,302 +397,308 @@ export default function CandidatesPage() {
         </div>
       </section>
 
-      {/* Candidate Inspector Drawer */}
+      {/* Candidate Inspector Fullscreen Popup */}
       {selectedCandidate && (
         <div
-          className="fixed inset-0 bg-slate-950/25 backdrop-blur-xs z-50 flex justify-end animate-fade-in"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center animate-fade-in"
           onClick={() => setSelectedCandidate(null)}
         >
           <div
-            className="w-full max-w-2xl h-full bg-white shadow-3xl border-l border-[#42C2FF]/12 flex flex-col animate-slide-right"
+            className="w-full h-full bg-white flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/30 shrink-0">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`material-symbols-outlined p-2 rounded-xl text-lg ${
-                    displayCandidate?.digilockerStatus === "Verified"
-                      ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/10"
-                      : "bg-slate-100 text-slate-400"
-                  }`}
-                >
-                  {displayCandidate?.digilockerStatus === "Verified" ? "verified_user" : "pending"}
-                </span>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-headline-md text-slate-900 font-extrabold text-lg">Candidate Profile</h3>
-                    {isLoadingDetail && (
-                      <div className="w-4 h-4 rounded-full border-2 border-[#42C2FF] border-t-transparent animate-spin" />
-                    )}
-                  </div>
-                  <span className="text-[11px] text-slate-400 font-semibold">ID: {displayCandidate?.id}</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedCandidate(null)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-              {/* Photo + Primary Identity Block */}
-              <div className="flex items-start gap-4 p-1">
-                {isLoadingDetail ? (
-                  <div className="w-20 h-24 bg-slate-50 rounded-2xl border border-slate-200/60 shrink-0 flex items-center justify-center shadow-inner">
-                    <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-[#42C2FF] animate-spin" />
-                  </div>
-                ) : displayCandidate?.digilockerPhoto ? (
-                  <div className="w-20 h-24 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center shadow-sm">
-                    <img
-                      src={getPhotoSrc(displayCandidate.digilockerPhoto)}
-                      alt={displayCandidate.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-20 h-24 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] text-[#0284c7] rounded-2xl flex items-center justify-center font-black text-3xl shrink-0 border border-[#85F4FF]/30 shadow-inner">
-                    {displayCandidate?.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="flex flex-col gap-1 pt-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="font-headline-md text-slate-900 font-extrabold text-xl leading-none">
-                      {displayCandidate?.digilockerName || displayCandidate?.name}
-                    </h4>
-                    {displayCandidate?.digilockerStatus === "Verified" && (
-                      <span className="inline-flex items-center text-[10px] text-emerald-600 font-bold bg-emerald-500/10 border border-emerald-500/15 px-2.5 py-0.5 rounded-full">
-                        <span className="material-symbols-outlined text-[10px] mr-1 font-bold">check_circle</span>
-                        Verified
-                      </span>
-                    )}
-                  </div>
-                  <p className="font-body-sm text-slate-500 mt-1">
-                    {displayCandidate?.digilockerEmail || displayCandidate?.email}
-                  </p>
-                  {displayCandidate?.digilockerUsername && (
-                    <span className="mt-1 bg-[#42C2FF]/10 text-[#0369a1] text-[9.5px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full w-fit">
-                      @{displayCandidate.digilockerUsername}
-                    </span>
-                  )}
-                  <span className="text-[10px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">CLIENT: {displayCandidate?.orgName}</span>
-                </div>
-              </div>
-
-              {/* Section: Account Status */}
-              <div className="p-4 bg-slate-50/50 border border-slate-200/50 rounded-2xl text-sm flex flex-col gap-3">
-                <span className="font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-1.5 text-xs uppercase tracking-wider text-slate-400">
-                  <span className="material-symbols-outlined text-base">account_circle</span>
-                  Account Details
-                </span>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span className="text-slate-400 block font-label-caps text-[9px] tracking-wide font-bold uppercase">LOGIN EMAIL</span>
-                    <span className="font-mono font-bold text-slate-700 break-all">{displayCandidate?.email}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block font-label-caps text-[9px] tracking-wide font-bold uppercase">ONBOARDING STATUS</span>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border mt-1 ${
-                      displayCandidate?.onboardingStatus === "setup_pending"
-                        ? "bg-amber-500/10 text-amber-600 border-amber-500/15"
-                        : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
-                    }`}>
-                      {displayCandidate?.onboardingStatus === "setup_pending" ? "Setup Pending" : "Account Active"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* DigiLocker Verified Details */}
-              {displayCandidate?.digilockerStatus === "Verified" ? (
-                <div className="flex flex-col gap-6 animate-fade-in">
-                  {/* Verified Details Sub-Section */}
-                  <div className="flex flex-col gap-3">
-                    <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                      <span className="material-symbols-outlined text-sm">person</span>
-                      Personal Details (DigiLocker Records)
-                    </h5>
-                    {isLoadingDetail ? (
-                      <div className="text-xs text-slate-400 italic">Decrypting secure records...</div>
-                    ) : (
-                      <>
-                        <div className="grid grid-cols-3 gap-3">
-                          {renderDetailField("Full Name", displayCandidate.digilockerName, false, "badge")}
-                          {renderDetailField("Age", displayCandidate.digilockerAge, false, "cake")}
-                          {renderDetailField("Gender", displayCandidate.digilockerGender, false, "wc")}
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          {renderDetailField("Date of Birth", displayCandidate.digilockerDob, false, "calendar_today")}
-                          {renderDetailField("Mobile Number", displayCandidate.digilockerMobile, false, "phone")}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Section: Identity Documents */}
-                  <div className="flex flex-col gap-3">
-                    <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                      <span className="material-symbols-outlined text-sm">description</span>
-                      Identity Documents
-                    </h5>
-                    {isLoadingDetail ? (
-                      <div className="text-xs text-slate-400 italic">Retrieving identity tokens...</div>
-                    ) : (
-                      <>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          {renderDetailField("Aadhaar", displayCandidate.digilockerAadhaar, false, "fingerprint")}
-                          {renderDetailField("PAN Card", displayCandidate.digilockerPan, true, "credit_card")}
-                          {renderDetailField("Driving Licence", displayCandidate.digilockerDrivingLicence, true, "directions_car")}
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          {renderDetailField("DigiLocker ID", displayCandidate.digilockerId, true, "link")}
-                          {renderDetailField("Reference Key", displayCandidate.digilockerReferenceKey, true, "vpn_key")}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Verified Documents from DigiLocker */}
-                  {isLoadingDetail ? (
-                    <div className="flex flex-col gap-3">
-                      <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                        <span className="material-symbols-outlined text-sm">folder_open</span>
-                        Verified Documents List
-                      </h5>
-                      <div className="text-xs text-slate-400 italic">Fetching digital wallet documents...</div>
-                    </div>
-                  ) : displayCandidate.digilockerDocuments && displayCandidate.digilockerDocuments.length > 0 ? (
-                    <div className="flex flex-col gap-3">
-                      <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                        <span className="material-symbols-outlined text-sm">folder_open</span>
-                        Verified Documents List ({displayCandidate.digilockerDocuments.length})
-                      </h5>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {displayCandidate.digilockerDocuments.map((doc: any) => (
-                          <div key={doc.id || doc.uri} className="p-3 bg-slate-50/60 border border-slate-200/50 rounded-2xl flex flex-col gap-1.5 hover:bg-slate-50 transition-colors">
-                            <span className="font-bold text-xs text-slate-800">{doc.name}</span>
-                            <span className="text-[10px] text-slate-400 font-semibold">{doc.issuer}</span>
-                            <div className="flex justify-between items-center mt-1">
-                              <span className="text-[9px] font-mono text-slate-400 truncate max-w-[150px]">{doc.uri}</span>
-                              <span className="text-[9px] bg-emerald-500/10 text-emerald-600 font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">{doc.status}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                /* Pending state details card */
-                <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 flex items-center gap-3">
-                  <span className="material-symbols-outlined text-slate-400 text-2xl font-light">hourglass_empty</span>
+            {/* Popup Header */}
+            <div className="border-b border-slate-100 bg-slate-50/30 shrink-0">
+              <div className="max-w-5xl mx-auto w-full flex items-center justify-between p-6">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`material-symbols-outlined p-2 rounded-xl text-lg ${
+                      displayCandidate?.digilockerStatus === "Verified"
+                        ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/10"
+                        : "bg-slate-100 text-slate-400"
+                    }`}
+                  >
+                    {displayCandidate?.digilockerStatus === "Verified" ? "verified_user" : "pending"}
+                  </span>
                   <div className="flex flex-col">
-                    <span className="font-body-sm font-bold text-slate-800">Awaiting DigiLocker Account Link</span>
-                    <span className="text-[11px] text-slate-400 font-medium mt-0.5">
-                      The candidate has been registered but has not yet completed their identity authentication via DigiLocker.
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Section: Verification Flow Context */}
-              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
-                <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                  <span className="material-symbols-outlined text-sm">assignment_turned_in</span>
-                  Verification Flow Context
-                </h5>
-                <div className="grid grid-cols-3 gap-3">
-                  {renderDetailField("Flow Status", displayCandidate?.status, false, "info")}
-                  {renderDetailField("Date Initiated", displayCandidate?.date, false, "calendar_today")}
-                  {renderDetailField("Verifier Assigned", displayCandidate?.verifier || "None", false, "badge")}
-                </div>
-
-                {displayCandidate?.reportDetails && (
-                  <div className="flex flex-col gap-1.5 mt-1.5">
-                    <span className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold">Latest Verification Findings</span>
-                    <p className="p-4 bg-slate-50/50 border border-slate-200/60 rounded-2xl text-slate-600 leading-relaxed font-body-sm">
-                      {displayCandidate.reportDetails}
-                    </p>
-                  </div>
-                )}
-
-                {displayCandidate?.notes && (
-                  <div className="flex flex-col gap-1.5 mt-1.5">
-                    <span className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2">
-                      <span className="material-symbols-outlined text-sm">sticky_note_2</span>
-                      Internal Flow Notes
-                    </span>
-                    <p className="text-slate-500 italic pl-3.5 border-l-2 border-[#42C2FF] font-body-sm leading-relaxed">
-                      {displayCandidate.notes}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Section: Verification Attempts */}
-              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
-                <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                  <span className="material-symbols-outlined text-sm">history</span>
-                  Verification Attempts ({attemptsList.length})
-                </h5>
-                <div className="flex flex-col gap-3">
-                  {attemptsList.map((att, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-slate-50/40 border border-slate-200/60 rounded-2xl p-4 flex flex-col gap-2 relative transition-all hover:bg-slate-50"
-                    >
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] text-[#0ea5e9] font-extrabold uppercase tracking-wider">
-                            Attempt #{idx + 1}
-                          </span>
-                          <span className="text-xs text-slate-700 font-bold mt-0.5">
-                            {att.date} · by <span className="text-[#0369a1]">{att.verifier}</span>
-                          </span>
-                        </div>
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
-                            att.status === "Completed"
-                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
-                              : att.status === "Processing"
-                              ? "bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15"
-                              : "bg-red-500/10 text-red-600 border-red-500/15"
-                          }`}
-                        >
-                          {att.status}
-                        </span>
-                      </div>
-                      {att.notes && (
-                        <p className="text-xs text-slate-500 italic border-l-2 border-slate-200 pl-2.5 mt-1.5 font-body-sm leading-relaxed">
-                          {att.notes}
-                        </p>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-headline-md text-slate-900 font-extrabold text-lg">Candidate Profile</h3>
+                      {isLoadingDetail && (
+                        <div className="w-4 h-4 rounded-full border-2 border-[#42C2FF] border-t-transparent animate-spin" />
                       )}
                     </div>
-                  ))}
+                    <span className="text-[11px] text-slate-400 font-semibold">ID: {displayCandidate?.id}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedCandidate(null)}
+                  className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Popup Body */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="max-w-5xl mx-auto w-full flex flex-col gap-6">
+                {/* Photo + Primary Identity Block */}
+                <div className="flex items-start gap-4 p-1">
+                  {isLoadingDetail ? (
+                    <div className="w-20 h-24 bg-slate-50 rounded-2xl border border-slate-200/60 shrink-0 flex items-center justify-center shadow-inner">
+                      <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-[#42C2FF] animate-spin" />
+                    </div>
+                  ) : displayCandidate?.digilockerPhoto ? (
+                    <div className="w-20 h-24 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center shadow-sm">
+                      <img
+                        src={getPhotoSrc(displayCandidate.digilockerPhoto)}
+                        alt={displayCandidate.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-24 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] text-[#0284c7] rounded-2xl flex items-center justify-center font-black text-3xl shrink-0 border border-[#85F4FF]/30 shadow-inner">
+                      {displayCandidate?.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1 pt-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-headline-md text-slate-900 font-extrabold text-xl leading-none">
+                        {displayCandidate?.digilockerName || displayCandidate?.name}
+                      </h4>
+                      {displayCandidate?.digilockerStatus === "Verified" && (
+                        <span className="inline-flex items-center text-[10px] text-emerald-600 font-bold bg-emerald-500/10 border border-emerald-500/15 px-2.5 py-0.5 rounded-full">
+                          <span className="material-symbols-outlined text-[10px] mr-1 font-bold">check_circle</span>
+                          Verified
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-body-sm text-slate-500 mt-1">
+                      {displayCandidate?.digilockerEmail || displayCandidate?.email}
+                    </p>
+                    {displayCandidate?.digilockerUsername && (
+                      <span className="mt-1 bg-[#42C2FF]/10 text-[#0369a1] text-[9.5px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full w-fit">
+                        @{displayCandidate.digilockerUsername}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">CLIENT: {displayCandidate?.orgName}</span>
+                  </div>
+                </div>
+
+                {/* Section: Account Status */}
+                <div className="p-4 bg-slate-50/50 border border-slate-200/50 rounded-2xl text-sm flex flex-col gap-3">
+                  <span className="font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-1.5 text-xs uppercase tracking-wider text-slate-400">
+                    <span className="material-symbols-outlined text-base">account_circle</span>
+                    Account Details
+                  </span>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-slate-400 block font-label-caps text-[9px] tracking-wide font-bold uppercase">LOGIN EMAIL</span>
+                      <span className="font-mono font-bold text-slate-700 break-all">{displayCandidate?.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-label-caps text-[9px] tracking-wide font-bold uppercase">ONBOARDING STATUS</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border mt-1 ${
+                        displayCandidate?.onboardingStatus === "setup_pending"
+                          ? "bg-amber-500/10 text-amber-600 border-amber-500/15"
+                          : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
+                      }`}>
+                        {displayCandidate?.onboardingStatus === "setup_pending" ? "Setup Pending" : "Account Active"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* DigiLocker Verified Details */}
+                {displayCandidate?.digilockerStatus === "Verified" ? (
+                  <div className="flex flex-col gap-6 animate-fade-in">
+                    {/* Verified Details Sub-Section */}
+                    <div className="flex flex-col gap-3">
+                      <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                        <span className="material-symbols-outlined text-sm">person</span>
+                        Personal Details (DigiLocker Records)
+                      </h5>
+                      {isLoadingDetail ? (
+                        <div className="text-xs text-slate-400 italic">Decrypting secure records...</div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-3 gap-3">
+                            {renderDetailField("Full Name", displayCandidate.digilockerName, false, "badge")}
+                            {renderDetailField("Age", displayCandidate.digilockerAge, false, "cake")}
+                            {renderDetailField("Gender", displayCandidate.digilockerGender, false, "wc")}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {renderDetailField("Date of Birth", displayCandidate.digilockerDob, false, "calendar_today")}
+                            {renderDetailField("Mobile Number", displayCandidate.digilockerMobile, false, "phone")}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Section: Identity Documents */}
+                    <div className="flex flex-col gap-3">
+                      <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                        <span className="material-symbols-outlined text-sm">description</span>
+                        Identity Documents
+                      </h5>
+                      {isLoadingDetail ? (
+                        <div className="text-xs text-slate-400 italic">Retrieving identity tokens...</div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {renderDetailField("Aadhaar", displayCandidate.digilockerAadhaar, false, "fingerprint")}
+                            {renderDetailField("PAN Card", displayCandidate.digilockerPan, true, "credit_card")}
+                            {renderDetailField("Driving Licence", displayCandidate.digilockerDrivingLicence, true, "directions_car")}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {renderDetailField("DigiLocker ID", displayCandidate.digilockerId, true, "link")}
+                            {renderDetailField("Reference Key", displayCandidate.digilockerReferenceKey, true, "vpn_key")}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Verified Documents from DigiLocker */}
+                    {isLoadingDetail ? (
+                      <div className="flex flex-col gap-3">
+                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                          <span className="material-symbols-outlined text-sm">folder_open</span>
+                          Verified Documents List
+                        </h5>
+                        <div className="text-xs text-slate-400 italic">Fetching digital wallet documents...</div>
+                      </div>
+                    ) : displayCandidate.digilockerDocuments && displayCandidate.digilockerDocuments.length > 0 ? (
+                      <div className="flex flex-col gap-3">
+                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                          <span className="material-symbols-outlined text-sm">folder_open</span>
+                          Verified Documents List ({displayCandidate.digilockerDocuments.length})
+                        </h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {displayCandidate.digilockerDocuments.map((doc: any) => (
+                            <div key={doc.id || doc.uri} className="p-3 bg-slate-50/60 border border-slate-200/50 rounded-2xl flex flex-col gap-1.5 hover:bg-slate-50 transition-colors">
+                              <span className="font-bold text-xs text-slate-800">{doc.name}</span>
+                              <span className="text-[10px] text-slate-400 font-semibold">{doc.issuer}</span>
+                              <div className="flex justify-between items-center mt-1">
+                                <span className="text-[9px] font-mono text-slate-400 truncate max-w-[150px]">{doc.uri}</span>
+                                <span className="text-[9px] bg-emerald-500/10 text-emerald-600 font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">{doc.status}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  /* Pending state details card */
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-slate-400 text-2xl font-light">hourglass_empty</span>
+                    <div className="flex flex-col">
+                      <span className="font-body-sm font-bold text-slate-800">Awaiting DigiLocker Account Link</span>
+                      <span className="text-[11px] text-slate-400 font-medium mt-0.5">
+                        The candidate has been registered but has not yet completed their identity authentication via DigiLocker.
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Section: Verification Flow Context */}
+                <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
+                  <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                    <span className="material-symbols-outlined text-sm">assignment_turned_in</span>
+                    Verification Flow Context
+                  </h5>
+                  <div className="grid grid-cols-3 gap-3">
+                    {renderDetailField("Flow Status", displayCandidate?.status, false, "info")}
+                    {renderDetailField("Date Initiated", displayCandidate?.date, false, "calendar_today")}
+                    {renderDetailField("Verifier Assigned", displayCandidate?.verifier || "None", false, "badge")}
+                  </div>
+
+                  {displayCandidate?.reportDetails && (
+                    <div className="flex flex-col gap-1.5 mt-1.5">
+                      <span className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold">Latest Verification Findings</span>
+                      <p className="p-4 bg-slate-50/50 border border-slate-200/60 rounded-2xl text-slate-655 leading-relaxed font-body-sm">
+                        {displayCandidate.reportDetails}
+                      </p>
+                    </div>
+                  )}
+
+                  {displayCandidate?.notes && (
+                    <div className="flex flex-col gap-1.5 mt-1.5">
+                      <span className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">sticky_note_2</span>
+                        Internal Flow Notes
+                      </span>
+                      <p className="text-slate-500 italic pl-3.5 border-l-2 border-[#42C2FF] font-body-sm leading-relaxed">
+                        {displayCandidate.notes}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section: Verification Attempts */}
+                <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
+                  <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                    <span className="material-symbols-outlined text-sm">history</span>
+                    Verification Attempts ({attemptsList.length})
+                  </h5>
+                  <div className="flex flex-col gap-3">
+                    {attemptsList.map((att, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-slate-50/40 border border-slate-200/60 rounded-2xl p-4 flex flex-col gap-2 relative transition-all hover:bg-slate-50"
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-[#0ea5e9] font-extrabold uppercase tracking-wider">
+                              Attempt #{idx + 1}
+                            </span>
+                            <span className="text-xs text-slate-700 font-bold mt-0.5">
+                              {att.date} · by <span className="text-[#0369a1]">{att.verifier}</span>
+                            </span>
+                          </div>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
+                              att.status === "Completed"
+                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
+                                : att.status === "Processing"
+                                ? "bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15"
+                                : "bg-red-500/10 text-red-600 border-red-500/15"
+                            }`}
+                          >
+                            {att.status}
+                          </span>
+                        </div>
+                        {att.notes && (
+                          <p className="text-xs text-slate-500 italic border-l-2 border-slate-200 pl-2.5 mt-1.5 font-body-sm leading-relaxed">
+                            {att.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 border-t border-slate-100 bg-slate-50/30 shrink-0 flex gap-3">
-              <button
-                onClick={() => setSelectedCandidate(null)}
-                className="w-full py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 font-button-text rounded-xl transition-colors cursor-pointer text-sm font-semibold flex items-center justify-center gap-2"
-              >
-                Close Inspector
-              </button>
-              {displayCandidate?.status === "Completed" && (
+            {/* Popup Footer */}
+            <div className="border-t border-slate-100 bg-slate-50/30 shrink-0">
+              <div className="max-w-5xl mx-auto w-full p-6 flex gap-3">
                 <button
-                  onClick={() => window.open(`/admin/report?id=${displayCandidate.id}`, "_blank")}
-                  className="w-full py-2.5 bg-gradient-to-r from-[#42C2FF] to-[#0099ff] hover:opacity-90 text-white font-button-text rounded-xl transition-all cursor-pointer text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-500/10"
+                  onClick={() => setSelectedCandidate(null)}
+                  className="w-full py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 font-button-text rounded-xl transition-colors cursor-pointer text-sm font-semibold flex items-center justify-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-base">print</span>
-                  Print Report
+                  Close Inspector
                 </button>
-              )}
+                {displayCandidate?.status === "Completed" && (
+                  <button
+                    onClick={() => window.open(`/admin/report?id=${displayCandidate.id}`, "_blank")}
+                    className="w-full py-2.5 bg-gradient-to-r from-[#42C2FF] to-[#0099ff] hover:opacity-90 text-white font-button-text rounded-xl transition-all cursor-pointer text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-500/10"
+                  >
+                    <span className="material-symbols-outlined text-base">print</span>
+                    Print Report
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
