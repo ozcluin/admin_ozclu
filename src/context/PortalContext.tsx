@@ -37,6 +37,7 @@ export interface Verification {
     status: string;
     notes?: string;
   }>;
+  setupUrl?: string;
 }
 
 export interface Invoice {

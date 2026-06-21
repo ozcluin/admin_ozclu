@@ -90,6 +90,13 @@ export function requireMfaVerified(user: SessionUser): NextResponse | null {
 export function sanitizeVerification(doc: any): any {
   if (!doc) return doc;
   const clean = { ...doc };
+
+  // Generate setupUrl on-the-fly if missing but email and tempPassword exist
+  if (!clean.setupUrl && clean.tempPassword && clean.email) {
+    const candidatePortalUrl = process.env.CANDIDATE_PORTAL_URL || "https://candidate.verify.cluso.in";
+    clean.setupUrl = `${candidatePortalUrl}/?email=${encodeURIComponent(clean.email.toLowerCase().trim())}&password=${encodeURIComponent(clean.tempPassword)}`;
+  }
+
   delete clean.password;
   delete clean.tempPassword; // Legacy field — no longer stored
   

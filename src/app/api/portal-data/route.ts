@@ -124,6 +124,10 @@ export async function POST(req: NextRequest) {
           notes: notes || "Verification flow initiated."
         };
 
+        // Build the direct login URL (with email and password query parameters)
+        const candidatePortalUrl = process.env.CANDIDATE_PORTAL_URL || "https://candidate.verify.cluso.in";
+        const setupUrl = `${candidatePortalUrl}/?email=${encodeURIComponent(email.toLowerCase().trim())}&password=${encodeURIComponent(tempPassword)}`;
+
         await db.collection("verifications").insertOne({
           id,
           name,
@@ -135,12 +139,9 @@ export async function POST(req: NextRequest) {
           notes,
           onboardingStatus: "active",
           tempPassword,
-          attempts: [initialAttempt]
+          attempts: [initialAttempt],
+          setupUrl
         });
-
-        // Build the direct login URL (with email and password query parameters)
-        const candidatePortalUrl = process.env.CANDIDATE_PORTAL_URL || "https://candidate.verify.cluso.in";
-        const setupUrl = `${candidatePortalUrl}/?email=${encodeURIComponent(email.toLowerCase().trim())}&password=${encodeURIComponent(tempPassword)}`;
 
         return NextResponse.json({ success: true, setupUrl });
       }
