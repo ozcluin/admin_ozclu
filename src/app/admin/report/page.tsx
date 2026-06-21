@@ -130,19 +130,17 @@ function ReportContent() {
       <div className="print-border w-full max-w-[800px] bg-white border-[6px] border-double border-[#8B0000] print:border-0 p-8 sm:p-10 shadow-lg relative print:shadow-none print:my-0 print:mx-auto print:p-8">
         
         {/* Top Header */}
-        <div className="flex justify-between items-start gap-4 mb-6">
-          <div className="border border-slate-300 p-4 bg-white w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
-            <img src="/cluso-infolink.png" alt="Cluso Logo" className="object-contain max-h-full" />
+        <div className="flex justify-between items-center gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start">
+              <img src="/cluso-infolink.png" alt="Cluso Logo" className="object-contain max-h-full" />
+            </div>
+            <h1 className="font-serif text-[#1B365D] text-2xl sm:text-3xl font-semibold tracking-wide italic leading-none">Report</h1>
           </div>
           <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">
             <div>Report #: <span className="font-mono text-slate-900">{reportNo}</span></div>
             <div>Date: <span className="text-slate-900">{formatDate(verification.completedAt || verification.date)}</span></div>
           </div>
-        </div>
-
-        {/* Verification Report Title */}
-        <div className="text-center mb-8">
-          <h1 className="font-serif text-[#1B365D] text-3xl sm:text-4xl font-semibold tracking-wide italic">Verification Report</h1>
         </div>
 
         {/* Boxed Metadata Card */}
