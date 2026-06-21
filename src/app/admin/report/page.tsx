@@ -129,7 +129,7 @@ function ReportContent() {
     : "text-amber-500";
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white print:p-0 p-4 sm:p-6 md:p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white print:p-0 p-4 sm:p-6 md:p-8 flex flex-col items-center print:block">
       {/* Repeating Fixed Border on Every Printed Page */}
       <div className="hidden print:block fixed inset-0 border-[6px] border-double border-[#8B0000] pointer-events-none z-50" />
       {/* Print Control Toolbar */}

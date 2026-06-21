@@ -584,7 +584,7 @@ export default function VerificationRosterPage() {
             </div>
           </div>
         </div>
-      )}}
+      )}
     </div>
   );
 }
