@@ -15,6 +15,7 @@ export default function ManageInvoicesPage() {
     organisations,
     verifiers,
     invoices,
+    verifications,
     addOrganisation,
     updateOrganisation,
     deleteOrganisation,
@@ -315,6 +316,29 @@ export default function ManageInvoicesPage() {
                 const orgInvCount = invoices.filter((i) => i.organisationId === org.id || i.orgName === org.name).length;
                 const isSelected = selectedOrgId === org.id;
 
+                // Calculate current dues
+                const orgInvs = invoices.filter((i) => i.organisationId === org.id || i.orgName === org.name);
+                const unpaid = orgInvs
+                  .filter((inv) => inv.status === "Unpaid" || inv.status === "Overdue")
+                  .reduce((sum, inv) => sum + inv.amount, 0);
+
+                const orgVers = verifications.filter(
+                  (v) => v.orgName.toLowerCase() === org.name.toLowerCase()
+                );
+                const completedCount = orgVers.filter((v) => {
+                  if (v.status !== "Completed") return false;
+                  try {
+                    const d = new Date(v.completedAt || v.date);
+                    if (isNaN(d.getTime())) return false;
+                    const nowVal = new Date();
+                    return d.getMonth() === nowVal.getMonth() && d.getFullYear() === nowVal.getFullYear();
+                  } catch {
+                    return false;
+                  }
+                }).length;
+                const liveTotal = completedCount * org.monthlyRate;
+                const totalDues = unpaid + liveTotal;
+
                 return (
                   <div
                     key={org.id}
@@ -342,7 +366,7 @@ export default function ManageInvoicesPage() {
                     </div>
 
                     {/* Plan badge */}
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-2 mb-4 flex-wrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15">
                         <span className="material-symbols-outlined text-[11px] mr-1">calendar_month</span>
                         Monthly
@@ -359,6 +383,8 @@ export default function ManageInvoicesPage() {
                         </span>
                       )}
                       <span className="font-body-sm font-extrabold text-slate-800">${org.monthlyRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">/ verification</span></span>
+                      
+                      <span className="font-body-sm font-bold text-[#0369a1] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 px-2 py-0.5 rounded-md text-[10px] ml-auto">Dues: ${totalDues.toFixed(2)}</span>
                     </div>
 
                     {/* Stats row */}
@@ -565,84 +591,126 @@ export default function ManageInvoicesPage() {
             {/* Tab Content */}
             <div className="flex-1 overflow-y-auto p-6">
               {/* ──── OVERVIEW TAB ──── */}
-              {activeTab === "overview" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 animate-fade-in">
-                  {/* Payment Plan Card */}
-                  <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">payments</span>
-                      <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Payment Plan</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15">
-                        Monthly
-                      </span>
-                    </div>
-                    <p className="font-body-md font-extrabold text-slate-900 text-2xl mt-4 tracking-tight">
-                      ${selectedOrg.monthlyRate.toLocaleString("en-US")}
-                      <span className="text-xs font-medium text-slate-400"> / verification</span>
-                    </p>
-                    <div className="mt-4 pt-3.5 border-t border-slate-100">
-                      <div className="flex items-center gap-2 opacity-40">
-                        <span className="material-symbols-outlined text-[14px] text-slate-500">block</span>
-                        <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Pay As You Go — Disabled</span>
-                      </div>
-                    </div>
-                  </div>
+              {activeTab === "overview" && (() => {
+                const orgUnpaidBalance = orgInvoices
+                  .filter((inv) => inv.status === "Unpaid" || inv.status === "Overdue")
+                  .reduce((sum, inv) => sum + inv.amount, 0);
 
-                  {/* Billing Details Card */}
-                  <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">event</span>
-                      <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Billing Cycle</span>
-                    </div>
-                    <p className="font-body-sm text-slate-600 leading-normal">
-                      Invoices are automatically generated on the <span className="font-extrabold text-slate-900">last day</span> of every month at <span className="font-extrabold text-slate-900">11:59 PM</span>.
-                    </p>
-                    <div className="mt-5 flex items-center gap-4">
-                      <div className="text-center flex-1">
-                        <p className="text-xl font-extrabold text-slate-900 tracking-tight">{orgInvoices.length}</p>
-                        <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Invoices</p>
-                      </div>
-                      <div className="w-px h-8 bg-slate-200"></div>
-                      <div className="text-center flex-1">
-                        <p className="text-xl font-extrabold text-emerald-600 tracking-tight">{orgInvoices.filter(i => i.status === "Paid").length}</p>
-                        <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Paid</p>
-                      </div>
-                      <div className="w-px h-8 bg-slate-200"></div>
-                      <div className="text-center flex-1">
-                        <p className="text-xl font-extrabold text-red-600 tracking-tight">{orgInvoices.filter(i => i.status !== "Paid").length}</p>
-                        <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Outstanding</p>
-                      </div>
-                    </div>
-                  </div>
+                const nowVal = new Date();
+                const currentMonthName = nowVal.toLocaleDateString("en-US", { month: "long" });
+                const currentYear = nowVal.getFullYear();
+                
+                const orgVers = verifications.filter(
+                  (v) => v.orgName.toLowerCase() === selectedOrg.name.toLowerCase()
+                );
+                const completedCount = orgVers.filter((v) => {
+                  if (v.status !== "Completed") return false;
+                  try {
+                    const d = new Date(v.completedAt || v.date);
+                    if (isNaN(d.getTime())) return false;
+                    return d.getMonth() === nowVal.getMonth() && d.getFullYear() === currentYear;
+                  } catch {
+                    return false;
+                  }
+                }).length;
+                const liveTotal = completedCount * selectedOrg.monthlyRate;
+                const totalDues = orgUnpaidBalance + liveTotal;
 
-                  {/* Verifiers Card */}
-                  <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">groups</span>
-                      <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Assigned Team</span>
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 animate-fade-in">
+                    {/* Payment Plan Card */}
+                    <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">payments</span>
+                        <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Payment Plan</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15">
+                          Monthly
+                        </span>
+                      </div>
+                      <p className="font-body-md font-extrabold text-slate-900 text-2xl mt-4 tracking-tight">
+                        ${selectedOrg.monthlyRate.toLocaleString("en-US")}
+                        <span className="text-xs font-medium text-slate-400"> / verification</span>
+                      </p>
+                      <div className="mt-4 pt-3.5 border-t border-slate-100">
+                        <div className="flex items-center gap-2 opacity-40">
+                          <span className="material-symbols-outlined text-[14px] text-slate-500">block</span>
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Pay As You Go — Disabled</span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-2xl font-extrabold text-slate-900 tracking-tight">{orgVerifiers.length}</p>
-                    <p className="text-[11px] text-slate-400 font-semibold mt-1">
-                      {orgVerifiers.filter(v => v.status === "Active").length} Active
-                      {orgVerifiers.filter(v => v.status === "Pending").length > 0 && `, ${orgVerifiers.filter(v => v.status === "Pending").length} Pending`}
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-1">
-                      {orgVerifiers.slice(0, 5).map((v) => (
-                        <div key={v.id} className="w-7 h-7 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] rounded-full flex items-center justify-center text-[10px] font-black text-[#0284c7] border-2 border-white shadow-sm" title={v.name}>
-                          {v.name.charAt(0)}
+
+                    {/* Billing Details Card */}
+                    <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">event</span>
+                          <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Billing Cycle</span>
                         </div>
-                      ))}
-                      {orgVerifiers.length > 5 && (
-                        <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-extrabold text-slate-500 border-2 border-white shadow-sm">
-                          +{orgVerifiers.length - 5}
+                        <p className="font-body-sm text-slate-600 leading-normal mb-4">
+                          Invoices are automatically generated on the <span className="font-extrabold text-slate-900">last day</span> of every month at <span className="font-extrabold text-slate-900">11:59 PM</span>.
+                        </p>
+                        <div className="flex items-center gap-4 border-b border-slate-100 pb-4 mb-4">
+                          <div className="text-center flex-1">
+                            <p className="text-xl font-extrabold text-slate-900 tracking-tight">{orgInvoices.length}</p>
+                            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Invoices</p>
+                          </div>
+                          <div className="w-px h-8 bg-slate-200"></div>
+                          <div className="text-center flex-1">
+                            <p className="text-xl font-extrabold text-emerald-600 tracking-tight">{orgInvoices.filter(i => i.status === "Paid").length}</p>
+                            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Paid</p>
+                          </div>
+                          <div className="w-px h-8 bg-slate-200"></div>
+                          <div className="text-center flex-1">
+                            <p className="text-xl font-extrabold text-red-600 tracking-tight">{orgInvoices.filter(i => i.status !== "Paid").length}</p>
+                            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Outstanding</p>
+                          </div>
                         </div>
-                      )}
+                      </div>
+                      <div className="flex flex-col gap-2 bg-[#42C2FF]/5 border border-[#42C2FF]/10 rounded-xl p-3.5 mt-auto">
+                        <div className="flex justify-between items-baseline text-xs">
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Unpaid Invoices</span>
+                          <span className="font-bold text-slate-800 font-mono">${orgUnpaidBalance.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline text-xs border-b border-slate-100/50 pb-2 mb-1.5">
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">{currentMonthName} {currentYear} (Live)</span>
+                          <span className="font-bold text-slate-850 font-mono">${liveTotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[9px] text-[#0369a1] uppercase tracking-wider font-extrabold">Current Dues</span>
+                          <span className="font-black text-base text-[#0369a1] font-mono">${totalDues.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Verifiers Card */}
+                    <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">groups</span>
+                        <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Assigned Team</span>
+                      </div>
+                      <p className="text-2xl font-extrabold text-slate-900 tracking-tight">{orgVerifiers.length}</p>
+                      <p className="text-[11px] text-slate-400 font-semibold mt-1">
+                        {orgVerifiers.filter(v => v.status === "Active").length} Active
+                        {orgVerifiers.filter(v => v.status === "Pending").length > 0 && `, ${orgVerifiers.filter(v => v.status === "Pending").length} Pending`}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-1">
+                        {orgVerifiers.slice(0, 5).map((v) => (
+                          <div key={v.id} className="w-7 h-7 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] rounded-full flex items-center justify-center text-[10px] font-black text-[#0284c7] border-2 border-white shadow-sm" title={v.name}>
+                            {v.name.charAt(0)}
+                          </div>
+                        ))}
+                        {orgVerifiers.length > 5 && (
+                          <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-extrabold text-slate-500 border-2 border-white shadow-sm">
+                            +{orgVerifiers.length - 5}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* ──── PAYMENT DETAILS TAB ──── */}
               {activeTab === "payment" && (
