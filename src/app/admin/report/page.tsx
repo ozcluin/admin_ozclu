@@ -172,7 +172,7 @@ function ReportContent() {
             <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start">
               <img src="/cluso-infolink.png" alt="Cluso Logo" className="object-contain max-h-full" />
             </div>
-            <h1 className="font-serif text-[#1B365D] text-2xl sm:text-3xl font-semibold tracking-wide italic leading-none">Report</h1>
+            <h1 className="font-sans text-[#1B365D] text-2xl sm:text-3xl font-bold tracking-wide mt-2">Report</h1>
           </div>
           <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">
             <div>Report #: <span className="font-mono text-slate-900">{reportNo}</span></div>
