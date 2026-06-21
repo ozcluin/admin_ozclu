@@ -167,13 +167,13 @@ function ReportContent() {
       <div className="print-border w-full max-w-[800px] bg-white border-[6px] border-double border-[#8B0000] print:border-0 p-8 sm:p-10 shadow-lg relative print:shadow-none print:my-0 print:mx-auto print:p-8">
         
         {/* Top Header */}
-        <div className="flex justify-between items-center gap-4 mb-8">
-          <div className="flex items-center gap-4">
+        <div className="grid grid-cols-3 items-center gap-4 mb-8">
+          <div className="flex justify-start">
             <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start">
               <img src="/cluso-infolink.png" alt="Cluso Logo" className="object-contain max-h-full" />
             </div>
-            <h1 className="font-sans text-[#1B365D] text-2xl sm:text-3xl font-bold tracking-wide mt-2">Report</h1>
           </div>
+          <h1 className="text-center font-sans text-[#1B365D] text-2xl sm:text-3xl font-extrabold tracking-widest uppercase mt-2">REPORT</h1>
           <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">
             <div>Report #: <span className="font-mono text-slate-900">{reportNo}</span></div>
             <div>Date: <span className="text-slate-900">{formatDate(verification.completedAt || verification.date)}</span></div>
