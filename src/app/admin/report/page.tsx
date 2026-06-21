@@ -93,6 +93,8 @@ function ReportContent() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white print:p-0 p-4 sm:p-6 md:p-8 flex flex-col items-center">
+      {/* Repeating Fixed Border on Every Printed Page */}
+      <div className="hidden print:block fixed inset-0 border-[6px] border-double border-[#8B0000] pointer-events-none z-50" />
       {/* Print Control Toolbar */}
       <div className="no-print w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
         <div className="flex flex-col">
@@ -125,7 +127,7 @@ function ReportContent() {
       </div>
 
       {/* Main Report Container */}
-      <div className="print-border w-full max-w-[800px] bg-white border-[6px] border-double border-[#8B0000] p-8 sm:p-10 shadow-lg relative print:shadow-none print:my-0 print:mx-auto print:p-8">
+      <div className="print-border w-full max-w-[800px] bg-white border-[6px] border-double border-[#8B0000] print:border-0 p-8 sm:p-10 shadow-lg relative print:shadow-none print:my-0 print:mx-auto print:p-8">
         
         {/* Top Header */}
         <div className="flex justify-between items-start gap-4 mb-6">
