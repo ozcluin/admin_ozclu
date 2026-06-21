@@ -64,6 +64,43 @@ function ReportContent() {
   const { verification, settings } = data;
   const reportNo = verification.id ? verification.id.replace("REQ-", "RPT-") : "RPT-UNKNOWN";
   
+  // Masking helpers
+  const maskDob = (dobStr: string) => {
+    if (!dobStr) return "-";
+    const match = dobStr.match(/\b\d{4}\b/);
+    if (!match) return dobStr.replace(/./g, "x");
+    const year = match[0];
+    const yearIndex = dobStr.indexOf(year);
+    if (yearIndex === 0) {
+      return year + dobStr.substring(4).replace(/./g, "x");
+    } else {
+      return dobStr.substring(0, yearIndex).replace(/./g, "x") + year;
+    }
+  };
+
+  const maskMobile = (mobile: string) => {
+    if (!mobile || mobile === "-") return "-";
+    const cleanMobile = mobile.replace(/\s+/g, "");
+    if (cleanMobile.length <= 6) return "x".repeat(cleanMobile.length);
+    return "x".repeat(6) + cleanMobile.substring(6);
+  };
+
+  const maskEmail = (email: string) => {
+    if (!email) return "-";
+    const parts = email.split("@");
+    if (parts.length !== 2) return email;
+    const localPart = parts[0];
+    const domainPart = parts[1];
+    const n = localPart.length;
+    if (n <= 1) return email;
+    const numMask = Math.floor(n / 2) + 1;
+    const leftLength = Math.floor((n - numMask) / 2);
+    const start = localPart.substring(0, leftLength);
+    const end = localPart.substring(leftLength + numMask);
+    const mask = "x".repeat(numMask);
+    return `${start}${mask}${end}@${domainPart}`;
+  };
+
   // Format Date functions
   const formatDate = (dateStr: any) => {
     if (!dateStr) return "-";
@@ -167,8 +204,8 @@ function ReportContent() {
             <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2">Candidate Details</h3>
             <div className="space-y-1.5 text-xs">
               <div><span className="text-slate-500 font-semibold">Name:</span> <span className="font-bold text-slate-800">{verification.name}</span></div>
-              <div><span className="text-slate-500 font-semibold">Email:</span> <span className="font-semibold text-slate-800">{verification.email}</span></div>
-              <div><span className="text-slate-500 font-semibold">Phone:</span> <span className="font-semibold text-slate-800">{verification.phone || "-"}</span></div>
+              <div><span className="text-slate-500 font-semibold">Email:</span> <span className="font-semibold text-slate-800">{maskEmail(verification.email)}</span></div>
+              <div><span className="text-slate-500 font-semibold">Phone:</span> <span className="font-semibold text-slate-800">{maskMobile(verification.phone)}</span></div>
             </div>
           </div>
           <div>
@@ -198,11 +235,11 @@ function ReportContent() {
                 </tr>
                 <tr>
                   <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Date of birth</td>
-                  <td className="p-2.5 font-mono">{verification.digilockerDob || verification.dob || "-"}</td>
+                  <td className="p-2.5 font-mono">{maskDob(verification.digilockerDob || verification.dob)}</td>
                 </tr>
                 <tr>
                   <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Mobile number</td>
-                  <td className="p-2.5 font-mono">{verification.digilockerMobile || verification.phone || "-"}</td>
+                  <td className="p-2.5 font-mono">{maskMobile(verification.digilockerMobile || verification.phone)}</td>
                 </tr>
                 <tr>
                   <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Current residential address</td>
@@ -222,7 +259,7 @@ function ReportContent() {
                 </tr>
                 <tr>
                   <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Email address</td>
-                  <td className="p-2.5">{verification.digilockerEmail || verification.email}</td>
+                  <td className="p-2.5">{maskEmail(verification.digilockerEmail || verification.email)}</td>
                 </tr>
                 <tr>
                   <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Nationality</td>
