@@ -54,6 +54,9 @@ export interface Invoice {
   paymentProof?: string;
   paymentProofDate?: string;
   generationType?: "Auto" | "Manual";
+  adminNote?: string;
+  rejectionReason?: string;
+  clientNote?: string;
 }
 
 export interface Verifier {

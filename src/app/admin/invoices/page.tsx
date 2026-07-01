@@ -251,7 +251,7 @@ export default function ManageInvoicesPage() {
     await updateInvoiceStatus(invoice.id, "Unpaid", {
       rejectionReason: rejectionReasonInput,
       paymentProof: "",
-      paymentProofDate: null
+      paymentProofDate: undefined
     }, invoice._id);
     setInvoiceRejection(null);
     setRejectionReasonInput("");
@@ -1697,7 +1697,7 @@ export default function ManageInvoicesPage() {
                                         src={inv.paymentProof}
                                         alt="Payment proof screenshot"
                                         className="w-full h-full object-contain transition-transform group-hover:scale-105"
-                                        onClick={() => setActiveScreenshotPreview(inv.paymentProof)}
+                                        onClick={() => setActiveScreenshotPreview(inv.paymentProof ?? null)}
                                       />
                                     </div>
                                   ) : (
