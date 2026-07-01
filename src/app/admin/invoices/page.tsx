@@ -1201,23 +1201,23 @@ export default function ManageInvoicesPage() {
                             <div className="flex flex-col gap-3">
                               <span className="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold border-b border-slate-100 pb-1">Identification</span>
                               <div className="flex flex-col gap-1.5">
-                                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">GSTIN</label>
-                                <input type="text" placeholder="e.g. 29ABCDE1234F1Z5" value={entGstin} onChange={(e) => setEntGstin(e.target.value)}
+                                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">State Tax ID / Sales Tax ID</label>
+                                <input type="text" placeholder="e.g. 1234567-8" value={entGstin} onChange={(e) => setEntGstin(e.target.value)}
                                   className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">CIN / Registration</label>
-                                <input type="text" placeholder="e.g. U12345MH2020PTC123456" value={entCin} onChange={(e) => setEntCin(e.target.value)}
+                                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Employer Identification Number (EIN)</label>
+                                <input type="text" placeholder="e.g. 12-3456789" value={entCin} onChange={(e) => setEntCin(e.target.value)}
                                   className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">TIN / SAC Code</label>
-                                <input type="text" placeholder="e.g. 998314" value={entTin} onChange={(e) => setEntTin(e.target.value)}
+                                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">DUNS Number</label>
+                                <input type="text" placeholder="e.g. 12-345-6789" value={entTin} onChange={(e) => setEntTin(e.target.value)}
                                   className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">LUT Code</label>
-                                <input type="text" placeholder="e.g. AD123456789012C" value={entLut} onChange={(e) => setEntLut(e.target.value)}
+                                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">State of Incorporation</label>
+                                <input type="text" placeholder="e.g. Delaware" value={entLut} onChange={(e) => setEntLut(e.target.value)}
                                   className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                             </div>
@@ -1312,19 +1312,19 @@ export default function ManageInvoicesPage() {
                           <div className="flex flex-col gap-3">
                             <span className="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold border-b border-slate-100 pb-1">Identification</span>
                             <div className="flex flex-col">
-                              <span className="text-[10px] text-slate-400 font-medium">GSTIN</span>
+                              <span className="text-[10px] text-slate-400 font-medium">State Tax ID / Sales Tax ID</span>
                               <span className="font-mono text-xs font-bold text-slate-800">{orgSettings.gstin || "-"}</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[10px] text-slate-400 font-medium">CIN / Registration</span>
+                              <span className="text-[10px] text-slate-400 font-medium">Employer Identification Number (EIN)</span>
                               <span className="font-mono text-xs font-bold text-slate-800">{orgSettings.cin || "-"}</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[10px] text-slate-400 font-medium">TIN / SAC Code</span>
+                              <span className="text-[10px] text-slate-400 font-medium">DUNS Number</span>
                               <span className="font-mono text-xs font-bold text-slate-800">{orgSettings.tin || "-"}</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[10px] text-slate-400 font-medium">LUT Code</span>
+                              <span className="text-[10px] text-slate-400 font-medium">State of Incorporation</span>
                               <span className="font-mono text-xs font-bold text-slate-800">{orgSettings.lut || "-"}</span>
                             </div>
                           </div>

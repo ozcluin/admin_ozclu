@@ -127,11 +127,11 @@ function BillableSummaryContent() {
                   <td className="py-1 text-slate-900">{settings?.contactEmail || "-"}</td>
                 </tr>
                 <tr>
-                  <td className="py-1 font-bold">GSTIN:</td>
+                  <td className="py-1 font-bold">State Tax ID / Sales Tax ID:</td>
                   <td className="py-1 text-slate-900">{settings?.gstin || "-"}</td>
                 </tr>
                 <tr>
-                  <td className="py-1 font-bold">CIN / Registration:</td>
+                  <td className="py-1 font-bold">Employer Identification Number (EIN):</td>
                   <td className="py-1 text-slate-900">{settings?.cin || "-"}</td>
                 </tr>
                 <tr>
@@ -170,19 +170,19 @@ function BillableSummaryContent() {
                   <td className="py-1 text-slate-900">{clusoSettings?.contactEmail || "indiaops@cluso.in"}</td>
                 </tr>
                 <tr>
-                  <td className="py-1 font-bold">GSTIN:</td>
+                  <td className="py-1 font-bold">State Tax ID / Sales Tax ID:</td>
                   <td className="py-1 text-slate-900">{clusoSettings?.gstin || "29AADCC1935C1ZZ"}</td>
                 </tr>
                 <tr>
-                  <td className="py-1 font-bold">CIN / Registration:</td>
+                  <td className="py-1 font-bold">Employer Identification Number (EIN):</td>
                   <td className="py-1 text-slate-900">{clusoSettings?.cin || "U74140KA2007PTC042369"}</td>
                 </tr>
                 <tr>
-                  <td className="py-1 font-bold">SAC Code:</td>
+                  <td className="py-1 font-bold">DUNS Number:</td>
                   <td className="py-1 text-slate-900">{clusoSettings?.sac || "U72900GJ2018PTC654321"}</td>
                 </tr>
                 <tr>
-                  <td className="py-1 font-bold">LUT Code:</td>
+                  <td className="py-1 font-bold">State of Incorporation:</td>
                   <td className="py-1 text-slate-900">{clusoSettings?.lut || "LUT12345"}</td>
                 </tr>
                 <tr>

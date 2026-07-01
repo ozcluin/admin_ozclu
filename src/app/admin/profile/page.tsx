@@ -144,42 +144,42 @@ export default function AdminProfilePage() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
             <div className="flex flex-col gap-2">
-              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">GSTIN</label>
+              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">State Tax ID / Sales Tax ID</label>
               <input 
                 type="text" 
                 value={gstin} 
                 onChange={(e) => setGstin(e.target.value)}
-                placeholder="e.g. 29AADCC1935C1ZZ" 
+                placeholder="e.g. 1234567-8" 
                 className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">CIN / Registration</label>
+              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">Employer Identification Number (EIN)</label>
               <input 
                 type="text" 
                 value={cin} 
                 onChange={(e) => setCin(e.target.value)}
-                placeholder="e.g. U74140KA2007PTC042369" 
+                placeholder="e.g. 12-3456789" 
                 className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">SAC Code</label>
+              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">DUNS Number</label>
               <input 
                 type="text" 
                 value={sac} 
                 onChange={(e) => setSac(e.target.value)}
-                placeholder="e.g. U72900GJ2018PTC654321" 
+                placeholder="e.g. 12-345-6789" 
                 className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">LUT Code</label>
+              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">State of Incorporation</label>
               <input 
                 type="text" 
                 value={lut} 
                 onChange={(e) => setLut(e.target.value)}
-                placeholder="e.g. LUT12345" 
+                placeholder="e.g. Delaware" 
                 className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
               />
             </div>
