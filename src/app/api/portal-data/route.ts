@@ -135,14 +135,13 @@ export async function POST(req: NextRequest) {
         const { randomBytes } = await import("crypto");
         const bcrypt = await import("bcryptjs");
 
-        // Generate a temporary password matching Cluso@<random8chars>
+        // Generate a cryptographically secure 16-character temporary password
         const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        let randStr = "";
-        const randomBytesArr = randomBytes(8);
-        for (let i = 0; i < 8; i++) {
-          randStr += charset.charAt(randomBytesArr[i] % charset.length);
+        let tempPassword = "";
+        const randomBytesArr = randomBytes(16);
+        for (let i = 0; i < 16; i++) {
+          tempPassword += charset.charAt(randomBytesArr[i] % charset.length);
         }
-        const tempPassword = `Cluso@${randStr}`;
         const hashedTempPassword = bcrypt.hashSync(tempPassword, 10);
         
         const existingUser = await db.collection("users").findOne({ email: email.toLowerCase().trim() });

@@ -370,14 +370,19 @@ function ReportContent() {
           </div>
         </div>
 
-        {/* Signatures */}
         <div className="flex justify-between items-center my-10 px-4 text-xs font-bold text-slate-700 print-avoid-break">
           <div className="text-center">
-            <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900">{generatedBy}</div>
+            <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900 min-h-[24px] flex items-center justify-center">{generatedBy}</div>
             <div>Created By</div>
           </div>
           <div className="text-center">
-            <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900">{verifiedBy}</div>
+            <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900 min-h-[24px] flex items-center justify-center">
+              {verifiedBy === "DigiLocker" ? (
+                <img src="/DigilockerLogo.svg" alt="DigiLocker" className="h-6 object-contain" />
+              ) : (
+                verifiedBy
+              )}
+            </div>
             <div>Verified By</div>
           </div>
         </div>

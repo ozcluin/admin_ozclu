@@ -4,7 +4,16 @@ import React, { useState } from "react";
 import { usePortal, Verification } from "src/context/PortalContext";
 
 export default function VerificationRosterPage() {
-  const { verifications, updateVerificationStatus, fetchVerificationDetail } = usePortal();
+  const { verifications, updateVerificationStatus, fetchVerificationDetail, refreshData } = usePortal();
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      refreshData().catch((err) => {
+        console.error("Auto-refresh failed:", err);
+      });
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [refreshData]);
 
   const getPhotoSrc = (photo: string) => {
     if (!photo) return "";
