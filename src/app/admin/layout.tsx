@@ -39,9 +39,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: "account_balance_wallet",
     },
     {
-      name: "Verifier Accounts",
-      path: "/admin/verifiers",
-      icon: "badge",
+      name: "Admin Profile",
+      path: "/admin/profile",
+      icon: "settings",
     },
   ];
 

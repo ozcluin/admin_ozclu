@@ -53,6 +53,7 @@ export interface Invoice {
   year?: number;
   paymentProof?: string;
   paymentProofDate?: string;
+  generationType?: "Auto" | "Manual";
 }
 
 export interface Verifier {
@@ -79,6 +80,9 @@ export interface Organisation {
   paymentNotes?: string;
   createdAt: string;
   status?: "Active" | "Deactivated";
+  ownerEmail?: string;
+  ownerName?: string;
+  maxVerifiers?: number;
 }
 
 export interface CompanySettings {
@@ -97,6 +101,7 @@ export interface CompanySettings {
   invoiceEmail: string;
   billingSameAsCompany: boolean;
   billingAddress: string;
+  sac?: string;
 }
 
 interface PortalContextType {
@@ -112,12 +117,12 @@ interface PortalContextType {
   updateVerifierRate: (verifierId: string, rate: number) => Promise<void>;
   updateVerifierStatus: (verifierId: string, status: "Active" | "Pending" | "Inactive") => Promise<void>;
   deleteVerifier: (verifierId: string) => Promise<void>;
-  updateInvoiceStatus: (id: string, status: "Paid" | "Unpaid" | "Overdue" | "Pending", extras?: Partial<Invoice>) => Promise<void>;
+  updateInvoiceStatus: (id: string, status: "Paid" | "Unpaid" | "Overdue" | "Pending", extras?: Partial<Invoice>, dbId?: string) => Promise<void>;
   deleteInvoice: (id: string) => Promise<void>;
   addInvoice: (orgName: string, amount: number, dueDate: string) => Promise<void>;
   assignVerifier: (verificationId: string, verifierName: string | null) => Promise<void>;
   updateVerificationStatus: (verificationId: string, status: "Completed" | "Processing" | "Needs Attention", notes?: string) => Promise<void>;
-  addOrganisation: (name: string, monthlyRate: number) => Promise<void>;
+  addOrganisation: (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number) => Promise<void>;
   updateOrganisation: (id: string, updates: Partial<Organisation>) => Promise<void>;
   deleteOrganisation: (id: string) => Promise<void>;
   deactivateOrganisation: (id: string, invoiceOption: "keep" | "default") => Promise<void>;
@@ -125,6 +130,8 @@ interface PortalContextType {
   generateMonthlyInvoice: (orgId: string, month: string, year: number) => Promise<void>;
   hasPaidInvoiceForMonth: (orgId: string, month: string, year: number) => boolean;
   fetchVerificationDetail: (id: string) => Promise<Verification>;
+  updateOrgSettings: (orgName: string, settings: Partial<CompanySettings>) => Promise<void>;
+  setOrganisationOwner: (orgId: string, ownerName: string, ownerEmail: string, ownerPassword?: string, maxVerifiers?: number) => Promise<void>;
 }
 
 const PortalContext = createContext<PortalContextType | undefined>(undefined);
@@ -145,7 +152,8 @@ const defaultSettings: CompanySettings = {
   gstin: "",
   invoiceEmail: "",
   billingSameAsCompany: true,
-  billingAddress: ""
+  billingAddress: "",
+  sac: ""
 };
 
 export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -187,7 +195,8 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           gstin: data.settings.gstin || "",
           invoiceEmail: data.settings.invoiceEmail || "",
           billingSameAsCompany: data.settings.billingSameAsCompany !== undefined ? data.settings.billingSameAsCompany : true,
-          billingAddress: data.settings.billingAddress || ""
+          billingAddress: data.settings.billingAddress || "",
+          sac: data.settings.sac || ""
         });
       }
 
@@ -331,21 +340,25 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     fetchAllData();
   };
 
-  const updateInvoiceStatus = async (id: string, status: "Paid" | "Unpaid" | "Overdue" | "Pending", extras?: Partial<Invoice>) => {
+  const updateInvoiceStatus = async (id: string, status: "Paid" | "Unpaid" | "Overdue" | "Pending", extras?: Partial<Invoice>, dbId?: string) => {
     setInvoices((prev) =>
-      prev.map((inv) => (inv.id === id ? { ...inv, status, ...extras } : inv))
+      prev.map((inv) => {
+        if (dbId && inv._id === dbId) return { ...inv, status, ...extras };
+        if (!dbId && inv.id === id) return { ...inv, status, ...extras };
+        return inv;
+      })
     );
 
     try {
       await fetch("/api/portal-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "updateInvoiceStatus", payload: { id, status, ...(extras || {}) } })
+        body: JSON.stringify({ action: "updateInvoiceStatus", payload: { id, status, dbId, ...(extras || {}) } })
       });
     } catch (err) {
       console.error("Failed updating invoice status:", err);
     }
-    fetchAllData();
+    await fetchAllData();
   };
 
   const deleteInvoice = async (id: string) => {
@@ -370,7 +383,8 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
       dueDate,
       amount,
-      status: "Unpaid"
+      status: "Unpaid",
+      generationType: "Manual"
     };
 
     setInvoices((prev) => [newInvoice, ...prev]);
@@ -478,7 +492,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // ── Organisation CRUD ──
 
-  const addOrganisation = async (name: string, monthlyRate: number) => {
+  const addOrganisation = async (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number) => {
     const newId = `ORG-${Math.floor(1000 + Math.random() * 9000)}`;
     const newOrg: Organisation = {
       id: newId,
@@ -487,6 +501,9 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       monthlyRate,
       billingDay: 0,
       createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+      ownerEmail: ownerEmail || undefined,
+      ownerName: ownerName || undefined,
+      maxVerifiers: maxVerifiers ?? 5,
     };
 
     setOrganisations((prev) => [...prev, newOrg]);
@@ -495,7 +512,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       await fetch("/api/portal-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "addOrganisation", payload: newOrg })
+        body: JSON.stringify({ action: "addOrganisation", payload: { ...newOrg, ownerPassword } })
       });
     } catch (err) {
       console.error("Failed adding organisation:", err);
@@ -516,6 +533,19 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     } catch (err) {
       console.error("Failed updating organisation:", err);
+    }
+    fetchAllData();
+  };
+
+  const setOrganisationOwner = async (orgId: string, ownerName: string, ownerEmail: string, ownerPassword?: string, maxVerifiers?: number) => {
+    try {
+      await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setOrganisationOwner", payload: { orgId, ownerName, ownerEmail, ownerPassword, maxVerifiers } })
+      });
+    } catch (err) {
+      console.error("Failed setting organisation owner:", err);
     }
     fetchAllData();
   };
@@ -577,7 +607,8 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const matchingVerifications = verifications.filter((v) => {
       if (v.orgName !== org.name || v.status !== "Completed") return false;
       try {
-        const d = new Date(v.date);
+        // Use completedAt if available, fall back to date
+        const d = new Date(v.completedAt || v.date);
         if (isNaN(d.getTime())) return false;
         const mName = d.toLocaleDateString("en-US", { month: "long" });
         const yVal = d.getFullYear();
@@ -607,14 +638,17 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       status: "Unpaid",
       month,
       year,
+      generationType: "Manual",
     };
 
+    // Optimistic update: remove existing unpaid invoices for same org/month/year
+    // Match by BOTH organisationId AND orgName to catch auto-generated invoices
     setInvoices((prev) => [
       newInvoice,
       ...prev.filter(
         (inv) =>
           !(
-            inv.organisationId === orgId &&
+            (inv.organisationId === orgId || inv.orgName === org.name) &&
             inv.month?.toLowerCase() === month.toLowerCase() &&
             inv.year === year &&
             inv.status !== "Paid"
@@ -634,6 +668,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     fetchAllData();
   };
 
+
   // Check if a paid invoice already exists for the given org/month/year
   const hasPaidInvoiceForMonth = (orgId: string, month: string, year: number): boolean => {
     return invoices.some((inv) =>
@@ -652,6 +687,30 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     const data = await res.json();
     return data.verification;
+  };
+
+  const updateOrgSettings = async (orgName: string, newSettings: Partial<CompanySettings>) => {
+    // Optimistic update of allSettings
+    setAllSettings((prev) => {
+      const idx = prev.findIndex((s) => s.companyName?.toLowerCase() === orgName.toLowerCase());
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], ...newSettings };
+        return updated;
+      }
+      return [...prev, { ...defaultSettings, companyName: orgName, ...newSettings }];
+    });
+
+    try {
+      await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateOrgSettings", payload: { orgName, settings: newSettings } })
+      });
+    } catch (err) {
+      console.error("Failed updating org settings:", err);
+    }
+    fetchAllData();
   };
 
   return (
@@ -682,6 +741,8 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         generateMonthlyInvoice,
         hasPaidInvoiceForMonth,
         fetchVerificationDetail,
+        updateOrgSettings,
+        setOrganisationOwner,
       }}
     >
       {children}

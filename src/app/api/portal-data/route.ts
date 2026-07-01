@@ -10,6 +10,7 @@ import {
 import { connectToDatabase } from "src/lib/mongodb";
 import { getClientIp, getUserAgent, logAuditEvent } from "shared/audit";
 import { softDeleteOne, softDeleteMany, notDeleted } from "shared/softDelete";
+import { ObjectId } from "mongodb";
 
 export async function GET(req: NextRequest) {
   try {
@@ -149,16 +150,57 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, setupUrl });
       }
       case "updateSettings": {
-        const { companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin, gstin, invoiceEmail, billingSameAsCompany, billingAddress } = payload;
+        const { companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin, gstin, invoiceEmail, billingSameAsCompany, billingAddress, sac } = payload;
         await db.collection("settings").updateOne(
           { id: "acme" },
           {
             $set: {
-              companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin, gstin, invoiceEmail, billingSameAsCompany, billingAddress
+              companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin, gstin, invoiceEmail, billingSameAsCompany, billingAddress, sac
             }
           },
           { upsert: true }
         );
+        break;
+      }
+      case "updateOrgSettings": {
+        const { orgName, settings } = payload;
+        if (!orgName) {
+          return NextResponse.json({ error: "orgName is required" }, { status: 400 });
+        }
+        // Build update object from provided settings fields
+        const settingsUpdate: Record<string, any> = {};
+        const allowedFields = [
+          "companyName", "address", "city", "postalCode",
+          "contactFirstName", "contactLastName", "contactEmail",
+          "billingOption", "cin", "lut", "tin", "gstin",
+          "invoiceEmail", "billingSameAsCompany", "billingAddress"
+        ];
+        for (const field of allowedFields) {
+          if (settings[field] !== undefined) {
+            settingsUpdate[field] = settings[field];
+          }
+        }
+        // Always ensure companyName is set to orgName
+        settingsUpdate.companyName = orgName;
+
+        await db.collection("settings").updateOne(
+          { companyName: orgName },
+          { $set: settingsUpdate },
+          { upsert: true }
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "org_settings_updated",
+          targetType: "settings",
+          targetId: orgName,
+          ip,
+          userAgent,
+          outcome: "success"
+        });
         break;
       }
       case "inviteVerifier": {
@@ -186,12 +228,21 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "updateInvoiceStatus": {
-        const { id, status, paymentProof, paymentProofDate, ...rest } = payload;
-        const updateFields: any = { status };
+        const { id, status, dbId, paymentProof, paymentProofDate, ...rest } = payload;
+        const updateFields: any = { status, ...rest };
         if (paymentProof !== undefined) updateFields.paymentProof = paymentProof;
         if (paymentProofDate !== undefined) updateFields.paymentProofDate = paymentProofDate;
+
+        let query: any = { id };
+        if (dbId) {
+          try {
+            query = { _id: new ObjectId(dbId) };
+          } catch (e) {
+            console.error("Invalid ObjectId format:", dbId);
+          }
+        }
         await db.collection("invoices").updateOne(
-          { id },
+          query,
           { $set: updateFields }
         );
         break;
@@ -215,9 +266,9 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "addInvoice": {
-        const { id, orgName, date, dueDate, amount, status } = payload;
+        const { id, orgName, date, dueDate, amount, status, generationType } = payload;
         await db.collection("invoices").insertOne({
-          id, orgName, date, dueDate, amount, status
+          id, orgName, date, dueDate, amount, status, generationType: generationType || "Manual"
         });
         break;
       }
@@ -275,41 +326,60 @@ export async function POST(req: NextRequest) {
             const now = new Date();
             const currentMonth = now.toLocaleDateString("en-US", { month: "long" });
             const currentYear = now.getFullYear();
+            const resolvedOrgId = org.id || org._id.toString();
             const invoiceId = `INV-${orgName.replace(/\s+/g, "").substring(0, 4).toUpperCase()}-${currentYear}-${currentMonth.substring(0, 3).toUpperCase()}`;
 
-            // Check if an unpaid invoice already exists for this org + month + year
-            const existingInvoice = await db.collection("invoices").findOne({
-              orgName,
-              month: currentMonth,
+            // Check if a PAID invoice already exists — if so, don't touch it
+            const paidInvoice = await db.collection("invoices").findOne({
+              $or: [
+                { organisationId: resolvedOrgId },
+                { orgName: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") } }
+              ],
+              month: { $regex: new RegExp("^" + currentMonth + "$", "i") },
               year: currentYear,
-              status: { $ne: "Paid" },
+              status: "Paid",
               isDeleted: { $ne: true }
             });
 
-            if (existingInvoice) {
-              // Increment the existing invoice amount
-              await db.collection("invoices").updateOne(
-                { _id: existingInvoice._id },
-                { $inc: { amount: org.monthlyRate } }
-              );
-            } else {
-              // Create a new invoice for this month
-              const generatedDate = now.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
-              const monthIndex = now.getMonth();
-              const lastDayOfMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
-              const dueDate = new Date(currentYear, monthIndex, lastDayOfMonth, 23, 59).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
-
-              await db.collection("invoices").insertOne({
-                id: invoiceId,
-                orgName,
-                organisationId: org.id || org._id.toString(),
-                date: generatedDate,
-                dueDate,
-                amount: org.monthlyRate,
-                status: "Unpaid",
-                month: currentMonth,
+            if (!paidInvoice) {
+              // Check if an unpaid invoice already exists for this org + month + year
+              const existingInvoice = await db.collection("invoices").findOne({
+                $or: [
+                  { organisationId: resolvedOrgId },
+                  { orgName: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") } }
+                ],
+                month: { $regex: new RegExp("^" + currentMonth + "$", "i") },
                 year: currentYear,
+                status: { $ne: "Paid" },
+                isDeleted: { $ne: true }
               });
+
+              if (existingInvoice) {
+                // Increment the existing invoice amount and ensure organisationId is set
+                await db.collection("invoices").updateOne(
+                  { _id: existingInvoice._id },
+                  { $inc: { amount: org.monthlyRate }, $set: { organisationId: resolvedOrgId, generationType: existingInvoice.generationType || "Auto" } }
+                );
+              } else {
+                // Create a new invoice for this month
+                const generatedDate = now.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+                const monthIndex = now.getMonth();
+                const lastDayOfMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
+                const dueDate = new Date(currentYear, monthIndex, lastDayOfMonth, 23, 59).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+
+                await db.collection("invoices").insertOne({
+                  id: invoiceId,
+                  orgName,
+                  organisationId: resolvedOrgId,
+                  date: generatedDate,
+                  dueDate,
+                  amount: org.monthlyRate,
+                  status: "Unpaid",
+                  month: currentMonth,
+                  year: currentYear,
+                  generationType: "Auto"
+                });
+              }
             }
           }
         }
@@ -360,10 +430,191 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "addOrganisation": {
-        const { id, name, paymentPlan, monthlyRate, billingDay, createdAt } = payload;
+        const { id, name, paymentPlan, monthlyRate, billingDay, createdAt, ownerEmail, ownerName, ownerPassword, maxVerifiers } = payload;
         await db.collection("organisations").insertOne({
-          id, name, paymentPlan, monthlyRate, billingDay, createdAt, status: "Active"
+          id, name, paymentPlan, monthlyRate, billingDay, createdAt, status: "Active",
+          ownerEmail: ownerEmail || null,
+          ownerName: ownerName || null,
+          maxVerifiers: maxVerifiers ?? 5
         });
+
+        // Auto-create org owner account if owner details are provided
+        if (ownerEmail && ownerPassword) {
+          const bcrypt = await import("bcryptjs");
+          const hashedPassword = bcrypt.hashSync(ownerPassword, 10);
+          const ownerEmailClean = ownerEmail.toLowerCase().trim();
+
+          // Create user with role "org_owner"
+          const existingUser = await db.collection("users").findOne({ email: ownerEmailClean });
+          if (!existingUser) {
+            await db.collection("users").insertOne({
+              email: ownerEmailClean,
+              password: hashedPassword,
+              fullName: ownerName || name,
+              role: "org_owner",
+              orgName: name,
+              createdAt: new Date()
+            });
+          }
+
+          // Create a verifier record for the owner
+          const ownerVerifierId = `V-OWN-${Math.floor(1000 + Math.random() * 9000)}`;
+          await db.collection("verifiers").insertOne({
+            id: ownerVerifierId,
+            name: ownerName || name,
+            email: ownerEmailClean,
+            org: name,
+            organisationId: id,
+            designation: "Organisation Owner",
+            status: "Active",
+            ratePerVerification: 0,
+            isOwner: true,
+            createdBy: user.email
+          });
+
+          // Create org settings record (for billable summary)
+          const existingSettings = await db.collection("settings").findOne({ companyName: name });
+          if (!existingSettings) {
+            await db.collection("settings").insertOne({
+              id: name.replace(/\s+/g, "").toLowerCase(),
+              companyName: name,
+              contactEmail: ownerEmailClean,
+              address: "",
+              city: "",
+              postalCode: "",
+              contactFirstName: ownerName?.split(" ")[0] || "",
+              contactLastName: ownerName?.split(" ").slice(1).join(" ") || "",
+              billingOption: "invoice",
+              cin: "",
+              lut: "",
+              tin: "",
+              gstin: "",
+              invoiceEmail: ownerEmailClean,
+              billingSameAsCompany: true,
+              billingAddress: ""
+            });
+          }
+
+          await logAuditEvent(db, {
+            actorUserId: user.id,
+            actorEmail: user.email,
+            actorRole: user.role,
+            portal: "admin",
+            action: "org_owner_created",
+            targetType: "user",
+            targetId: ownerEmailClean,
+            ip,
+            userAgent,
+            outcome: "success",
+            metadata: { organisationId: id, organisationName: name }
+          });
+        }
+        break;
+      }
+      case "setOrganisationOwner": {
+        const { orgId, ownerName, ownerEmail, ownerPassword, maxVerifiers } = payload;
+        
+        // Find organisation first
+        const org = await db.collection("organisations").findOne({ id: orgId });
+        if (!org) {
+          return NextResponse.json({ error: "Organisation not found" }, { status: 404 });
+        }
+
+        // Update organisation record
+        await db.collection("organisations").updateOne(
+          { id: orgId },
+          {
+            $set: {
+              ownerEmail: ownerEmail || null,
+              ownerName: ownerName || null,
+              maxVerifiers: maxVerifiers ?? 5
+            }
+          }
+        );
+
+        // Create org owner account if password is provided
+        if (ownerEmail && ownerPassword) {
+          const bcrypt = await import("bcryptjs");
+          const hashedPassword = bcrypt.hashSync(ownerPassword, 10);
+          const ownerEmailClean = ownerEmail.toLowerCase().trim();
+
+          // Create or update user with role "org_owner"
+          await db.collection("users").updateOne(
+            { email: ownerEmailClean },
+            {
+              $set: {
+                email: ownerEmailClean,
+                password: hashedPassword,
+                fullName: ownerName || org.name,
+                role: "org_owner",
+                orgName: org.name,
+                updatedAt: new Date()
+              },
+              $setOnInsert: {
+                createdAt: new Date()
+              }
+            },
+            { upsert: true }
+          );
+
+          // Create or update verifier record for the owner
+          const ownerVerifierId = `V-OWN-${Math.floor(1000 + Math.random() * 9000)}`;
+          await db.collection("verifiers").updateOne(
+            { email: ownerEmailClean, org: org.name },
+            {
+              $set: {
+                name: ownerName || org.name,
+                organisationId: orgId,
+                designation: "Organisation Owner",
+                status: "Active",
+                ratePerVerification: 0,
+                isOwner: true,
+                createdBy: user.email
+              },
+              $setOnInsert: {
+                id: ownerVerifierId
+              }
+            },
+            { upsert: true }
+          );
+
+          // Create org settings record if it doesn't exist
+          const existingSettings = await db.collection("settings").findOne({ companyName: org.name });
+          if (!existingSettings) {
+            await db.collection("settings").insertOne({
+              id: org.name.replace(/\s+/g, "").toLowerCase(),
+              companyName: org.name,
+              contactEmail: ownerEmailClean,
+              address: "",
+              city: "",
+              postalCode: "",
+              contactFirstName: ownerName?.split(" ")[0] || "",
+              contactLastName: ownerName?.split(" ").slice(1).join(" ") || "",
+              billingOption: "invoice",
+              cin: "",
+              lut: "",
+              tin: "",
+              gstin: "",
+              invoiceEmail: ownerEmailClean,
+              billingSameAsCompany: true,
+              billingAddress: ""
+            });
+          }
+
+          await logAuditEvent(db, {
+            actorUserId: user.id,
+            actorEmail: user.email,
+            actorRole: user.role,
+            portal: "admin",
+            action: "org_owner_assigned",
+            targetType: "user",
+            targetId: ownerEmailClean,
+            ip,
+            userAgent,
+            outcome: "success",
+            metadata: { organisationId: orgId, organisationName: org.name }
+          });
+        }
         break;
       }
       case "updateOrganisation": {
@@ -486,18 +737,40 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "generateMonthlyInvoice": {
-        const { id, orgName, organisationId, date, dueDate, amount, status, month, year } = payload;
-        // Auto-delete existing non-paid invoice for same org/month/year
-        if (organisationId && month && year) {
-          await db.collection("invoices").deleteMany({
-            organisationId,
+        const { id, orgName, organisationId, date, dueDate, amount, status, month, year, generationType } = payload;
+        // Soft-delete existing non-paid invoices for same org/month/year
+        // Match by BOTH organisationId AND orgName to catch auto-generated invoices
+        if (month && year) {
+          const deleteFilter: any = {
+            $or: [
+              ...(organisationId ? [{ organisationId }] : []),
+              ...(orgName ? [{ orgName: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") } }] : [])
+            ],
             month: { $regex: new RegExp("^" + month + "$", "i") },
             year,
-            status: { $ne: "Paid" }
-          });
+            status: { $ne: "Paid" },
+            isDeleted: { $ne: true }
+          };
+          // Only proceed if we have at least one org identifier
+          if (deleteFilter.$or.length > 0) {
+            await softDeleteMany(db, "invoices", deleteFilter, user.id, "Replaced by newly generated monthly invoice");
+          }
         }
         await db.collection("invoices").insertOne({
-          id, orgName, organisationId, date, dueDate, amount, status, month, year
+          id, orgName, organisationId, date, dueDate, amount, status, month, year, generationType: generationType || "Manual"
+        });
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "invoice_generated",
+          targetType: "invoice",
+          targetId: id,
+          ip,
+          userAgent,
+          outcome: "success"
         });
         break;
       }

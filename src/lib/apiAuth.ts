@@ -166,7 +166,7 @@ export function sanitizeInvoice(doc: any): any {
   // Strip large base64 paymentProof from list responses
   if (clean.paymentProof) {
     clean.hasPaymentProof = true;
-    delete clean.paymentProof;
+    // Keep paymentProof in admin panel as there is no detail endpoint
   }
   if (clean._id) {
     clean._id = clean._id.toString ? clean._id.toString() : String(clean._id);
