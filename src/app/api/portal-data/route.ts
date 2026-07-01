@@ -41,12 +41,39 @@ export async function GET(req: NextRequest) {
     ).toArray();
     const organisations = await db.collection("organisations").find({ isDeleted: { $ne: true } }).toArray();
 
+    // Backfill orgNumber for existing organisations that don't have one
+    const orgsWithoutNumber = organisations.filter(o => !o.orgNumber);
+    if (orgsWithoutNumber.length > 0) {
+      const maxOrgNumber = organisations.reduce((max, o) => Math.max(max, o.orgNumber || 0), 0);
+      // Sort orgs without number by createdAt so they get assigned in creation order
+      orgsWithoutNumber.sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateA - dateB;
+      });
+      for (let i = 0; i < orgsWithoutNumber.length; i++) {
+        const assignedNumber = maxOrgNumber + i + 1;
+        orgsWithoutNumber[i].orgNumber = assignedNumber;
+        await db.collection("organisations").updateOne(
+          { _id: orgsWithoutNumber[i]._id },
+          { $set: { orgNumber: assignedNumber } }
+        );
+      }
+    }
+
     // Sanitize _id fields
     const cleanSettings = settings ? { ...settings, _id: settings._id.toString() } : null;
     const cleanAllSettings = allSettings.map(s => ({ ...s, _id: s._id.toString() }));
     const cleanVerifications = verifications.map(sanitizeVerification);
     const cleanInvoices = invoices.map(sanitizeInvoice);
-    const cleanVerifiers = verifiers.map(v => ({ ...v, _id: v._id.toString() }));
+    const cleanVerifiers = verifiers.map(v => {
+      const org = organisations.find(o => o.name === v.org || o.id === v.organisationId);
+      return {
+        ...v,
+        _id: v._id.toString(),
+        ratePerVerification: org ? (org.monthlyRate || 0) : (v.ratePerVerification || 0)
+      };
+    });
     const cleanOrganisations = organisations.map(o => ({ ...o, _id: o._id.toString() }));
 
     return NextResponse.json({
@@ -89,8 +116,22 @@ export async function POST(req: NextRequest) {
 
     switch (action) {
       case "addVerification": {
-        const { id, name, email, orgName, date, status, verifier, notes } = payload;
+        const { name, email, orgName, requestingOrgName, date, status, verifier, notes } = payload;
         
+        const cleanOrg = orgName.replace(/[^a-zA-Z]/g, "").slice(0, 3).padEnd(3, "X").toUpperCase();
+        
+        const nowTime = new Date();
+        const dd = String(nowTime.getDate()).padStart(2, "0");
+        const mm = String(nowTime.getMonth() + 1).padStart(2, "0");
+        const yy = String(nowTime.getFullYear()).slice(-2);
+        const dateStr = `${dd}${mm}${yy}`;
+        const prefix = `${cleanOrg}${dateStr}-`;
+        
+        const count = await db.collection("verifications").countDocuments({
+          id: { $regex: `^${prefix}` }
+        });
+        const finalId = `${prefix}${String(count + 1).padStart(4, "0")}`;
+
         const { randomBytes } = await import("crypto");
         const bcrypt = await import("bcryptjs");
 
@@ -133,10 +174,11 @@ export async function POST(req: NextRequest) {
         const setupUrl = `${candidatePortalUrl}/?email=${encodeURIComponent(email.toLowerCase().trim())}&password=${encodeURIComponent(tempPassword)}`;
 
         await db.collection("verifications").insertOne({
-          id,
+          id: finalId,
           name,
           email: email.toLowerCase().trim(),
           orgName,
+          requestingOrgName: requestingOrgName || orgName,
           date,
           status,
           verifier,
@@ -147,7 +189,24 @@ export async function POST(req: NextRequest) {
           setupUrl
         });
 
-        return NextResponse.json({ success: true, setupUrl });
+        if (requestingOrgName && requestingOrgName.trim()) {
+          const trimmedOrg = requestingOrgName.trim();
+          await db.collection("settings").updateOne(
+            { companyName: orgName },
+            { $addToSet: { recentRequestingOrgs: trimmedOrg } },
+            { upsert: true }
+          );
+        }
+ 
+        return NextResponse.json({ success: true, id: finalId, setupUrl });
+      }
+      case "removeRecentRequestingOrg": {
+        const { requestingOrgName, orgName } = payload;
+        await db.collection("settings").updateOne(
+          { companyName: orgName },
+          { $pull: { recentRequestingOrgs: requestingOrgName } }
+        );
+        return NextResponse.json({ success: true });
       }
       case "updateSettings": {
         const { companyName, address, city, postalCode, contactFirstName, contactLastName, contactEmail, billingOption, cin, lut, tin, gstin, invoiceEmail, billingSameAsCompany, billingAddress, sac } = payload;
@@ -173,7 +232,7 @@ export async function POST(req: NextRequest) {
           "companyName", "address", "city", "postalCode",
           "contactFirstName", "contactLastName", "contactEmail",
           "billingOption", "cin", "lut", "tin", "gstin",
-          "invoiceEmail", "billingSameAsCompany", "billingAddress"
+          "invoiceEmail", "billingSameAsCompany", "billingAddress", "logo"
         ];
         for (const field of allowedFields) {
           if (settings[field] !== undefined) {
@@ -204,9 +263,15 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "inviteVerifier": {
-        const { id, name, email, org, status, password, ratePerVerification, organisationId, designation } = payload;
+        const { id, name, email, org, status, password, organisationId, designation } = payload;
+        // Look up org rate — all verifiers use the organisation's rate
+        let verifierRate = 0;
+        if (organisationId) {
+          const orgDoc = await db.collection("organisations").findOne({ id: organisationId, isDeleted: { $ne: true } });
+          if (orgDoc) verifierRate = orgDoc.monthlyRate || 0;
+        }
         await db.collection("verifiers").insertOne({
-          id, name, email, org, status, ratePerVerification: ratePerVerification ?? 0, organisationId: organisationId || null, designation: designation || null
+          id, name, email, org, status, ratePerVerification: verifierRate, organisationId: organisationId || null, designation: designation || null
         });
         
         if (password) {
@@ -266,9 +331,9 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "addInvoice": {
-        const { id, orgName, date, dueDate, amount, status, generationType } = payload;
+        const { id, orgName, date, dueDate, amount, status, generationType, activityLog } = payload;
         await db.collection("invoices").insertOne({
-          id, orgName, date, dueDate, amount, status, generationType: generationType || "Manual"
+          id, orgName, date, dueDate, amount, status, generationType: generationType || "Manual", activityLog: activityLog || []
         });
         break;
       }
@@ -327,7 +392,10 @@ export async function POST(req: NextRequest) {
             const currentMonth = now.toLocaleDateString("en-US", { month: "long" });
             const currentYear = now.getFullYear();
             const resolvedOrgId = org.id || org._id.toString();
-            const invoiceId = `INV-${orgName.replace(/\s+/g, "").substring(0, 4).toUpperCase()}-${currentYear}-${currentMonth.substring(0, 3).toUpperCase()}`;
+            const orgNumStr = String(org.orgNumber || 0).padStart(3, "0");
+            const orgPrefix = orgName.replace(/\s+/g, "").substring(0, 3).toUpperCase();
+            const monthAbbr = currentMonth.substring(0, 3).toUpperCase();
+            const invoiceId = `INV-${orgNumStr}-${orgPrefix}-${monthAbbr}-${currentYear}`;
 
             // Check if a PAID invoice already exists — if so, don't touch it
             const paidInvoice = await db.collection("invoices").findOne({
@@ -430,9 +498,15 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "addOrganisation": {
-        const { id, name, paymentPlan, monthlyRate, billingDay, createdAt, ownerEmail, ownerName, ownerPassword, maxVerifiers } = payload;
+        const { id, name, paymentPlan, monthlyRate, billingDay, createdAt, ownerEmail, ownerName, ownerPassword, maxVerifiers, orgNumber } = payload;
+        // If orgNumber was provided by the client, use it; otherwise compute from DB
+        let finalOrgNumber = orgNumber;
+        if (!finalOrgNumber) {
+          const maxDoc = await db.collection("organisations").find({}).sort({ orgNumber: -1 }).limit(1).toArray();
+          finalOrgNumber = (maxDoc.length > 0 && maxDoc[0].orgNumber ? maxDoc[0].orgNumber : 0) + 1;
+        }
         await db.collection("organisations").insertOne({
-          id, name, paymentPlan, monthlyRate, billingDay, createdAt, status: "Active",
+          id, name, orgNumber: finalOrgNumber, paymentPlan, monthlyRate, billingDay, createdAt, status: "Active",
           ownerEmail: ownerEmail || null,
           ownerName: ownerName || null,
           maxVerifiers: maxVerifiers ?? 5
@@ -467,7 +541,7 @@ export async function POST(req: NextRequest) {
             organisationId: id,
             designation: "Organisation Owner",
             status: "Active",
-            ratePerVerification: 0,
+            ratePerVerification: monthlyRate,
             isOwner: true,
             createdBy: user.email
           });
@@ -567,7 +641,7 @@ export async function POST(req: NextRequest) {
                 organisationId: orgId,
                 designation: "Organisation Owner",
                 status: "Active",
-                ratePerVerification: 0,
+                ratePerVerification: org.monthlyRate || 0,
                 isOwner: true,
                 createdBy: user.email
               },

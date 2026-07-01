@@ -9,6 +9,7 @@ export interface Verification {
   name: string;
   email: string;
   orgName: string;
+  requestingOrgName?: string;
   date: string;
   status: "Completed" | "Processing" | "Needs Attention";
   verifier: string | null;
@@ -40,6 +41,16 @@ export interface Verification {
   setupUrl?: string;
 }
 
+export interface InvoiceActivity {
+  id: string;
+  type: "generated" | "submitted" | "approved" | "rejected" | "status_change";
+  status?: "Paid" | "Unpaid" | "Overdue" | "Pending" | "Defaulted";
+  timestamp: string;
+  actor: string;
+  note?: string;
+  paymentProof?: string;
+}
+
 export interface Invoice {
   _id?: string;
   id: string;
@@ -56,7 +67,12 @@ export interface Invoice {
   generationType?: "Auto" | "Manual";
   adminNote?: string;
   rejectionReason?: string;
+  rejectedBy?: string;
+  rejectedDate?: string;
   clientNote?: string;
+  approvedBy?: string;
+  approvedDate?: string;
+  activityLog?: InvoiceActivity[];
 }
 
 export interface Verifier {
@@ -73,6 +89,7 @@ export interface Verifier {
 export interface Organisation {
   id: string;
   name: string;
+  orgNumber?: number;
   paymentPlan: "monthly" | "pay_as_you_go";
   monthlyRate: number;
   billingDay: number;
@@ -105,6 +122,8 @@ export interface CompanySettings {
   billingSameAsCompany: boolean;
   billingAddress: string;
   sac?: string;
+  logo?: string;
+  recentRequestingOrgs?: string[];
 }
 
 interface PortalContextType {
@@ -135,6 +154,8 @@ interface PortalContextType {
   fetchVerificationDetail: (id: string) => Promise<Verification>;
   updateOrgSettings: (orgName: string, settings: Partial<CompanySettings>) => Promise<void>;
   setOrganisationOwner: (orgId: string, ownerName: string, ownerEmail: string, ownerPassword?: string, maxVerifiers?: number) => Promise<void>;
+  refreshData: () => Promise<void>;
+  removeRecentRequestingOrg: (requestingOrgName: string, orgName?: string) => Promise<void>;
 }
 
 const PortalContext = createContext<PortalContextType | undefined>(undefined);
@@ -199,7 +220,9 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           invoiceEmail: data.settings.invoiceEmail || "",
           billingSameAsCompany: data.settings.billingSameAsCompany !== undefined ? data.settings.billingSameAsCompany : true,
           billingAddress: data.settings.billingAddress || "",
-          sac: data.settings.sac || ""
+          sac: data.settings.sac || "",
+          logo: data.settings.logo || "",
+          recentRequestingOrgs: data.settings.recentRequestingOrgs || []
         });
       }
 
@@ -379,7 +402,15 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const addInvoice = async (orgName: string, amount: number, dueDate: string) => {
-    const newId = `INV-${new Date().getFullYear()}-${Math.floor(10 + Math.random() * 90)}`;
+    // Build new invoice ID: INV-{orgNumber}-{orgPrefix}-{month}-{year}
+    const matchedOrg = organisations.find((o) => o.name === orgName);
+    const orgNum = String(matchedOrg?.orgNumber || 0).padStart(3, "0");
+    const orgPrefix = orgName.replace(/\s+/g, "").substring(0, 3).toUpperCase();
+    const now = new Date();
+    const monthAbbr = now.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+    const yearStr = now.getFullYear();
+    const newId = `INV-${orgNum}-${orgPrefix}-${monthAbbr}-${yearStr}`;
+    const timestamp = new Date().toISOString();
     const newInvoice: Invoice = {
       id: newId,
       orgName,
@@ -387,7 +418,16 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       dueDate,
       amount,
       status: "Unpaid",
-      generationType: "Manual"
+      generationType: "Manual",
+      activityLog: [
+        {
+          id: `act-${Date.now()}-gen`,
+          type: "generated",
+          timestamp,
+          actor: "System / Admin",
+          note: "Invoice generated manually"
+        }
+      ]
     };
 
     setInvoices((prev) => [newInvoice, ...prev]);
@@ -497,9 +537,13 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const addOrganisation = async (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number) => {
     const newId = `ORG-${Math.floor(1000 + Math.random() * 9000)}`;
+    // Compute next sequential org number
+    const maxExisting = organisations.reduce((max, o) => Math.max(max, o.orgNumber || 0), 0);
+    const nextOrgNumber = maxExisting + 1;
     const newOrg: Organisation = {
       id: newId,
       name,
+      orgNumber: nextOrgNumber,
       paymentPlan: "monthly",
       monthlyRate,
       billingDay: 0,
@@ -624,7 +668,10 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const completedCount = matchingVerifications.length;
     const amount = completedCount * org.monthlyRate;
 
-    const newId = `INV-${org.name.replace(/\s+/g, "").substring(0, 4).toUpperCase()}-${year}-${month.substring(0, 3).toUpperCase()}`;
+    const orgNum = String(org.orgNumber || 0).padStart(3, "0");
+    const orgPrefix = org.name.replace(/\s+/g, "").substring(0, 3).toUpperCase();
+    const monthAbbr = month.substring(0, 3).toUpperCase();
+    const newId = `INV-${orgNum}-${orgPrefix}-${monthAbbr}-${year}`;
     const generatedDate = new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
     // Due date is last day of the billing month
     const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
@@ -716,6 +763,19 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     fetchAllData();
   };
 
+  const removeRecentRequestingOrg = async (requestingOrgName: string, orgName?: string) => {
+    try {
+      await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "removeRecentRequestingOrg", payload: { requestingOrgName, orgName } })
+      });
+      fetchAllData();
+    } catch (err) {
+      console.error("Failed removing recent requesting org:", err);
+    }
+  };
+
   return (
     <PortalContext.Provider
       value={{
@@ -746,6 +806,8 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         fetchVerificationDetail,
         updateOrgSettings,
         setOrganisationOwner,
+        removeRecentRequestingOrg,
+        refreshData: fetchAllData,
       }}
     >
       {children}

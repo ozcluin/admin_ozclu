@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import { usePortal } from "src/context/PortalContext";
-import type { Organisation, Verifier, Invoice } from "src/context/PortalContext";
+import type { Organisation, Verifier, Invoice, InvoiceActivity } from "src/context/PortalContext";
+import { useAuth } from "src/context/AuthContext";
 
 // ── Month names for selectors ──
 const MONTHS = [
@@ -11,6 +12,7 @@ const MONTHS = [
 ];
 
 export default function ManageInvoicesPage() {
+  const { user, profile } = useAuth();
   const {
     organisations,
     verifiers,
@@ -87,6 +89,21 @@ export default function ManageInvoicesPage() {
   const [rejectionReasonInput, setRejectionReasonInput] = useState("");
   const [createOrgOpen, setCreateOrgOpen] = useState(false);
   const [activeScreenshotPreview, setActiveScreenshotPreview] = useState<string | null>(null);
+  const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
+  const [adminModalClosing, setAdminModalClosing] = useState<"details" | "status" | "rejection" | null>(null);
+
+  const handleCloseAdminModal = (type: "details" | "status" | "rejection") => {
+    setAdminModalClosing(type);
+    setTimeout(() => {
+      if (type === "details") setDetailInvoice(null);
+      else if (type === "status") setInvoiceStatusChange(null);
+      else if (type === "rejection") {
+        setInvoiceRejection(null);
+        setRejectionReasonInput("");
+      }
+      setAdminModalClosing(null);
+    }, 600);
+  };
 
   // ── Enterprise details editing ──
   const [editingEnterprise, setEditingEnterprise] = useState(false);
@@ -237,10 +254,69 @@ export default function ManageInvoicesPage() {
     });
   }, [detailInvoice, verifications, selectedOrg]);
 
+  const getUpdatedActivityLog = (invoice: Invoice, newActivity: InvoiceActivity) => {
+    const baseLog: InvoiceActivity[] = [...(invoice.activityLog || [])];
+    if (baseLog.length === 0) {
+      baseLog.push({
+        id: `act-${Date.now()}-gen`,
+        type: "generated",
+        timestamp: invoice.date || new Date().toISOString(),
+        actor: "System",
+        note: "Invoice generated"
+      });
+    }
+    if (invoice.paymentProofDate && !baseLog.some(a => a.type === "submitted")) {
+      baseLog.push({
+        id: `act-${Date.now()}-sub`,
+        type: "submitted",
+        timestamp: invoice.paymentProofDate,
+        actor: invoice.orgName || "Client",
+        note: invoice.clientNote || "",
+        paymentProof: invoice.paymentProof
+      });
+    }
+    return [...baseLog, newActivity];
+  };
+
   const handleConfirmStatusChange = async () => {
     if (!invoiceStatusChange) return;
     const { invoice, targetStatus } = invoiceStatusChange;
-    await updateInvoiceStatus(invoice.id, targetStatus, { adminNote: adminNoteInput }, invoice._id);
+    
+    const extras: Partial<Invoice> = { adminNote: adminNoteInput };
+    const adminActor = profile?.full_name || user?.email || "Admin";
+    const timestamp = new Date().toISOString();
+
+    if (targetStatus === "Paid") {
+      extras.approvedBy = adminActor;
+      extras.approvedDate = timestamp;
+      extras.rejectionReason = "";
+      extras.rejectedBy = "";
+      extras.rejectedDate = "";
+
+      const newActivity: InvoiceActivity = {
+        id: `act-${Date.now()}-app`,
+        type: "approved",
+        timestamp,
+        actor: adminActor,
+        note: adminNoteInput || "Payment approved by administrator"
+      };
+      extras.activityLog = getUpdatedActivityLog(invoice, newActivity);
+    } else {
+      extras.approvedBy = "";
+      extras.approvedDate = "";
+
+      const newActivity: InvoiceActivity = {
+        id: `act-${Date.now()}-status`,
+        type: "status_change",
+        status: targetStatus,
+        timestamp,
+        actor: adminActor,
+        note: adminNoteInput || `Status manually changed to ${targetStatus}`
+      };
+      extras.activityLog = getUpdatedActivityLog(invoice, newActivity);
+    }
+
+    await updateInvoiceStatus(invoice.id, targetStatus, extras, invoice._id);
     setInvoiceStatusChange(null);
     setAdminNoteInput("");
   };
@@ -248,10 +324,28 @@ export default function ManageInvoicesPage() {
   const handleConfirmRejection = async () => {
     if (!invoiceRejection) return;
     const { invoice } = invoiceRejection;
+    const adminActor = profile?.full_name || user?.email || "Admin";
+    const timestamp = new Date().toISOString();
+
+    const newActivity: InvoiceActivity = {
+      id: `act-${Date.now()}-rej`,
+      type: "rejected",
+      timestamp,
+      actor: adminActor,
+      note: rejectionReasonInput || "Payment disapproved by administrator"
+    };
+
+    const updatedLog = getUpdatedActivityLog(invoice, newActivity);
+
     await updateInvoiceStatus(invoice.id, "Unpaid", {
       rejectionReason: rejectionReasonInput,
+      rejectedBy: adminActor,
+      rejectedDate: timestamp,
       paymentProof: "",
-      paymentProofDate: undefined
+      paymentProofDate: undefined,
+      approvedBy: "",
+      approvedDate: "",
+      activityLog: updatedLog
     }, invoice._id);
     setInvoiceRejection(null);
     setRejectionReasonInput("");
@@ -389,8 +483,9 @@ export default function ManageInvoicesPage() {
     if (!vEmail.trim() || !vEmail.includes("@")) { setVError("Valid email is required"); return; }
     if (!selectedOrg) return;
 
-    const parsedRate = vRate ? parseFloat(vRate) : 0;
-    await inviteVerifier(vName, vEmail, selectedOrg.name, vPassword || undefined, parsedRate, selectedOrgId || undefined, vDesignation || undefined);
+    // Use organization monthlyRate as the verifier's rate
+    const orgRate = selectedOrg.monthlyRate || 0;
+    await inviteVerifier(vName, vEmail, selectedOrg.name, vPassword || undefined, orgRate, selectedOrgId || undefined, vDesignation || undefined);
     setVSuccess(`Verifier ${vName} added successfully!`);
     setVName(""); setVEmail(""); setVDesignation(""); setVPassword(""); setVRate("");
     setTimeout(() => setVSuccess(""), 4000);
@@ -594,7 +689,7 @@ export default function ManageInvoicesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-headline-md text-slate-900 font-extrabold text-sm truncate leading-tight group-hover:text-[#0ea5e9] transition-colors">{org.name}</h4>
-                        <span className="text-[10px] text-slate-400 font-bold font-mono block mt-1">{org.id}</span>
+                        <span className="text-[10px] text-slate-400 font-bold font-mono block mt-1">{String(org.orgNumber || 0).padStart(3, "0")}</span>
                       </div>
                       <span className="material-symbols-outlined text-[16px] text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300">
                         open_in_new
@@ -667,6 +762,12 @@ export default function ManageInvoicesPage() {
                 <div>
                   <h3 className="font-headline-md text-slate-900 font-extrabold leading-none">Create Organisation</h3>
                   <p className="text-[11px] text-slate-550 font-semibold mt-1">Register a new client organisation and set up their administrator account.</p>
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#B8FFF9]/30 border border-[#85F4FF]/30">
+                    <span className="material-symbols-outlined text-[13px] text-[#0ea5e9] font-bold">tag</span>
+                    <span className="text-[10px] font-black text-[#0369a1] tracking-wide">
+                      Organisation #{String((organisations.reduce((max, o) => Math.max(max, o.orgNumber || 0), 0)) + 1).padStart(3, "0")}
+                    </span>
+                  </div>
                 </div>
               </div>
               <button
@@ -865,7 +966,7 @@ export default function ManageInvoicesPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="font-mono text-[10px] text-slate-400 font-bold">{selectedOrg.id}</span>
+                    <span className="font-mono text-[10px] text-slate-400 font-bold">{String(selectedOrg.orgNumber || 0).padStart(3, "0")}</span>
                     <span className="text-[10px] text-slate-300">•</span>
                     <span className="text-[11px] text-slate-500 font-medium">Created {selectedOrg.createdAt}</span>
                   </div>
@@ -1429,7 +1530,7 @@ export default function ManageInvoicesPage() {
                             className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
                         </div>
                         <div className="flex flex-col gap-2">
-                          <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">UPI ID (optional)</label>
+                          <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">UPI ID</label>
                           <input type="text" placeholder="e.g. acme@upi" value={payUpiId} onChange={(e) => setPayUpiId(e.target.value)}
                             className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
                         </div>
@@ -1559,12 +1660,7 @@ export default function ManageInvoicesPage() {
                         
                         <input type="text" placeholder="Job title / Designation" value={vDesignation} onChange={(e) => setVDesignation(e.target.value)}
                           autoComplete="off" className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
-                        
-                        <div className="relative">
-                          <span className="absolute left-3.5 top-3 text-slate-400 font-bold text-sm">$</span>
-                          <input type="number" min="0" step="1" placeholder="Rate per verification" value={vRate} onChange={(e) => setVRate(e.target.value)}
-                            autoComplete="off" className="w-full pl-8 pr-4 py-3 border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
-                        </div>
+
                         
                         <div>
                           <div className="flex justify-between items-center mb-1">
@@ -1662,7 +1758,26 @@ export default function ManageInvoicesPage() {
                                 </div>
                                 <div className="flex gap-2">
                                   <button
-                                    onClick={() => updateInvoiceStatus(inv.id, "Paid", undefined, inv._id)}
+                                    onClick={() => {
+                                      const adminActor = profile?.full_name || user?.email || "Admin";
+                                      const timestamp = new Date().toISOString();
+                                      const newActivity: InvoiceActivity = {
+                                        id: `act-${Date.now()}-app`,
+                                        type: "approved",
+                                        timestamp,
+                                        actor: adminActor,
+                                        note: "Payment approved by administrator"
+                                      };
+                                      const updatedLog = getUpdatedActivityLog(inv, newActivity);
+                                      updateInvoiceStatus(inv.id, "Paid", {
+                                        approvedBy: adminActor,
+                                        approvedDate: timestamp,
+                                        rejectionReason: "",
+                                        rejectedBy: "",
+                                        rejectedDate: "",
+                                        activityLog: updatedLog
+                                      }, inv._id);
+                                    }}
                                     className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm shadow-emerald-500/10 border-none"
                                   >
                                     <span className="material-symbols-outlined text-[15px] font-bold">check_circle</span>
@@ -1734,7 +1849,7 @@ export default function ManageInvoicesPage() {
                           <th className="py-3 px-4 font-label-caps text-slate-500 font-bold text-[9px]">AMOUNT</th>
                           <th className="py-3 px-4 font-label-caps text-slate-500 font-bold text-[9px]">STATUS</th>
                           <th className="py-3 px-4 font-label-caps text-slate-500 font-bold text-[9px]">TYPE</th>
-                          <th className="py-3 px-4 font-label-caps text-slate-500 font-bold text-right text-[9px]">ACTION</th>
+                          <th className="py-3 px-4 font-label-caps text-slate-500 font-bold text-right text-[9px]">DETAILS</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -1746,56 +1861,274 @@ export default function ManageInvoicesPage() {
                           </tr>
                         ) : (
                           orgInvoices.map((inv) => (
-                            <tr key={inv._id || inv.id} className="hover:bg-slate-50/40 transition-colors">
-                              <td 
-                                className="py-3.5 px-4"
-                              >
-                                <span
-                                  onClick={() => setDetailInvoice(inv)}
-                                  className="font-bold text-sky-600 hover:text-sky-850 hover:underline font-mono text-xs cursor-pointer block"
+                            <React.Fragment key={inv._id || inv.id}>
+                              <tr className="hover:bg-slate-50/40 transition-colors">
+                                <td 
+                                  className="py-3.5 px-4"
                                 >
-                                  {inv.id}
-                                </span>
-                                {inv.adminNote && (
-                                  <span className="text-[10px] text-slate-500 block mt-0.5 leading-normal max-w-xs truncate" title={inv.adminNote}>
-                                    Note: <span className="italic font-medium">{inv.adminNote}</span>
+                                  <span
+                                    onClick={() => setExpandedInvoiceId(expandedInvoiceId === inv.id ? null : inv.id)}
+                                    className="font-bold text-sky-600 hover:text-sky-850 hover:underline font-mono text-xs cursor-pointer block"
+                                  >
+                                    {inv.id}
                                   </span>
-                                )}
-                              </td>
-                              <td className="py-3.5 px-4 text-slate-700 font-medium">{inv.month ? `${inv.month} ${inv.year}` : "—"}</td>
-                              <td className="py-3.5 px-4 text-slate-500 font-medium">{inv.date}</td>
-                              <td className="py-3.5 px-4 text-slate-500 font-medium">{inv.dueDate}</td>
-                              <td className="py-3.5 px-4 font-black text-slate-900">${inv.amount.toLocaleString("en-US")}</td>
-                              <td className="py-3.5 px-4">{statusBadge(inv.status)}</td>
-                              <td className="py-3.5 px-4">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${
-                                  inv.generationType === "Manual"
-                                    ? "bg-purple-500/10 text-purple-600 border-purple-500/15"
-                                    : "bg-blue-500/10 text-blue-600 border-blue-500/15"
-                                }`}>
-                                  {inv.generationType === "Manual" ? "Manual" : "Autogenerated"}
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-4 text-right">
-                                <select
-                                  value={inv.status}
-                                  onChange={(e) => {
-                                    setInvoiceStatusChange({
-                                      invoice: inv,
-                                      targetStatus: e.target.value as any
-                                    });
-                                    setAdminNoteInput(inv.adminNote || "");
-                                  }}
-                                  className="p-1.5 border border-slate-200/80 rounded-lg font-body-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#42C2FF]/30 text-xs cursor-pointer font-semibold text-slate-700"
-                                >
-                                  <option value="Paid">Paid</option>
-                                  <option value="Pending">Pending</option>
-                                  <option value="Unpaid">Unpaid</option>
-                                  <option value="Overdue">Overdue</option>
-                                  <option value="Defaulted">Defaulted</option>
-                                </select>
-                              </td>
-                            </tr>
+                                  {inv.adminNote && (
+                                    <span className="text-[10px] text-slate-500 block mt-0.5 leading-normal max-w-xs truncate" title={inv.adminNote}>
+                                      Note: <span className="italic font-medium">{inv.adminNote}</span>
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-4 text-slate-700 font-medium">{inv.month ? `${inv.month} ${inv.year}` : "—"}</td>
+                                <td className="py-3.5 px-4 text-slate-500 font-medium">{inv.date}</td>
+                                <td className="py-3.5 px-4 text-slate-500 font-medium">{inv.dueDate}</td>
+                                <td className="py-3.5 px-4 font-black text-slate-900">${inv.amount.toLocaleString("en-US")}</td>
+                                <td className="py-3.5 px-4">{statusBadge(inv.status)}</td>
+                                <td className="py-3.5 px-4">
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${
+                                    inv.generationType === "Manual"
+                                      ? "bg-purple-500/10 text-purple-600 border-purple-500/15"
+                                      : "bg-blue-500/10 text-blue-600 border-blue-500/15"
+                                  }`}>
+                                    {inv.generationType === "Manual" ? "Manual" : "Autogenerated"}
+                                  </span>
+                                </td>
+                                <td className="py-3.5 px-4 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedInvoiceId(expandedInvoiceId === inv.id ? null : inv.id)}
+                                    className="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-655 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5 cursor-pointer ml-auto shadow-2xs"
+                                  >
+                                    <span>{expandedInvoiceId === inv.id ? "Hide Details" : "View Details"}</span>
+                                    <span className="material-symbols-outlined text-[16px] transition-transform duration-200">
+                                      {expandedInvoiceId === inv.id ? "expand_less" : "expand_more"}
+                                    </span>
+                                  </button>
+                                </td>
+                              </tr>
+                              {expandedInvoiceId === inv.id && (
+                                <tr className="bg-slate-50/25">
+                                  <td colSpan={8} className="p-6 border-b border-slate-200">
+                                    <div className="flex flex-col lg:flex-row gap-8 justify-between items-start">
+                                      {/* Left: Activity Timeline */}
+                                      <div className="flex-1 flex flex-col gap-4">
+                                        <h5 className="text-xs font-bold text-slate-700 flex items-center gap-1.5 uppercase tracking-wider font-label-caps border-b border-slate-200 pb-2 mb-2">
+                                          <span className="material-symbols-outlined text-[18px] text-slate-400">history</span>
+                                          <span>Invoice Activity History</span>
+                                        </h5>
+                                        
+                                        <div className="relative border-l border-slate-250/80 pl-6 ml-3 flex flex-col gap-6">
+                                          {(() => {
+                                            const baseLog: InvoiceActivity[] = [...(inv.activityLog || [])];
+                                            if (baseLog.length === 0) {
+                                              baseLog.push({
+                                                id: `fallback-gen`,
+                                                type: "generated",
+                                                timestamp: inv.date ? new Date(inv.date).toISOString() : new Date().toISOString(),
+                                                actor: "System",
+                                                note: "Invoice generated"
+                                              });
+                                              if (inv.paymentProofDate) {
+                                                baseLog.push({
+                                                  id: `fallback-sub`,
+                                                  type: "submitted",
+                                                  timestamp: inv.paymentProofDate,
+                                                  actor: inv.orgName || "Client",
+                                                  note: inv.clientNote || "",
+                                                  paymentProof: inv.paymentProof
+                                                });
+                                              }
+                                              if (inv.status === "Paid") {
+                                                baseLog.push({
+                                                  id: `fallback-app`,
+                                                  type: "approved",
+                                                  timestamp: inv.approvedDate || new Date().toISOString(),
+                                                  actor: inv.approvedBy || "Admin",
+                                                  note: inv.adminNote || "Payment approved by administrator"
+                                                });
+                                              } else if (inv.status === "Unpaid" && inv.rejectionReason) {
+                                                baseLog.push({
+                                                  id: `fallback-rej`,
+                                                  type: "rejected",
+                                                  timestamp: inv.rejectedDate || new Date().toISOString(),
+                                                  actor: inv.rejectedBy || "Administrator",
+                                                  note: inv.rejectionReason
+                                                });
+                                              }
+                                            }
+                                            const sorted = baseLog.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+                                            return sorted.map((act, index) => {
+                                              let icon = "receipt";
+                                              let iconBg = "bg-sky-500 text-white";
+                                              let title = "";
+                                              let content = null;
+
+                                              if (act.type === "generated") {
+                                                icon = "receipt";
+                                                iconBg = "bg-sky-500 text-white";
+                                                title = "Invoice Generated";
+                                                content = (
+                                                  <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                                                    Generated on {new Date(act.timestamp).toLocaleString()} (Type: {inv.generationType || "Auto"})
+                                                  </p>
+                                                );
+                                              } else if (act.type === "submitted") {
+                                                icon = "payments";
+                                                iconBg = "bg-amber-500 text-white";
+                                                title = "Payment Submitted";
+                                                content = (
+                                                  <div className="flex flex-col gap-2 mt-1">
+                                                    <p className="text-[11px] text-slate-500 font-medium">
+                                                      Submitted by <strong className="text-slate-700 font-semibold">{act.actor}</strong> on {new Date(act.timestamp).toLocaleString()}
+                                                    </p>
+                                                    {act.note && (
+                                                      <p className="text-xs italic text-slate-600 bg-white border border-slate-200 rounded-lg p-2 max-w-md font-medium leading-relaxed">
+                                                        Note: "{act.note}"
+                                                      </p>
+                                                    )}
+                                                    {act.paymentProof && (
+                                                      <div className="mt-1">
+                                                        {act.paymentProof.startsWith("data:image/") ? (
+                                                          <div className="relative group overflow-hidden rounded-xl border border-slate-200 bg-white max-w-xs h-36 flex items-center justify-center cursor-zoom-in">
+                                                            <img
+                                                              src={act.paymentProof}
+                                                              alt="Payment proof"
+                                                              className="w-full h-full object-contain"
+                                                              onClick={() => setActiveScreenshotPreview(act.paymentProof ?? null)}
+                                                            />
+                                                          </div>
+                                                        ) : (
+                                                          <button
+                                                            type="button"
+                                                            onClick={() => window.open(act.paymentProof, "_blank")}
+                                                            className="text-xs text-sky-600 underline hover:no-underline font-extrabold flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
+                                                          >
+                                                            <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+                                                            <span>View Document</span>
+                                                          </button>
+                                                        )}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                );
+                                              } else if (act.type === "approved") {
+                                                icon = "check_circle";
+                                                iconBg = "bg-emerald-500 text-white";
+                                                title = "Payment Approved";
+                                                content = (
+                                                  <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                                                    Approved by <strong className="text-slate-700 font-semibold">{act.actor}</strong> on {new Date(act.timestamp).toLocaleString()}
+                                                    {act.note && act.note !== "Payment approved by administrator" && (
+                                                      <span className="block mt-1 text-xs text-slate-600 italic">
+                                                        Note: "{act.note}"
+                                                      </span>
+                                                    )}
+                                                  </p>
+                                                );
+                                              } else if (act.type === "rejected") {
+                                                icon = "cancel";
+                                                iconBg = "bg-rose-500 text-white";
+                                                title = "Payment Disapproved / Rejected";
+                                                content = (
+                                                  <div className="flex flex-col gap-2 mt-1.5">
+                                                    <p className="text-[11px] text-slate-500 font-medium">
+                                                      Disapproved by <strong className="text-rose-700 font-semibold">{act.actor}</strong> on {new Date(act.timestamp).toLocaleString()}
+                                                    </p>
+                                                    {act.note && (
+                                                      <div className="bg-rose-50/80 border border-rose-200/60 rounded-xl p-3 max-w-md">
+                                                        <div className="flex items-start gap-2">
+                                                          <span className="material-symbols-outlined text-rose-400 text-[14px] mt-px shrink-0">info</span>
+                                                          <div>
+                                                            <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-1">Rejection Reason</p>
+                                                            <p className="text-xs text-rose-700 font-medium leading-relaxed">
+                                                              {act.note}
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                );
+                                              } else if (act.type === "status_change") {
+                                                icon = "swap_horiz";
+                                                iconBg = "bg-slate-500 text-white";
+                                                title = `Status Updated to ${act.status}`;
+                                                content = (
+                                                  <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                                                    Changed by <strong className="text-slate-700 font-semibold">{act.actor}</strong> on {new Date(act.timestamp).toLocaleString()}
+                                                    {act.note && (
+                                                      <span className="block mt-1 text-xs text-slate-655 italic">
+                                                        Note: "{act.note}"
+                                                      </span>
+                                                    )}
+                                                  </p>
+                                                );
+                                              }
+
+                                              return (
+                                                <div key={act.id || index} className="relative">
+                                                  <div className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center shadow-xs ${iconBg}`}>
+                                                    <span className="material-symbols-outlined text-[10px] font-bold">{icon}</span>
+                                                  </div>
+                                                  <div className="text-left">
+                                                    <p className="text-xs font-bold text-slate-800">{title}</p>
+                                                    {content}
+                                                  </div>
+                                                </div>
+                                              );
+                                            });
+                                          })()}
+                                        </div>
+                                      </div>
+
+                                      {/* Right: Actions */}
+                                      <div className="w-full lg:w-64 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col gap-4 text-left shrink-0">
+                                        <h6 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">
+                                          <span>Invoice Actions</span>
+                                        </h6>
+                                        
+                                        <div className="flex flex-col gap-1.5">
+                                          <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Update Status</label>
+                                          <select
+                                            value={inv.status}
+                                            onChange={(e) => {
+                                              setInvoiceStatusChange({
+                                                invoice: inv,
+                                                targetStatus: e.target.value as any
+                                              });
+                                              setAdminNoteInput(inv.adminNote || "");
+                                            }}
+                                            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all text-xs cursor-pointer font-semibold text-slate-700"
+                                          >
+                                            <option value="Paid">Paid</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Unpaid">Unpaid</option>
+                                            <option value="Overdue">Overdue</option>
+                                            <option value="Defaulted">Defaulted</option>
+                                          </select>
+                                        </div>
+
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-[10px] text-slate-400 font-medium">Internal Admin Note</span>
+                                          <span className="text-xs font-semibold text-slate-700 italic bg-slate-50 p-2.5 rounded-xl border border-slate-100 min-h-[40px] block leading-normal">
+                                            {inv.adminNote || "No notes added yet."}
+                                          </span>
+                                        </div>
+                                        
+                                        <button
+                                          type="button"
+                                          onClick={() => setDetailInvoice(inv)}
+                                          className="w-full px-4 py-2.5 border border-[#42C2FF]/20 hover:border-[#42C2FF]/40 bg-[#B8FFF9]/20 hover:bg-[#85F4FF]/20 text-[#0284c7] font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                        >
+                                          <span className="material-symbols-outlined text-[16px] font-bold">visibility</span>
+                                          <span>View Itemized Details</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
                           ))
                         )}
                       </tbody>
@@ -1841,7 +2174,7 @@ export default function ManageInvoicesPage() {
                   </div>
                   <div>
                     <p className="font-body-sm font-bold text-slate-800 leading-none">{selectedOrg.name}</p>
-                    <p className="text-[10px] text-slate-450 font-mono mt-1 font-bold">{selectedOrg.id}</p>
+                    <p className="text-[10px] text-slate-450 font-mono mt-1 font-bold">{String(selectedOrg.orgNumber || 0).padStart(3, "0")}</p>
                   </div>
                 </div>
               </div>
@@ -2061,134 +2394,146 @@ export default function ManageInvoicesPage() {
       {detailInvoice && selectedOrg && (
         <div
           className="fixed inset-0 bg-slate-900/15 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setDetailInvoice(null)}
+          onClick={() => {
+            if (adminModalClosing !== "details") handleCloseAdminModal("details");
+          }}
         >
           <div
             className="bg-white border border-[#42C2FF]/12 rounded-3xl shadow-3xl w-full max-w-4xl h-[70vh] max-h-[70vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/30 shrink-0">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 bg-sky-500/10 text-sky-600 rounded-xl flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[20px] font-bold">receipt_long</span>
-                </div>
-                <div>
-                  <h3 className="font-headline-md text-slate-900 font-extrabold text-base leading-none font-sans">Invoice Details</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1.5 font-mono">{detailInvoice.id}</p>
-                </div>
+            {adminModalClosing === "details" ? (
+              <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+                <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <h3 className="font-semibold text-sm text-slate-800">Closing Invoice Details...</h3>
+                <p className="text-secondary text-[10px] mt-1 text-slate-500 font-medium">Please wait a moment</p>
               </div>
-              <button
-                onClick={() => setDetailInvoice(null)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
+            ) : (
+              <>
+                {/* Modal Header */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/30 shrink-0">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 bg-sky-500/10 text-sky-600 rounded-xl flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[20px] font-bold">receipt_long</span>
+                    </div>
+                    <div>
+                      <h3 className="font-headline-md text-slate-900 font-extrabold text-base leading-none font-sans">Invoice Details</h3>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1.5 font-mono">{detailInvoice.id}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleCloseAdminModal("details")}
+                    className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer border-none bg-transparent"
+                  >
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
 
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="bg-slate-50 border border-slate-200/50 rounded-2xl p-4">
-                  <span className="text-[9px] text-slate-450 uppercase tracking-wider font-extrabold block mb-1">Billing Month</span>
-                  <span className="font-bold text-slate-800 text-sm">{detailInvoice.month ? `${detailInvoice.month} ${detailInvoice.year}` : "—"}</span>
-                </div>
-                <div className="bg-slate-50 border border-slate-200/50 rounded-2xl p-4">
-                  <span className="text-[9px] text-slate-450 uppercase tracking-wider font-extrabold block mb-1">Amount</span>
-                  <span className="font-black text-slate-900 text-sm">${detailInvoice.amount.toLocaleString("en-US")}</span>
-                </div>
-                <div className="bg-slate-50 border border-slate-200/50 rounded-2xl p-4">
-                  <span className="text-[9px] text-slate-450 uppercase tracking-wider font-extrabold block mb-1">Status / Type</span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    {statusBadge(detailInvoice.status)}
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold border ${
-                      detailInvoice.generationType === "Manual"
-                        ? "bg-purple-500/10 text-purple-600 border-purple-500/15"
-                        : "bg-blue-500/10 text-blue-600 border-blue-500/15"
-                    }`}>
-                      {detailInvoice.generationType === "Manual" ? "Manual" : "Auto"}
+                {/* Modal Body */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 text-left">
+                  {/* Status Grid info */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Invoice ID</span>
+                      <span className="text-xs font-mono font-bold text-slate-900 mt-1">{detailInvoice.id}</span>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Month</span>
+                      <span className="text-xs font-bold text-slate-900 mt-1">{detailInvoice.month ? `${detailInvoice.month} ${detailInvoice.year}` : "N/A"}</span>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Amount Due</span>
+                      <span className="text-xs font-black text-slate-900 mt-1">${detailInvoice.amount.toLocaleString("en-US")}</span>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Status</span>
+                      <span className="mt-1">{statusBadge(detailInvoice.status)}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Generation Type</span>
+                      <span className="text-xs font-semibold text-slate-700">
+                        {detailInvoice.generationType === "Manual" ? "Manual Invoice" : "Auto-Generated Statement"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Issued Date</span>
+                      <span className="text-xs font-semibold text-slate-700">{detailInvoice.date}</span>
+                    </div>
+                  </div>
+
+                  {/* Verifications section */}
+                  <div className="flex flex-col gap-3">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-sans border-b border-slate-100 pb-2">
+                      <span>Completed Verifications ({detailInvoiceVerifications.length})</span>
                     </span>
-                  </div>
-                </div>
-                <div className="bg-slate-50 border border-slate-200/50 rounded-2xl p-4">
-                  <span className="text-[9px] text-slate-450 uppercase tracking-wider font-extrabold block mb-1">Date Generated</span>
-                  <span className="font-bold text-slate-700 text-xs">{detailInvoice.date}</span>
-                </div>
-              </div>
-
-              {/* Verification List */}
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <h4 className="font-headline-md text-slate-800 font-extrabold text-sm flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[18px] text-slate-400">fact_check</span>
-                    <span>Completed Verifications ({detailInvoiceVerifications.length})</span>
-                  </h4>
-                  <span className="text-[10px] font-bold text-slate-400">Rate: ${selectedOrg.monthlyRate}/ea</span>
-                </div>
-
-                {detailInvoiceVerifications.length === 0 ? (
-                  <div className="py-12 text-center text-slate-450 bg-slate-50/50 rounded-2xl border border-slate-200/40 flex flex-col items-center gap-2">
-                    <span className="material-symbols-outlined text-3xl opacity-30 font-light">info</span>
-                    <p className="text-xs font-medium">No completed verifications found matching this month/period.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto bg-white rounded-2xl border border-slate-200/50 max-h-[30vh]">
-                    <table className="w-full text-left font-body-sm whitespace-nowrap">
-                      <thead>
-                        <tr className="border-b border-slate-200/50 bg-slate-50/50 sticky top-0 z-10">
-                          <th className="py-2.5 px-4 font-label-caps text-slate-500 font-bold text-[9px]">CANDIDATE ID</th>
-                          <th className="py-2.5 px-4 font-label-caps text-slate-500 font-bold text-[9px]">NAME</th>
-                          <th className="py-2.5 px-4 font-label-caps text-slate-500 font-bold text-[9px]">EMAIL</th>
-                          <th className="py-2.5 px-4 font-label-caps text-slate-500 font-bold text-[9px]">COMPLETED DATE</th>
-                          <th className="py-2.5 px-4 font-label-caps text-slate-500 font-bold text-right text-[9px]">BILLABLE RATE</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {detailInvoiceVerifications.map((v) => {
-                          const completedDateStr = v.completedAt
-                            ? new Date(v.completedAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
-                            : v.date;
-                          return (
-                            <tr key={v.id} className="hover:bg-slate-50/30 transition-colors">
-                              <td className="py-2.5 px-4 font-mono text-[10px] text-slate-500 font-bold">{v.id}</td>
-                              <td className="py-2.5 px-4 font-bold text-slate-800">{v.name}</td>
-                              <td className="py-2.5 px-4 text-slate-500 font-mono text-[10px]">{v.email}</td>
-                              <td className="py-2.5 px-4 text-slate-600 font-medium text-xs">{completedDateStr}</td>
-                              <td className="py-2.5 px-4 text-right font-black text-slate-800">${selectedOrg.monthlyRate.toLocaleString("en-US")}</td>
+                    {detailInvoiceVerifications.length === 0 ? (
+                      <div className="p-6 text-center text-slate-400 text-xs font-medium bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                        No requests completed during this billing period.
+                      </div>
+                    ) : (
+                      <div className="border border-slate-200/60 rounded-2xl overflow-hidden bg-white max-h-[30vh] overflow-y-auto">
+                        <table className="w-full text-left font-body-sm whitespace-nowrap">
+                          <thead>
+                            <tr className="border-b border-slate-200/50 bg-slate-50/50">
+                              <th className="py-2.5 px-3 text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">CANDIDATE ID</th>
+                              <th className="py-2.5 px-3 text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">NAME</th>
+                              <th className="py-2.5 px-3 text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">EMAIL</th>
+                              <th className="py-2.5 px-3 text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">COMPLETED DATE</th>
+                              <th className="py-2.5 px-3 text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono text-right">BILLABLE RATE</th>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {detailInvoiceVerifications.map((v) => {
+                              const completedDateStr = v.completedAt
+                                ? new Date(v.completedAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+                                : v.date;
+                              return (
+                                <tr key={v.id}>
+                                  <td className="py-2.5 px-3 font-mono text-xs text-sky-600 font-bold">{v.id}</td>
+                                  <td className="py-2.5 px-3 text-xs text-slate-700 font-medium">{v.name}</td>
+                                  <td className="py-2.5 px-3 text-xs text-slate-500 font-mono">{v.email}</td>
+                                  <td className="py-2.5 px-3 text-xs text-slate-600 font-medium">{completedDateStr}</td>
+                                  <td className="py-2.5 px-3 text-xs font-black text-slate-900 text-right">
+                                    ${(vRate ? parseFloat(vRate) : selectedOrg.monthlyRate || 0).toLocaleString("en-US")}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            {/* Modal Footer */}
-            <div className="p-6 pt-2 border-t border-slate-100 bg-slate-50/20 flex justify-between items-center shrink-0">
-              <button
-                onClick={() => {
-                  if (detailInvoice) {
-                    window.open(
-                      `/admin/billable-summary?orgId=${selectedOrg.id}&month=${detailInvoice.month}&year=${detailInvoice.year}`,
-                      "_blank"
-                    );
-                  }
-                }}
-                className="px-4 py-2 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#134074] text-white hover:brightness-110 font-button-text rounded-xl transition-all cursor-pointer text-xs font-bold flex items-center gap-1.5 border-none shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[15px]">download</span>
-                <span>Download Billable Summary</span>
-              </button>
-              <button
-                onClick={() => setDetailInvoice(null)}
-                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-button-text rounded-xl transition-all cursor-pointer text-xs font-bold"
-              >
-                Close Details
-              </button>
-            </div>
+                {/* Modal Footer */}
+                <div className="p-6 pt-2 border-t border-slate-100 bg-slate-50/20 flex justify-between items-center shrink-0">
+                  <button
+                    onClick={() => {
+                      if (detailInvoice) {
+                        window.open(
+                          `/admin/billable-summary?orgId=${selectedOrg.id}&month=${detailInvoice.month}&year=${detailInvoice.year}`,
+                          "_blank"
+                        );
+                      }
+                    }}
+                    className="px-4 py-2 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#134074] text-white hover:brightness-110 font-button-text rounded-xl transition-all cursor-pointer text-xs font-bold flex items-center gap-1.5 border-none shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">download</span>
+                    <span>Download Billable Summary</span>
+                  </button>
+                  <button
+                    onClick={() => handleCloseAdminModal("details")}
+                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-button-text rounded-xl transition-all cursor-pointer text-xs font-bold"
+                  >
+                    Close Details
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -2219,46 +2564,53 @@ export default function ManageInvoicesPage() {
       {invoiceStatusChange && (
         <div className="fixed inset-0 bg-slate-900/15 backdrop-blur-xs flex items-center justify-center p-4 z-[99999] animate-fade-in">
           <div className="bg-white border border-slate-200/80 rounded-3xl p-6 max-w-md w-full shadow-2xl relative my-auto animate-fade-in text-left">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-amber-500 font-bold">warning</span>
-              <span>Confirm Invoice Status Change</span>
-            </h4>
-            <p className="text-xs text-slate-500 font-medium leading-relaxed">
-              Are you sure you want to change the status of invoice <strong className="text-slate-800 font-semibold">{invoiceStatusChange.invoice.id}</strong> to <strong className="text-slate-800 font-semibold">{invoiceStatusChange.targetStatus}</strong>?
-            </p>
+            {adminModalClosing === "status" ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in min-h-[160px]">
+                <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <h3 className="font-semibold text-xs text-[#0F172A]">Closing Dialog...</h3>
+                <p className="text-slate-500 text-[10px] mt-1">Please wait</p>
+              </div>
+            ) : (
+              <>
+                <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-amber-500 font-bold">warning</span>
+                  <span>Confirm Invoice Status Change</span>
+                </h4>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Are you sure you want to change the status of invoice <strong className="text-slate-800 font-semibold">{invoiceStatusChange.invoice.id}</strong> to <strong className="text-slate-800 font-semibold">{invoiceStatusChange.targetStatus}</strong>?
+                </p>
 
-            <div className="flex flex-col gap-2 mt-4">
-              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">
-                Internal Note (Optional)
-              </label>
-              <textarea
-                value={adminNoteInput}
-                onChange={(e) => setAdminNoteInput(e.target.value)}
-                placeholder="Add comments or reference notes for this update..."
-                rows={3}
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all resize-none text-xs"
-              />
-            </div>
+                <div className="flex flex-col gap-2 mt-4">
+                  <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">
+                    Internal Note
+                  </label>
+                  <textarea
+                    value={adminNoteInput}
+                    onChange={(e) => setAdminNoteInput(e.target.value)}
+                    placeholder="Add comments or reference notes for this update..."
+                    rows={3}
+                    className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all resize-none text-xs"
+                  />
+                </div>
 
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setInvoiceStatusChange(null);
-                  setAdminNoteInput("");
-                }}
-                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmStatusChange}
-                className="px-4 py-2 bg-gradient-to-br from-[#0F172A] to-[#1E293B] hover:brightness-110 text-white font-bold text-xs rounded-xl cursor-pointer"
-              >
-                Confirm Update
-              </button>
-            </div>
+                <div className="mt-5 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleCloseAdminModal("status")}
+                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmStatusChange}
+                    className="px-4 py-2 bg-gradient-to-br from-[#0F172A] to-[#1E293B] hover:brightness-110 text-white font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    Confirm Update
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -2267,46 +2619,53 @@ export default function ManageInvoicesPage() {
       {invoiceRejection && (
         <div className="fixed inset-0 bg-slate-900/15 backdrop-blur-xs flex items-center justify-center p-4 z-[99999] animate-fade-in">
           <div className="bg-white border border-slate-200/80 rounded-3xl p-6 max-w-md w-full shadow-2xl relative my-auto animate-fade-in text-left">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-rose-500 font-bold">cancel</span>
-              <span>Disapprove Payment Proof</span>
-            </h4>
-            <p className="text-xs text-slate-500 font-medium leading-relaxed">
-              Are you sure you want to reject the payment proof for invoice <strong className="text-slate-800 font-semibold">{invoiceRejection.invoice.id}</strong>? The status will revert to Unpaid.
-            </p>
+            {adminModalClosing === "rejection" ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in min-h-[160px]">
+                <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <h3 className="font-semibold text-xs text-[#0F172A]">Closing Dialog...</h3>
+                <p className="text-slate-500 text-[10px] mt-1">Please wait</p>
+              </div>
+            ) : (
+              <>
+                <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-rose-500 font-bold">cancel</span>
+                  <span>Disapprove Payment Proof</span>
+                </h4>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Are you sure you want to reject the payment proof for invoice <strong className="text-slate-800 font-semibold">{invoiceRejection.invoice.id}</strong>? The status will revert to Unpaid.
+                </p>
 
-            <div className="flex flex-col gap-2 mt-4">
-              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">
-                Rejection Note / Reason (Optional)
-              </label>
-              <textarea
-                value={rejectionReasonInput}
-                onChange={(e) => setRejectionReasonInput(e.target.value)}
-                placeholder="Explain why this proof is invalid (e.g. Blurred receipt, Wrong amount)..."
-                rows={3}
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all resize-none text-xs"
-              />
-            </div>
+                <div className="flex flex-col gap-2 mt-4">
+                  <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">
+                    Rejection Note / Reason
+                  </label>
+                  <textarea
+                    value={rejectionReasonInput}
+                    onChange={(e) => setRejectionReasonInput(e.target.value)}
+                    placeholder="Explain why this proof is invalid (e.g. Blurred receipt, Wrong amount)..."
+                    rows={3}
+                    className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all resize-none text-xs"
+                  />
+                </div>
 
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setInvoiceRejection(null);
-                  setRejectionReasonInput("");
-                }}
-                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmRejection}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl cursor-pointer border-none shadow-sm"
-              >
-                Reject Payment
-              </button>
-            </div>
+                <div className="mt-5 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleCloseAdminModal("rejection")}
+                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmRejection}
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl cursor-pointer border-none shadow-sm"
+                  >
+                    Reject Payment
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
