@@ -171,11 +171,7 @@ function ReportContent() {
         <div className="grid grid-cols-3 items-center gap-4 mb-8">
           <div className="flex justify-start">
             <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start">
-              {settings?.logo ? (
-                <img src={settings.logo} alt="Logo" className="object-contain max-h-full" />
-              ) : (
-                <OzcluLogo size="md" />
-              )}
+              <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
             </div>
           </div>
           <h1 className="text-center font-sans text-[#1B365D] text-2xl sm:text-3xl font-extrabold tracking-widest uppercase mt-2">REPORT</h1>
