@@ -7,7 +7,7 @@ import OzcluLogo from "../../components/OzcluLogo";
 
 function BillableSummaryContent() {
   const searchParams = useSearchParams();
-  const { settings: clusoSettings, allSettings, organisations, verifications, invoices } = usePortal();
+  const { settings: ozcluSettings, allSettings, organisations, verifications, invoices } = usePortal();
   const [loaded, setLoaded] = useState(false);
 
   // Read search params
@@ -92,8 +92,8 @@ function BillableSummaryContent() {
     ? [settings.address, settings.city, settings.postalCode].filter(Boolean).join(", ")
     : "";
 
-  const clusoAddress = clusoSettings
-    ? [clusoSettings.address, clusoSettings.city, clusoSettings.postalCode].filter(Boolean).join(", ")
+  const ozcluAddress = ozcluSettings
+    ? [ozcluSettings.address, ozcluSettings.city, ozcluSettings.postalCode].filter(Boolean).join(", ")
     : "Evoma #14, Old Madras Road, Near Garden City College,, Bhattarahalli, Binna Mangala, Krishnarajapuram,, Bengaluru, Karnataka, 560049";
 
   return (
@@ -121,7 +121,7 @@ function BillableSummaryContent() {
           </div>
         </div>
 
-        {/* Customer Details vs Cluso Details Box */}
+        {/* Customer Details vs Ozclu Details Box */}
         <div className="grid grid-cols-1 md:grid-cols-2 border border-slate-200 rounded-xl overflow-hidden mb-8 shadow-3xs">
           
           {/* Customer Details */}
@@ -174,44 +174,44 @@ function BillableSummaryContent() {
               <tbody>
                 <tr>
                   <td className="w-1/3 py-1 font-bold">Company Name:</td>
-                  <td className="w-2/3 py-1 text-slate-900">{clusoSettings?.companyName || "Ozclu Private Limited"}</td>
+                  <td className="w-2/3 py-1 text-slate-900">{ozcluSettings?.companyName || "Ozclu Private Limited"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Login Email:</td>
-                  <td className="py-1 text-slate-900">{clusoSettings?.contactEmail || "indiaops@ozclu.com"}</td>
+                  <td className="py-1 text-slate-900">{ozcluSettings?.contactEmail || "indiaops@ozclu.com"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">State Tax ID / Sales Tax ID:</td>
-                  <td className="py-1 text-slate-900">{clusoSettings?.gstin || "29AADCC1935C1ZZ"}</td>
+                  <td className="py-1 text-slate-900">{ozcluSettings?.gstin || "29AADCC1935C1ZZ"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Employer Identification Number (EIN):</td>
-                  <td className="py-1 text-slate-900">{clusoSettings?.cin || "U74140KA2007PTC042369"}</td>
+                  <td className="py-1 text-slate-900">{ozcluSettings?.cin || "U74140KA2007PTC042369"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">DUNS Number:</td>
-                  <td className="py-1 text-slate-900">{clusoSettings?.sac || "U72900GJ2018PTC654321"}</td>
+                  <td className="py-1 text-slate-900">{ozcluSettings?.sac || "U72900GJ2018PTC654321"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">State of Incorporation:</td>
-                  <td className="py-1 text-slate-900">{clusoSettings?.lut || "LUT12345"}</td>
+                  <td className="py-1 text-slate-900">{ozcluSettings?.lut || "LUT12345"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Address:</td>
-                  <td className="py-1 text-slate-900 leading-tight">{clusoAddress}</td>
+                  <td className="py-1 text-slate-900 leading-tight">{ozcluAddress}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Invoice Email:</td>
-                  <td className="py-1 text-slate-900">{clusoSettings?.invoiceEmail || clusoSettings?.contactEmail || "indiaops@ozclu.com"}</td>
+                  <td className="py-1 text-slate-900">{ozcluSettings?.invoiceEmail || ozcluSettings?.contactEmail || "indiaops@ozclu.com"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Billing same as company:</td>
-                  <td className="py-1 text-slate-950">{clusoSettings?.billingSameAsCompany ? "Yes" : "No"}</td>
+                  <td className="py-1 text-slate-950">{ozcluSettings?.billingSameAsCompany ? "Yes" : "No"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Billing Address:</td>
                   <td className="py-1 text-slate-900 leading-tight">
-                    {clusoSettings?.billingSameAsCompany ? "-" : clusoSettings?.billingAddress || "-"}
+                    {ozcluSettings?.billingSameAsCompany ? "-" : ozcluSettings?.billingAddress || "-"}
                   </td>
                 </tr>
               </tbody>
