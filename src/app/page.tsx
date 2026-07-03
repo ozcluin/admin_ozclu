@@ -76,11 +76,9 @@ export default function AdminLoginPage() {
       <main className="flex-1 flex flex-col justify-center items-center px-4 py-12 relative z-10">
         <div className="w-full max-w-md bg-white/75 backdrop-blur-xl border border-white/60 rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(1, 110, 28,0.08)] transition-all duration-500 animate-fade-in">
           <div className="text-center mb-8 flex flex-col items-center">
-            {/* Visual Icon */}
-            <div className="w-14 h-14 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] border border-[#bfcab9]/30 rounded-2xl flex items-center justify-center mb-4 shadow-sm shadow-[#016e1c]/10 text-[#016e1c]">
-              <span className="material-symbols-outlined text-3xl font-light">admin_panel_settings</span>
+            <div className="mb-4 select-none">
+              <OzcluLogo size="lg" />
             </div>
-            <h2 className="font-display-lg text-slate-900 mb-2">Welcome Back</h2>
             <p className="font-body-lg text-[#5e7285]">Sign in to access your administrative workspace.</p>
           </div>
 
