@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "src/context/AuthContext";
+import OzcluLogo from "./components/OzcluLogo";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -44,9 +45,9 @@ export default function AdminLoginPage() {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#f4f9fc] items-center justify-center">
+      <div className="flex flex-col min-h-screen bg-[#f6fbf0] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#42C2FF] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-[#016e1c] border-t-transparent rounded-full animate-spin"></div>
           <span className="font-body-sm text-[#5e7285] animate-pulse">Loading secure session...</span>
         </div>
       </div>
@@ -54,22 +55,18 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-[#EFFFFD] via-[#f4f9fc] to-[#B8FFF9] text-on-background relative overflow-hidden font-sans">
+    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-[#f6fbf0] via-[#f6fbf0] to-[#eaf0e4] text-on-background relative overflow-hidden font-sans">
       {/* Decorative gradient glowing spheres */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-[#85F4FF]/20 to-transparent blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tl from-[#42C2FF]/15 to-transparent blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-[#bfcab9]/20 to-transparent blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tl from-[#016e1c]/15 to-transparent blur-3xl pointer-events-none"></div>
 
       {/* Top Header */}
-      <header className="h-16 bg-white/40 backdrop-blur-md border-b border-[#42C2FF]/15 flex justify-between items-center px-8 z-10">
+      <header className="h-16 bg-white/40 backdrop-blur-md border-b border-[#016e1c]/15 flex justify-between items-center px-8 z-10">
         <div className="flex items-center gap-3">
-          <img 
-            src="/cluso-infolink.png" 
-            alt="Cluso Infolink Logo" 
-            className="h-12 w-auto object-contain"
-          />
+          <OzcluLogo size="md" />
         </div>
         <div>
-          <span className="font-label-caps text-[#0369a1] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 px-3 py-1 rounded-full text-xs font-semibold">
+          <span className="font-label-caps text-[#00450e] bg-[#eaf0e4]/40 border border-[#bfcab9]/30 px-3 py-1 rounded-full text-xs font-semibold">
             Admin Console
           </span>
         </div>
@@ -77,10 +74,10 @@ export default function AdminLoginPage() {
 
       {/* Main Container */}
       <main className="flex-1 flex flex-col justify-center items-center px-4 py-12 relative z-10">
-        <div className="w-full max-w-md bg-white/75 backdrop-blur-xl border border-white/60 rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(66,194,255,0.08)] transition-all duration-500 animate-fade-in">
+        <div className="w-full max-w-md bg-white/75 backdrop-blur-xl border border-white/60 rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(1, 110, 28,0.08)] transition-all duration-500 animate-fade-in">
           <div className="text-center mb-8 flex flex-col items-center">
             {/* Visual Icon */}
-            <div className="w-14 h-14 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] border border-[#85F4FF]/30 rounded-2xl flex items-center justify-center mb-4 shadow-sm shadow-[#42C2FF]/10 text-[#0284c7]">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] border border-[#bfcab9]/30 rounded-2xl flex items-center justify-center mb-4 shadow-sm shadow-[#016e1c]/10 text-[#016e1c]">
               <span className="material-symbols-outlined text-3xl font-light">admin_panel_settings</span>
             </div>
             <h2 className="font-display-lg text-slate-900 mb-2">Welcome Back</h2>
@@ -107,8 +104,8 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-slate-200/80 rounded-xl p-3.5 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white placeholder-slate-400"
-                placeholder="admin@cluso.in"
+                className="w-full border border-slate-200/80 rounded-xl p-3.5 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white placeholder-slate-400"
+                placeholder="indiaops@ozclu.com"
               />
             </div>
 
@@ -124,7 +121,7 @@ export default function AdminLoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-slate-200/80 rounded-xl p-3.5 pr-12 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white placeholder-slate-400"
+                  className="w-full border border-slate-200/80 rounded-xl p-3.5 pr-12 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white placeholder-slate-400"
                   placeholder="••••••••••••"
                 />
                 <button
@@ -163,7 +160,7 @@ export default function AdminLoginPage() {
           {/* Admin Notice */}
           <div className="mt-8 text-center border-t border-slate-100 pt-5">
             <div className="flex items-center justify-center gap-2 text-xs text-[#5e7285]">
-              <span className="material-symbols-outlined text-base text-[#42C2FF]">shield</span>
+              <span className="material-symbols-outlined text-base text-[#016e1c]">shield</span>
               <span className="font-body-sm">Protected environment for verified specialists only.</span>
             </div>
           </div>
@@ -171,8 +168,8 @@ export default function AdminLoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="h-14 bg-white/20 backdrop-blur-sm border-t border-[#42C2FF]/10 flex justify-center items-center font-body-sm text-[#5e7285] text-xs font-medium">
-        <span>&copy; {new Date().getFullYear()} Cluso Infolink. All Rights Reserved.</span>
+      <footer className="h-14 bg-white/20 backdrop-blur-sm border-t border-[#016e1c]/10 flex justify-center items-center font-body-sm text-[#5e7285] text-xs font-medium">
+        <span>&copy; {new Date().getFullYear()} Ozclu. All Rights Reserved.</span>
       </footer>
     </div>
   );

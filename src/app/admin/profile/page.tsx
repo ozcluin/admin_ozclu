@@ -26,8 +26,8 @@ export default function AdminProfilePage() {
   // Sync form states with settings from context
   useEffect(() => {
     if (settings) {
-      setCompanyName(settings.companyName || "Cluso Infolink Private Limited");
-      setContactEmail(settings.contactEmail || "indiaops@cluso.in");
+      setCompanyName(settings.companyName || "Ozclu Private Limited");
+      setContactEmail(settings.contactEmail || "indiaops@ozclu.com");
       setGstin(settings.gstin || "29AADCC1935C1ZZ");
       setCin(settings.cin || "U74140KA2007PTC042369");
       setSac(settings.sac || "U72900GJ2018PTC654321");
@@ -35,7 +35,7 @@ export default function AdminProfilePage() {
       setAddress(settings.address || "Evoma #14, Old Madras Road, Near Garden City College, Bhattarahalli, Binna Mangala, Krishnarajapuram, Bengaluru, Karnataka, 560049");
       setCity(settings.city || "Bengaluru");
       setPostalCode(settings.postalCode || "560049");
-      setInvoiceEmail(settings.invoiceEmail || "indiaops@cluso.in");
+      setInvoiceEmail(settings.invoiceEmail || "indiaops@ozclu.com");
       setBillingSameAsCompany(settings.billingSameAsCompany !== undefined ? settings.billingSameAsCompany : true);
       setBillingAddress(settings.billingAddress || "Evoma #14, Old Madras Road, Near Garden City College, Bhattarahalli, Binna Mangala, Krishnarajapuram, Bengaluru, Karnataka, 560049");
     }
@@ -63,7 +63,7 @@ export default function AdminProfilePage() {
         billingSameAsCompany,
         billingAddress,
       });
-      setSuccess("Cluso Infolink details updated successfully!");
+      setSuccess("Ozclu details updated successfully!");
       setTimeout(() => setSuccess(""), 4500);
     } catch (err: any) {
       setError(err.message || "Failed to update profile settings.");
@@ -77,11 +77,11 @@ export default function AdminProfilePage() {
       {/* Page Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-          <span className="material-symbols-outlined text-sky-600 font-bold text-3xl">settings</span>
+          <span className="material-symbols-outlined text-primary font-bold text-3xl">settings</span>
           <span>Admin Profile Settings</span>
         </h1>
         <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
-          Configure Cluso Infolink organizational details used on billable summaries and invoices.
+          Configure Ozclu organizational details used on billable summaries and invoices.
         </p>
       </div>
 
@@ -100,7 +100,7 @@ export default function AdminProfilePage() {
       )}
 
       {/* Main Settings Panel */}
-      <form onSubmit={handleSubmit} className="bg-white border border-[#42C2FF]/12 rounded-3xl p-6 md:p-8 flex flex-col gap-8 shadow-[0_4px_25px_rgba(66,194,255,0.03)]">
+      <form onSubmit={handleSubmit} className="bg-white border border-[#016e1c]/12 rounded-3xl p-6 md:p-8 flex flex-col gap-8 shadow-[0_4px_25px_rgba(1, 110, 28,0.03)]">
         
         {/* Section 1: Organisation Identity */}
         <div className="flex flex-col gap-5">
@@ -116,8 +116,8 @@ export default function AdminProfilePage() {
                 type="text" 
                 value={companyName} 
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="e.g. Cluso Infolink Private Limited" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                placeholder="e.g. Ozclu Private Limited" 
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
                 required
               />
             </div>
@@ -127,8 +127,8 @@ export default function AdminProfilePage() {
                 type="email" 
                 value={contactEmail} 
                 onChange={(e) => setContactEmail(e.target.value)}
-                placeholder="e.g. indiaops@cluso.in" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                placeholder="e.g. indiaops@ozclu.com" 
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
                 required
               />
             </div>
@@ -150,7 +150,7 @@ export default function AdminProfilePage() {
                 value={gstin} 
                 onChange={(e) => setGstin(e.target.value)}
                 placeholder="e.g. 1234567-8" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -160,7 +160,7 @@ export default function AdminProfilePage() {
                 value={cin} 
                 onChange={(e) => setCin(e.target.value)}
                 placeholder="e.g. 12-3456789" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -170,7 +170,7 @@ export default function AdminProfilePage() {
                 value={sac} 
                 onChange={(e) => setSac(e.target.value)}
                 placeholder="e.g. 12-345-6789" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -180,7 +180,7 @@ export default function AdminProfilePage() {
                 value={lut} 
                 onChange={(e) => setLut(e.target.value)}
                 placeholder="e.g. Delaware" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
               />
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function AdminProfilePage() {
                 value={address} 
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="e.g. Evoma #14, Old Madras Road" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -212,7 +212,7 @@ export default function AdminProfilePage() {
                   value={city} 
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Bengaluru" 
-                  className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                  className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -222,7 +222,7 @@ export default function AdminProfilePage() {
                   value={postalCode} 
                   onChange={(e) => setPostalCode(e.target.value)}
                   placeholder="560049" 
-                  className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                  className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
                 />
               </div>
             </div>
@@ -243,8 +243,8 @@ export default function AdminProfilePage() {
                 type="email" 
                 value={invoiceEmail} 
                 onChange={(e) => setInvoiceEmail(e.target.value)}
-                placeholder="e.g. accounts@cluso.in" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                placeholder="e.g. accounts@ozclu.com" 
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
               />
             </div>
             
@@ -254,7 +254,7 @@ export default function AdminProfilePage() {
                   type="checkbox" 
                   checked={billingSameAsCompany} 
                   onChange={(e) => setBillingSameAsCompany(e.target.checked)}
-                  className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500/20 border-slate-300"
+                  className="w-4 h-4 rounded text-primary focus:ring-primary/20 border-slate-300"
                 />
                 <span className="text-xs font-bold text-slate-700">Billing address is same as registered address</span>
               </label>
@@ -269,7 +269,7 @@ export default function AdminProfilePage() {
                 value={billingAddress} 
                 onChange={(e) => setBillingAddress(e.target.value)}
                 placeholder="Enter complete billing address" 
-                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all"
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
               />
             </div>
           )}
@@ -280,7 +280,7 @@ export default function AdminProfilePage() {
           <button 
             type="submit" 
             disabled={saving}
-            className="px-6 py-3 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#134074] hover:brightness-110 text-white font-button-text rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 h-11 w-full sm:w-auto border-none disabled:opacity-40 disabled:cursor-not-allowed font-bold"
+            className="px-6 py-3 bg-gradient-to-br from-[#181d16] via-[#3f4a3d] to-[#00450e] hover:brightness-110 text-white font-button-text rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 h-11 w-full sm:w-auto border-none disabled:opacity-40 disabled:cursor-not-allowed font-bold"
           >
             {saving ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

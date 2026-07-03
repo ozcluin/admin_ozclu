@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     // Generate TOTP secret
     const secret = new OTPAuth.Secret({ size: 20 });
     const totp = new OTPAuth.TOTP({
-      issuer: "Cluso Infolink Admin",
+      issuer: "Ozclu Admin",
       label: user.email,
       algorithm: "SHA1",
       digits: 6,

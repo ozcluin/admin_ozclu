@@ -598,11 +598,11 @@ export default function ManageInvoicesPage() {
 
       <div className="grid grid-cols-1 gap-6 max-w-6xl">
         {/* ════════════ Organisation Directory ════════════ */}
-        <section className="bg-white border border-[#42C2FF]/12 rounded-2xl p-6 flex flex-col gap-5 shadow-[0_4px_25px_rgba(66,194,255,0.03)]">
+        <section className="bg-white border border-[#016e1c]/12 rounded-2xl p-6 flex flex-col gap-5 shadow-[0_4px_25px_rgba(1, 110, 28,0.03)]">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-4">
             <div className="flex items-center gap-3">
               <h3 className="font-headline-md text-slate-900 font-extrabold">Organisation Directory</h3>
-              <span className="text-[10px] text-[#0369a1] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider font-label-caps">
+              <span className="text-[10px] text-[#00450e] bg-[#eaf0e4]/40 border border-[#bfcab9]/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider font-label-caps">
                 {visibleOrgs.length} Org{visibleOrgs.length !== 1 ? "s" : ""}
               </span>
             </div>
@@ -617,7 +617,7 @@ export default function ManageInvoicesPage() {
                 setNewOwnerEmail("");
                 setNewOwnerPassword("");
               }}
-              className="px-4 py-2 bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border-none shadow-sm shadow-sky-500/15"
+              className="px-4 py-2 bg-[#016e1c] hover:bg-[#016e1c] text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border-none shadow-sm shadow-primary/15"
             >
               <span className="material-symbols-outlined text-[15px] font-bold">domain_add</span>
               <span>Create Organisation</span>
@@ -676,14 +676,14 @@ export default function ManageInvoicesPage() {
                     onClick={() => openOrgDetail(org)}
                     className={`relative bg-slate-50/40 border rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:bg-white hover:shadow-lg group ${
                       isSelected
-                        ? "border-[#42C2FF] ring-4 ring-[#42C2FF]/10 shadow-md bg-white"
-                        : "border-slate-200/70 hover:border-[#42C2FF]/40"
+                        ? "border-[#016e1c] ring-4 ring-[#016e1c]/10 shadow-md bg-white"
+                        : "border-slate-200/70 hover:border-[#016e1c]/40"
                     }`}
                   >
                     {/* Org icon + name */}
                     <div className="flex items-start gap-3.5 mb-4">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black shadow-sm ${
-                        isSelected ? "bg-gradient-to-br from-[#42C2FF] to-[#0099ff] text-white" : "bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] text-[#0284c7]"
+                        isSelected ? "bg-gradient-to-br from-[#016e1c] to-[#0099ff] text-white" : "bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] text-[#016e1c]"
                       }`}>
                         {org.name.charAt(0).toUpperCase()}
                       </div>
@@ -698,7 +698,7 @@ export default function ManageInvoicesPage() {
 
                     {/* Plan badge */}
                     <div className="flex items-center gap-2 mb-4 flex-wrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15">
                         <span className="material-symbols-outlined text-[11px] mr-1">calendar_month</span>
                         Monthly
                       </span>
@@ -715,7 +715,7 @@ export default function ManageInvoicesPage() {
                       )}
                       <span className="font-body-sm font-extrabold text-slate-800">${org.monthlyRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">/ verification</span></span>
                       
-                      <span className="font-body-sm font-bold text-[#0369a1] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 px-2 py-0.5 rounded-md text-[10px] ml-auto">Dues: ${totalDues.toFixed(2)}</span>
+                      <span className="font-body-sm font-bold text-[#00450e] bg-[#eaf0e4]/40 border border-[#bfcab9]/30 px-2 py-0.5 rounded-md text-[10px] ml-auto">Dues: ${totalDues.toFixed(2)}</span>
                     </div>
 
                     {/* Stats row */}
@@ -750,21 +750,21 @@ export default function ManageInvoicesPage() {
           onClick={() => setCreateOrgOpen(false)}
         >
           <div
-            className="bg-white border border-[#42C2FF]/12 rounded-3xl shadow-3xl w-full max-w-3xl overflow-hidden flex flex-col relative my-auto animate-fade-in text-left"
+            className="bg-white border border-[#016e1c]/12 rounded-3xl shadow-3xl w-full max-w-3xl overflow-hidden flex flex-col relative my-auto animate-fade-in text-left"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/30 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#B8FFF9]/40 border border-[#85F4FF]/30 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-[#eaf0e4]/40 border border-[#bfcab9]/30 rounded-xl flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-[#0ea5e9]">domain_add</span>
                 </div>
                 <div>
                   <h3 className="font-headline-md text-slate-900 font-extrabold leading-none">Create Organisation</h3>
                   <p className="text-[11px] text-slate-550 font-semibold mt-1">Register a new client organisation and set up their administrator account.</p>
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#B8FFF9]/30 border border-[#85F4FF]/30">
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#eaf0e4]/30 border border-[#bfcab9]/30">
                     <span className="material-symbols-outlined text-[13px] text-[#0ea5e9] font-bold">tag</span>
-                    <span className="text-[10px] font-black text-[#0369a1] tracking-wide">
+                    <span className="text-[10px] font-black text-[#00450e] tracking-wide">
                       Organisation #{String((organisations.reduce((max, o) => Math.max(max, o.orgNumber || 0), 0)) + 1).padStart(3, "0")}
                     </span>
                   </div>
@@ -789,7 +789,7 @@ export default function ManageInvoicesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Column 1: Organisation Details */}
                 <div className="flex flex-col gap-4">
-                  <h4 className="font-bold text-xs text-[#0369a1] font-label-caps uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                  <h4 className="font-bold text-xs text-[#00450e] font-label-caps uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-sm font-bold">domain</span>
                     <span>1. Organisation Details</span>
                   </h4>
@@ -804,7 +804,7 @@ export default function ManageInvoicesPage() {
                       value={newOrgName}
                       onChange={(e) => setNewOrgName(e.target.value)}
                       required
-                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
+                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
                     />
                   </div>
 
@@ -820,7 +820,7 @@ export default function ManageInvoicesPage() {
                       value={newOrgRate}
                       onChange={(e) => setNewOrgRate(e.target.value)}
                       required
-                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
+                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
                     />
                   </div>
 
@@ -835,7 +835,7 @@ export default function ManageInvoicesPage() {
                       value={newMaxVerifiers}
                       onChange={(e) => setNewMaxVerifiers(e.target.value)}
                       required
-                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
+                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
                     />
                   </div>
 
@@ -843,8 +843,8 @@ export default function ManageInvoicesPage() {
                   <div className="flex flex-col gap-1.5 mt-1">
                     <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">Payment Plan</label>
                     <div className="flex gap-3">
-                      <div className="flex-1 p-2.5 rounded-xl border border-[#42C2FF] bg-[#B8FFF9]/10 text-center">
-                        <p className="font-body-sm font-extrabold text-[#0369a1] text-xs leading-none">Monthly</p>
+                      <div className="flex-1 p-2.5 rounded-xl border border-[#016e1c] bg-[#eaf0e4]/10 text-center">
+                        <p className="font-body-sm font-extrabold text-[#00450e] text-xs leading-none">Monthly</p>
                         <p className="text-[8px] text-[#0ea5e9]/70 font-semibold uppercase tracking-wider mt-1.5">Active Plan</p>
                       </div>
                       <div className="flex-1 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-center opacity-40 cursor-not-allowed">
@@ -857,7 +857,7 @@ export default function ManageInvoicesPage() {
 
                 {/* Column 2: Owner Details */}
                 <div className="flex flex-col gap-4">
-                  <h4 className="font-bold text-xs text-[#0369a1] font-label-caps uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                  <h4 className="font-bold text-xs text-[#00450e] font-label-caps uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-sm font-bold">person</span>
                     <span>2. Owner Details</span>
                   </h4>
@@ -872,7 +872,7 @@ export default function ManageInvoicesPage() {
                       value={newOwnerName}
                       onChange={(e) => setNewOwnerName(e.target.value)}
                       required
-                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
+                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
                     />
                   </div>
 
@@ -886,7 +886,7 @@ export default function ManageInvoicesPage() {
                       value={newOwnerEmail}
                       onChange={(e) => setNewOwnerEmail(e.target.value)}
                       required
-                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
+                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
                     />
                   </div>
 
@@ -900,14 +900,14 @@ export default function ManageInvoicesPage() {
                       value={newOwnerPassword}
                       onChange={(e) => setNewOwnerPassword(e.target.value)}
                       required
-                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
+                      className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400 text-xs font-semibold"
                     />
                   </div>
 
                   {/* Auto-billing info */}
-                  <div className="flex items-center gap-2.5 bg-[#B8FFF9]/10 border border-[#85F4FF]/20 rounded-xl px-4 py-2.5 mt-2">
+                  <div className="flex items-center gap-2.5 bg-[#eaf0e4]/10 border border-[#bfcab9]/20 rounded-xl px-4 py-2.5 mt-2">
                     <span className="material-symbols-outlined text-[#0ea5e9] text-base">schedule</span>
-                    <p className="text-[10px] text-[#0369a1] font-semibold leading-snug">
+                    <p className="text-[10px] text-[#00450e] font-semibold leading-snug">
                       Invoices auto-generate on the <span className="font-extrabold">last day</span> of each month at <span className="font-extrabold">11:59 PM</span>.
                     </p>
                   </div>
@@ -925,7 +925,7 @@ export default function ManageInvoicesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-br from-[#0F172A] to-[#1E293B] hover:brightness-110 text-white font-bold text-xs rounded-xl cursor-pointer border-none flex items-center gap-1.5 shadow-sm"
+                  className="px-5 py-2.5 bg-gradient-to-br from-[#181d16] to-[#1E293B] hover:brightness-110 text-white font-bold text-xs rounded-xl cursor-pointer border-none flex items-center gap-1.5 shadow-sm"
                 >
                   <span>Create Organisation</span>
                   <span className="material-symbols-outlined text-sm font-bold">add_business</span>
@@ -943,13 +943,13 @@ export default function ManageInvoicesPage() {
           onClick={() => setSelectedOrgId(null)}
         >
           <div
-            className="bg-white border border-[#42C2FF]/12 rounded-3xl shadow-3xl w-full max-w-6xl h-[85vh] max-h-[85vh] overflow-hidden flex flex-col"
+            className="bg-white border border-[#016e1c]/12 rounded-3xl shadow-3xl w-full max-w-6xl h-[85vh] max-h-[85vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Detail Header */}
             <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/30 shrink-0">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#42C2FF] to-[#0099ff] text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-md shadow-sky-500/10">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#016e1c] to-[#0099ff] text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-md shadow-sky-500/10">
                   {selectedOrg.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -1089,7 +1089,7 @@ export default function ManageInvoicesPage() {
                           <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Payment Plan</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15">
                             Monthly
                           </span>
                         </div>
@@ -1132,7 +1132,7 @@ export default function ManageInvoicesPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 bg-[#42C2FF]/5 border border-[#42C2FF]/10 rounded-xl p-3.5 mt-auto">
+                        <div className="flex flex-col gap-2 bg-[#016e1c]/5 border border-[#016e1c]/10 rounded-xl p-3.5 mt-auto">
                           <div className="flex justify-between items-baseline text-xs">
                             <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Unpaid Invoices</span>
                             <span className="font-bold text-slate-800 font-mono">${orgUnpaidBalance.toFixed(2)}</span>
@@ -1142,8 +1142,8 @@ export default function ManageInvoicesPage() {
                             <span className="font-bold text-slate-850 font-mono">${liveTotal.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between items-baseline">
-                            <span className="text-[9px] text-[#0369a1] uppercase tracking-wider font-extrabold">Current Dues</span>
-                            <span className="font-black text-base text-[#0369a1] font-mono">${totalDues.toFixed(2)}</span>
+                            <span className="text-[9px] text-[#00450e] uppercase tracking-wider font-extrabold">Current Dues</span>
+                            <span className="font-black text-base text-[#00450e] font-mono">${totalDues.toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
@@ -1161,7 +1161,7 @@ export default function ManageInvoicesPage() {
                         </p>
                         <div className="mt-4 flex flex-wrap gap-1">
                           {orgVerifiers.slice(0, 5).map((v) => (
-                            <div key={v.id} className="w-7 h-7 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] rounded-full flex items-center justify-center text-[10px] font-black text-[#0284c7] border-2 border-white shadow-sm" title={v.name}>
+                            <div key={v.id} className="w-7 h-7 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] rounded-full flex items-center justify-center text-[10px] font-black text-[#016e1c] border-2 border-white shadow-sm" title={v.name}>
                               {v.name.charAt(0)}
                             </div>
                           ))}
@@ -1186,21 +1186,21 @@ export default function ManageInvoicesPage() {
                               placeholder="Owner Full Name"
                               value={ownerNameInput}
                               onChange={(e) => setOwnerNameInput(e.target.value)}
-                              className="w-full border border-slate-200/80 rounded-lg p-2 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#42C2FF]/30 transition-all text-xs"
+                              className="w-full border border-slate-200/80 rounded-lg p-2 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/30 transition-all text-xs"
                             />
                             <input
                               type="email"
                               placeholder="Owner Email"
                               value={ownerEmailInput}
                               onChange={(e) => setOwnerEmailInput(e.target.value)}
-                              className="w-full border border-slate-200/80 rounded-lg p-2 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#42C2FF]/30 transition-all text-xs"
+                              className="w-full border border-slate-200/80 rounded-lg p-2 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/30 transition-all text-xs"
                             />
                             <input
                               type="password"
                               placeholder={selectedOrg.ownerEmail ? "Password (empty to keep old)" : "Password (min 6 chars)"}
                               value={ownerPasswordInput}
                               onChange={(e) => setOwnerPasswordInput(e.target.value)}
-                              className="w-full border border-slate-200/80 rounded-lg p-2 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#42C2FF]/30 transition-all text-xs"
+                              className="w-full border border-slate-200/80 rounded-lg p-2 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/30 transition-all text-xs"
                             />
                             <div className="flex items-center justify-between text-xs mt-0.5">
                               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Verifiers Limit:</span>
@@ -1209,7 +1209,7 @@ export default function ManageInvoicesPage() {
                                 min="1"
                                 value={maxVerifiersInput}
                                 onChange={(e) => setMaxVerifiersInput(e.target.value)}
-                                className="w-16 border border-slate-200/80 rounded-lg p-1.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#42C2FF]/30 transition-all text-xs text-center"
+                                className="w-16 border border-slate-200/80 rounded-lg p-1.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/30 transition-all text-xs text-center"
                               />
                             </div>
                             <div className="flex gap-2 mt-1.5 shrink-0">
@@ -1251,14 +1251,14 @@ export default function ManageInvoicesPage() {
                                   <p className="font-body-md font-extrabold text-slate-800 leading-tight">
                                     {selectedOrg.ownerName || "Unnamed Owner"}
                                   </p>
-                                  <p className="text-[11px] text-[#0284c7] font-mono mt-1 select-all">{selectedOrg.ownerEmail}</p>
+                                  <p className="text-[11px] text-[#016e1c] font-mono mt-1 select-all">{selectedOrg.ownerEmail}</p>
                                 </div>
                               ) : (
                                 <div className="text-left flex-1 flex flex-col justify-center items-start py-2">
                                   <p className="font-body-md font-bold text-slate-400 text-xs italic">No Owner Assigned</p>
                                   <button
                                     onClick={() => openOwnerEdit(selectedOrg)}
-                                    className="mt-3.5 px-3 py-1.5 bg-[#42C2FF]/10 text-[#0369a1] border border-[#42C2FF]/25 hover:bg-[#42C2FF]/20 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                                    className="mt-3.5 px-3 py-1.5 bg-[#016e1c]/10 text-[#00450e] border border-[#016e1c]/25 hover:bg-[#016e1c]/20 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1"
                                   >
                                     <span className="material-symbols-outlined text-xs font-bold">add</span>
                                     Add Owner Account
@@ -1268,7 +1268,7 @@ export default function ManageInvoicesPage() {
                             </div>
                             <div className="mt-4 pt-3.5 border-t border-slate-100/50 flex justify-between items-center shrink-0">
                               <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Verifier Accounts Limit</span>
-                              <span className="font-mono text-xs font-black text-[#0369a1] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 px-2 py-0.5 rounded-md">
+                              <span className="font-mono text-xs font-black text-[#00450e] bg-[#eaf0e4]/40 border border-[#bfcab9]/30 px-2 py-0.5 rounded-md">
                                 {orgVerifiers.length} / {selectedOrg.maxVerifiers ?? 5}
                               </span>
                             </div>
@@ -1304,22 +1304,22 @@ export default function ManageInvoicesPage() {
                               <div className="flex flex-col gap-1.5">
                                 <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">State Tax ID / Sales Tax ID</label>
                                 <input type="text" placeholder="e.g. 1234567-8" value={entGstin} onChange={(e) => setEntGstin(e.target.value)}
-                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
+                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                               <div className="flex flex-col gap-1.5">
                                 <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Employer Identification Number (EIN)</label>
                                 <input type="text" placeholder="e.g. 12-3456789" value={entCin} onChange={(e) => setEntCin(e.target.value)}
-                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
+                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                               <div className="flex flex-col gap-1.5">
                                 <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">DUNS Number</label>
                                 <input type="text" placeholder="e.g. 12-345-6789" value={entTin} onChange={(e) => setEntTin(e.target.value)}
-                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
+                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                               <div className="flex flex-col gap-1.5">
                                 <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">State of Incorporation</label>
                                 <input type="text" placeholder="e.g. Delaware" value={entLut} onChange={(e) => setEntLut(e.target.value)}
-                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
+                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                             </div>
 
@@ -1329,18 +1329,18 @@ export default function ManageInvoicesPage() {
                               <div className="flex flex-col gap-1.5">
                                 <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Street Address</label>
                                 <input type="text" placeholder="e.g. 123 Business Park, MG Road" value={entAddress} onChange={(e) => setEntAddress(e.target.value)}
-                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 text-xs" />
+                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 text-xs" />
                               </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="flex flex-col gap-1.5">
                                   <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">City</label>
                                   <input type="text" placeholder="e.g. Mumbai" value={entCity} onChange={(e) => setEntCity(e.target.value)}
-                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 text-xs" />
+                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 text-xs" />
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                   <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Postal Code</label>
                                   <input type="text" placeholder="e.g. 400001" value={entPostalCode} onChange={(e) => setEntPostalCode(e.target.value)}
-                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 text-xs" />
+                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 text-xs" />
                                 </div>
                               </div>
                               <div className="flex items-center gap-3 mt-1">
@@ -1348,7 +1348,7 @@ export default function ManageInvoicesPage() {
                                   type="button"
                                   onClick={() => setEntBillingSameAsCompany(!entBillingSameAsCompany)}
                                   className={`w-9 h-5 rounded-full relative transition-all duration-300 cursor-pointer border ${
-                                    entBillingSameAsCompany ? "bg-[#42C2FF] border-[#42C2FF]/50" : "bg-slate-200 border-slate-300"
+                                    entBillingSameAsCompany ? "bg-[#016e1c] border-[#016e1c]/50" : "bg-slate-200 border-slate-300"
                                   }`}
                                 >
                                   <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${
@@ -1361,7 +1361,7 @@ export default function ManageInvoicesPage() {
                                 <div className="flex flex-col gap-1.5 animate-fade-in">
                                   <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Billing Address</label>
                                   <textarea placeholder="Enter separate billing address..." value={entBillingAddress} onChange={(e) => setEntBillingAddress(e.target.value)} rows={2}
-                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 resize-none text-xs" />
+                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none text-xs" />
                                 </div>
                               )}
                             </div>
@@ -1372,24 +1372,24 @@ export default function ManageInvoicesPage() {
                               <div className="flex flex-col gap-1.5">
                                 <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Invoice Email</label>
                                 <input type="email" placeholder="e.g. billing@company.com" value={entInvoiceEmail} onChange={(e) => setEntInvoiceEmail(e.target.value)}
-                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
+                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="flex flex-col gap-1.5">
                                   <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">First Name</label>
                                   <input type="text" placeholder="e.g. Rahul" value={entContactFirstName} onChange={(e) => setEntContactFirstName(e.target.value)}
-                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 text-xs" />
+                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 text-xs" />
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                   <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Last Name</label>
                                   <input type="text" placeholder="e.g. Sharma" value={entContactLastName} onChange={(e) => setEntContactLastName(e.target.value)}
-                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 text-xs" />
+                                    className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 text-xs" />
                                 </div>
                               </div>
                               <div className="flex flex-col gap-1.5">
                                 <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Contact Email</label>
                                 <input type="email" placeholder="e.g. contact@company.com" value={entContactEmail} onChange={(e) => setEntContactEmail(e.target.value)}
-                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 font-mono text-xs" />
+                                  className="w-full border border-slate-200/80 rounded-xl p-2.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 font-mono text-xs" />
                               </div>
                             </div>
                           </div>
@@ -1458,7 +1458,7 @@ export default function ManageInvoicesPage() {
                             <span className="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold border-b border-slate-100 pb-1">Contact Details</span>
                             <div className="flex flex-col">
                               <span className="text-[10px] text-slate-450 font-medium">Invoice Email</span>
-                              <span className="font-mono text-xs font-bold text-[#0284c7]">{orgSettings.invoiceEmail || "-"}</span>
+                              <span className="font-mono text-xs font-bold text-[#016e1c]">{orgSettings.invoiceEmail || "-"}</span>
                             </div>
                             <div className="flex flex-col">
                               <span className="text-[10px] text-slate-450 font-medium">Contact Person Name</span>
@@ -1517,28 +1517,28 @@ export default function ManageInvoicesPage() {
                         <div className="flex flex-col gap-2">
                           <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Bank Name</label>
                           <input type="text" placeholder="e.g. Silicon Valley Bank" value={payBankName} onChange={(e) => setPayBankName(e.target.value)}
-                            className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
+                            className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400" />
                         </div>
                         <div className="flex flex-col gap-2">
                           <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Account Number</label>
                           <input type="text" placeholder="e.g. 1092830918" value={payAccountNumber} onChange={(e) => setPayAccountNumber(e.target.value)}
-                            className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
+                            className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400" />
                         </div>
                         <div className="flex flex-col gap-2">
                           <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">IFSC / Routing Code</label>
                           <input type="text" placeholder="e.g. IFSC0002" value={payIfscCode} onChange={(e) => setPayIfscCode(e.target.value)}
-                            className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
+                            className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400" />
                         </div>
                         <div className="flex flex-col gap-2">
                           <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">UPI ID</label>
                           <input type="text" placeholder="e.g. acme@upi" value={payUpiId} onChange={(e) => setPayUpiId(e.target.value)}
-                            className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
+                            className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400" />
                         </div>
                       </div>
                       <div className="flex flex-col gap-2">
                         <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[9px] font-bold">Payment Notes & Wire Instructions</label>
                         <textarea placeholder="Special instructions for wire transfers..." value={payNotes} onChange={(e) => setPayNotes(e.target.value)} rows={3}
-                          className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400 resize-none" />
+                          className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none" />
                       </div>
                       <div className="flex gap-2.5 mt-2">
                         <button onClick={handleSavePayment} disabled={paymentSaving}
@@ -1629,7 +1629,7 @@ export default function ManageInvoicesPage() {
                                   <td className="py-3 px-4 font-bold text-slate-800">{v.name}</td>
                                   <td className="py-3 px-4 text-slate-500 font-mono text-xs">{v.email}</td>
                                   <td className="py-3 px-4 text-slate-600 font-medium">{v.designation || "—"}</td>
-                                  <td className="py-3 px-4 font-bold text-[#0369a1]">${(v.ratePerVerification ?? 0).toLocaleString("en-US")}</td>
+                                  <td className="py-3 px-4 font-bold text-[#00450e]">${(v.ratePerVerification ?? 0).toLocaleString("en-US")}</td>
                                   <td className="py-3 px-4 text-right">
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold border ${
                                       v.status === "Active" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15" : "bg-slate-100 text-slate-400 border-slate-200/50"
@@ -1653,13 +1653,13 @@ export default function ManageInvoicesPage() {
                       </div>
                       <form onSubmit={handleAddVerifier} className="flex flex-col gap-3.5">
                         <input type="text" placeholder="Full name (e.g. David Miller)" value={vName} onChange={(e) => setVName(e.target.value)}
-                          autoComplete="off" className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
+                          autoComplete="off" className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400" />
                         
                         <input type="email" placeholder="Email address" value={vEmail} onChange={(e) => setVEmail(e.target.value)}
-                          autoComplete="off" className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
+                          autoComplete="off" className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400" />
                         
                         <input type="text" placeholder="Job title / Designation" value={vDesignation} onChange={(e) => setVDesignation(e.target.value)}
-                          autoComplete="off" className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
+                          autoComplete="off" className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400" />
 
                         
                         <div>
@@ -1671,7 +1671,7 @@ export default function ManageInvoicesPage() {
                           </div>
                           <div className="relative">
                             <input type="text" placeholder="Set temporary login password" value={vPassword} onChange={(e) => setVPassword(e.target.value)}
-                              autoComplete="new-password" className="w-full border border-slate-200/80 rounded-xl p-3 pr-10 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all placeholder-slate-400" />
+                              autoComplete="new-password" className="w-full border border-slate-200/80 rounded-xl p-3 pr-10 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all placeholder-slate-400" />
                             {vPassword && (
                               <button type="button" onClick={() => navigator.clipboard.writeText(vPassword)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer flex items-center justify-center" title="Copy Password">
@@ -1699,14 +1699,14 @@ export default function ManageInvoicesPage() {
                       <div className="flex-1 flex flex-col gap-2">
                         <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">Invoice Month</label>
                         <select value={invoiceMonth} onChange={(e) => setInvoiceMonth(e.target.value)}
-                          className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all cursor-pointer">
+                          className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all cursor-pointer">
                           {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
                         </select>
                       </div>
                       <div className="w-full sm:w-36 flex flex-col gap-2">
                         <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">Invoice Year</label>
                         <input type="number" min="2020" max="2100" value={invoiceYear} onChange={(e) => setInvoiceYear(e.target.value)}
-                          className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all" />
+                          className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all" />
                       </div>
                       <button 
                         onClick={handleGenerateInvoice}
@@ -1868,7 +1868,7 @@ export default function ManageInvoicesPage() {
                                 >
                                   <span
                                     onClick={() => setExpandedInvoiceId(expandedInvoiceId === inv.id ? null : inv.id)}
-                                    className="font-bold text-sky-600 hover:text-sky-850 hover:underline font-mono text-xs cursor-pointer block"
+                                    className="font-bold text-primary hover:text-sky-850 hover:underline font-mono text-xs cursor-pointer block"
                                   >
                                     {inv.id}
                                   </span>
@@ -1887,7 +1887,7 @@ export default function ManageInvoicesPage() {
                                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${
                                     inv.generationType === "Manual"
                                       ? "bg-purple-500/10 text-purple-600 border-purple-500/15"
-                                      : "bg-blue-500/10 text-blue-600 border-blue-500/15"
+                                      : "bg-blue-500/10 text-primary border-primary/15"
                                   }`}>
                                     {inv.generationType === "Manual" ? "Manual" : "Autogenerated"}
                                   </span>
@@ -1959,13 +1959,13 @@ export default function ManageInvoicesPage() {
 
                                             return sorted.map((act, index) => {
                                               let icon = "receipt";
-                                              let iconBg = "bg-sky-500 text-white";
+                                              let iconBg = "bg-primary text-white";
                                               let title = "";
                                               let content = null;
 
                                               if (act.type === "generated") {
                                                 icon = "receipt";
-                                                iconBg = "bg-sky-500 text-white";
+                                                iconBg = "bg-primary text-white";
                                                 title = "Invoice Generated";
                                                 content = (
                                                   <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
@@ -2001,7 +2001,7 @@ export default function ManageInvoicesPage() {
                                                           <button
                                                             type="button"
                                                             onClick={() => window.open(act.paymentProof, "_blank")}
-                                                            className="text-xs text-sky-600 underline hover:no-underline font-extrabold flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
+                                                            className="text-xs text-primary underline hover:no-underline font-extrabold flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
                                                           >
                                                             <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
                                                             <span>View Document</span>
@@ -2098,7 +2098,7 @@ export default function ManageInvoicesPage() {
                                               });
                                               setAdminNoteInput(inv.adminNote || "");
                                             }}
-                                            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all text-xs cursor-pointer font-semibold text-slate-700"
+                                            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all text-xs cursor-pointer font-semibold text-slate-700"
                                           >
                                             <option value="Paid">Paid</option>
                                             <option value="Pending">Pending</option>
@@ -2118,7 +2118,7 @@ export default function ManageInvoicesPage() {
                                         <button
                                           type="button"
                                           onClick={() => setDetailInvoice(inv)}
-                                          className="w-full px-4 py-2.5 border border-[#42C2FF]/20 hover:border-[#42C2FF]/40 bg-[#B8FFF9]/20 hover:bg-[#85F4FF]/20 text-[#0284c7] font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                          className="w-full px-4 py-2.5 border border-[#016e1c]/20 hover:border-[#016e1c]/40 bg-[#eaf0e4]/20 hover:bg-[#bfcab9]/20 text-[#016e1c] font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                                         >
                                           <span className="material-symbols-outlined text-[16px] font-bold">visibility</span>
                                           <span>View Itemized Details</span>
@@ -2148,7 +2148,7 @@ export default function ManageInvoicesPage() {
           onClick={() => setShowDeleteModal(false)}
         >
           <div
-            className="bg-white border border-[#42C2FF]/12 rounded-3xl shadow-3xl w-full max-w-md mx-4 overflow-hidden relative"
+            className="bg-white border border-[#016e1c]/12 rounded-3xl shadow-3xl w-full max-w-md mx-4 overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -2169,7 +2169,7 @@ export default function ManageInvoicesPage() {
               <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 flex flex-col gap-1.5">
                 <p className="font-body-sm text-slate-400 font-bold text-[9px] uppercase tracking-wider">Confirm Delete Request</p>
                 <div className="flex items-center gap-2.5 mt-1">
-                  <div className="w-8 h-8 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] rounded-lg flex items-center justify-center text-[#0284c7] font-black text-sm">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] rounded-lg flex items-center justify-center text-[#016e1c] font-black text-sm">
                     {selectedOrg.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -2218,7 +2218,7 @@ export default function ManageInvoicesPage() {
                     className={`w-full pl-10 pr-4 py-3 border rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 transition-all ${
                       deleteError
                         ? "border-red-500 focus:ring-red-500/10 bg-white"
-                        : "border-slate-200/80 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white"
+                        : "border-slate-200/80 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white"
                     }`}
                   />
                 </div>
@@ -2282,7 +2282,7 @@ export default function ManageInvoicesPage() {
           onClick={() => setShowDeactivateModal(false)}
         >
           <div
-            className="bg-white border border-[#42C2FF]/12 rounded-3xl shadow-3xl w-full max-w-md mx-4 overflow-hidden relative"
+            className="bg-white border border-[#016e1c]/12 rounded-3xl shadow-3xl w-full max-w-md mx-4 overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -2316,7 +2316,7 @@ export default function ManageInvoicesPage() {
                     onClick={() => setDeactivateInvoiceOption("keep")}
                     className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3 ${
                       deactivateInvoiceOption === "keep"
-                        ? "border-[#42C2FF] bg-[#B8FFF9]/10 shadow-sm"
+                        ? "border-[#016e1c] bg-[#eaf0e4]/10 shadow-sm"
                         : "border-slate-200/80 bg-slate-50/50 hover:bg-slate-50"
                     }`}
                   >
@@ -2399,12 +2399,12 @@ export default function ManageInvoicesPage() {
           }}
         >
           <div
-            className="bg-white border border-[#42C2FF]/12 rounded-3xl shadow-3xl w-full max-w-4xl h-[70vh] max-h-[70vh] overflow-hidden flex flex-col"
+            className="bg-white border border-[#016e1c]/12 rounded-3xl shadow-3xl w-full max-w-4xl h-[70vh] max-h-[70vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {adminModalClosing === "details" ? (
               <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-fade-in">
-                <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
                 <h3 className="font-semibold text-sm text-slate-800">Closing Invoice Details...</h3>
                 <p className="text-secondary text-[10px] mt-1 text-slate-500 font-medium">Please wait a moment</p>
               </div>
@@ -2413,7 +2413,7 @@ export default function ManageInvoicesPage() {
                 {/* Modal Header */}
                 <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/30 shrink-0">
                   <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 bg-sky-500/10 text-sky-600 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-sky-500/10 text-primary rounded-xl flex items-center justify-center">
                       <span className="material-symbols-outlined text-[20px] font-bold">receipt_long</span>
                     </div>
                     <div>
@@ -2492,7 +2492,7 @@ export default function ManageInvoicesPage() {
                                 : v.date;
                               return (
                                 <tr key={v.id}>
-                                  <td className="py-2.5 px-3 font-mono text-xs text-sky-600 font-bold">{v.id}</td>
+                                  <td className="py-2.5 px-3 font-mono text-xs text-primary font-bold">{v.id}</td>
                                   <td className="py-2.5 px-3 text-xs text-slate-700 font-medium">{v.name}</td>
                                   <td className="py-2.5 px-3 text-xs text-slate-500 font-mono">{v.email}</td>
                                   <td className="py-2.5 px-3 text-xs text-slate-600 font-medium">{completedDateStr}</td>
@@ -2520,7 +2520,7 @@ export default function ManageInvoicesPage() {
                         );
                       }
                     }}
-                    className="px-4 py-2 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#134074] text-white hover:brightness-110 font-button-text rounded-xl transition-all cursor-pointer text-xs font-bold flex items-center gap-1.5 border-none shadow-sm"
+                    className="px-4 py-2 bg-gradient-to-br from-[#181d16] via-[#3f4a3d] to-[#00450e] text-white hover:brightness-110 font-button-text rounded-xl transition-all cursor-pointer text-xs font-bold flex items-center gap-1.5 border-none shadow-sm"
                   >
                     <span className="material-symbols-outlined text-[15px]">download</span>
                     <span>Download Billable Summary</span>
@@ -2541,7 +2541,7 @@ export default function ManageInvoicesPage() {
       {/* ════════════ UNDO DELETION TOAST BANNER ════════════ */}
       {pendingDeleteOrg && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-slate-800 text-white rounded-2xl shadow-3xl p-4.5 flex items-center gap-4.5 animate-fade-in max-w-sm">
-          <span className="material-symbols-outlined text-[#42C2FF] text-xl font-bold">delete</span>
+          <span className="material-symbols-outlined text-[#016e1c] text-xl font-bold">delete</span>
           <div className="flex-1 min-w-0">
             <p className="font-body-sm font-bold text-white leading-none">Organisation Deleted</p>
             <p className="text-[11px] text-slate-400 font-semibold truncate mt-1">{pendingDeleteOrg.name}</p>
@@ -2552,7 +2552,7 @@ export default function ManageInvoicesPage() {
               setUndoTimer(0);
               localStorage.removeItem("pending_delete_org");
             }}
-            className="text-white hover:text-[#42C2FF] px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 transition-all font-button-text text-xs cursor-pointer flex items-center gap-1.5 font-bold shadow-sm"
+            className="text-white hover:text-[#016e1c] px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 transition-all font-button-text text-xs cursor-pointer flex items-center gap-1.5 font-bold shadow-sm"
           >
             <span className="material-symbols-outlined text-[15px] font-bold">undo</span>
             <span>Undo ({undoTimer}s)</span>
@@ -2567,7 +2567,7 @@ export default function ManageInvoicesPage() {
             {adminModalClosing === "status" ? (
               <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in min-h-[160px]">
                 <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                <h3 className="font-semibold text-xs text-[#0F172A]">Closing Dialog...</h3>
+                <h3 className="font-semibold text-xs text-[#181d16]">Closing Dialog...</h3>
                 <p className="text-slate-500 text-[10px] mt-1">Please wait</p>
               </div>
             ) : (
@@ -2589,7 +2589,7 @@ export default function ManageInvoicesPage() {
                     onChange={(e) => setAdminNoteInput(e.target.value)}
                     placeholder="Add comments or reference notes for this update..."
                     rows={3}
-                    className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all resize-none text-xs"
+                    className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all resize-none text-xs"
                   />
                 </div>
 
@@ -2604,7 +2604,7 @@ export default function ManageInvoicesPage() {
                   <button
                     type="button"
                     onClick={handleConfirmStatusChange}
-                    className="px-4 py-2 bg-gradient-to-br from-[#0F172A] to-[#1E293B] hover:brightness-110 text-white font-bold text-xs rounded-xl cursor-pointer"
+                    className="px-4 py-2 bg-gradient-to-br from-[#181d16] to-[#1E293B] hover:brightness-110 text-white font-bold text-xs rounded-xl cursor-pointer"
                   >
                     Confirm Update
                   </button>
@@ -2622,7 +2622,7 @@ export default function ManageInvoicesPage() {
             {adminModalClosing === "rejection" ? (
               <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in min-h-[160px]">
                 <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                <h3 className="font-semibold text-xs text-[#0F172A]">Closing Dialog...</h3>
+                <h3 className="font-semibold text-xs text-[#181d16]">Closing Dialog...</h3>
                 <p className="text-slate-500 text-[10px] mt-1">Please wait</p>
               </div>
             ) : (
@@ -2644,7 +2644,7 @@ export default function ManageInvoicesPage() {
                     onChange={(e) => setRejectionReasonInput(e.target.value)}
                     placeholder="Explain why this proof is invalid (e.g. Blurred receipt, Wrong amount)..."
                     rows={3}
-                    className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all resize-none text-xs"
+                    className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-850 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all resize-none text-xs"
                   />
                 </div>
 

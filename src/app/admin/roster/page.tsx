@@ -106,7 +106,7 @@ export default function VerificationRosterPage() {
             <span className="material-symbols-outlined text-[13px] text-slate-400">{icon}</span>
           )}
           {isBadge ? (
-            <span className="bg-[#42C2FF]/10 text-[#0369a1] text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded">
+            <span className="bg-[#016e1c]/10 text-[#00450e] text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded">
               {label}
             </span>
           ) : (
@@ -134,14 +134,14 @@ export default function VerificationRosterPage() {
       </div>
 
       {/* Roster Controls / Filters */}
-      <section className="bg-white border border-[#42C2FF]/12 rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center shadow-[0_4px_25px_rgba(66,194,255,0.03)]">
+      <section className="bg-white border border-[#016e1c]/12 rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center shadow-[0_4px_25px_rgba(1, 110, 28,0.03)]">
         <div className="w-full md:flex-1 relative">
           <input
             type="text"
             placeholder="Search by ID, name, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400"
           />
           <span className="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">search</span>
         </div>
@@ -150,7 +150,7 @@ export default function VerificationRosterPage() {
           <select
             value={orgFilter}
             onChange={(e) => setOrgFilter(e.target.value)}
-            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all cursor-pointer"
+            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
           >
             <option value="all">All Organizations</option>
             {organizations.map((org) => (
@@ -165,7 +165,7 @@ export default function VerificationRosterPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all cursor-pointer"
+            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
           >
             <option value="all">All Statuses</option>
             <option value="Completed">Completed</option>
@@ -176,11 +176,11 @@ export default function VerificationRosterPage() {
       </section>
 
       {/* Main Roster Table */}
-      <section className="apple-card-static overflow-hidden border border-[#42C2FF]/10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]">
+      <section className="apple-card-static overflow-hidden border border-[#016e1c]/10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left font-body-sm whitespace-nowrap">
             <thead>
-              <tr className="border-b border-[#42C2FF]/10 bg-slate-50/50">
+              <tr className="border-b border-[#016e1c]/10 bg-slate-50/50">
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">REQUEST ID</th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">CANDIDATE</th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">CLIENT ORG</th>
@@ -214,12 +214,12 @@ export default function VerificationRosterPage() {
                           v.status === "Completed"
                             ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                             : v.status === "Processing"
-                            ? "bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15"
+                            ? "bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15"
                             : "bg-red-500/10 text-red-600 border-red-500/15"
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          v.status === "Completed" ? "bg-emerald-500" : v.status === "Processing" ? "bg-[#42C2FF]" : "bg-red-500"
+                          v.status === "Completed" ? "bg-emerald-500" : v.status === "Processing" ? "bg-[#016e1c]" : "bg-red-500"
                         }`}></span>
                         {v.status}
                       </span>
@@ -253,7 +253,7 @@ export default function VerificationRosterPage() {
       {/* Edit Status Modal */}
       {statusModalVer && (
         <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white border border-[#42C2FF]/12 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
+          <div className="bg-white border border-[#016e1c]/12 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
             <button
               onClick={() => setStatusModalVer(null)}
               className="absolute right-5 top-5 p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
@@ -293,7 +293,7 @@ export default function VerificationRosterPage() {
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   rows={3}
-                  className="w-full bg-slate-50/50 border border-slate-200/80 rounded-xl px-4 py-2.5 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400 resize-none"
+                  className="w-full bg-slate-50/50 border border-slate-200/80 rounded-xl px-4 py-2.5 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400 resize-none"
                   placeholder="Notes about verification hurdles, checks completed..."
                 />
               </div>
@@ -345,7 +345,7 @@ export default function VerificationRosterPage() {
                     <div className="flex items-center gap-2">
                       <h3 className="font-headline-md text-slate-900 font-extrabold text-lg">Verification Details</h3>
                       {isLoadingDetail && (
-                        <div className="w-4 h-4 rounded-full border-2 border-[#42C2FF] border-t-transparent animate-spin" />
+                        <div className="w-4 h-4 rounded-full border-2 border-[#016e1c] border-t-transparent animate-spin" />
                       )}
                     </div>
                     <span className="text-[11px] text-slate-400 font-semibold">{displayVerification?.id} · {displayVerification?.name}</span>
@@ -396,7 +396,7 @@ export default function VerificationRosterPage() {
                     <div className="flex items-start gap-4 p-1">
                       {isLoadingDetail ? (
                         <div className="w-20 h-24 bg-slate-50 rounded-2xl border border-slate-200/50 shrink-0 flex items-center justify-center shadow-inner">
-                          <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-[#42C2FF] animate-spin" />
+                          <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-[#016e1c] animate-spin" />
                         </div>
                       ) : displayVerification.digilockerPhoto ? (
                         <div className="w-20 h-24 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/50 shrink-0 flex items-center justify-center shadow-sm">
@@ -415,7 +415,7 @@ export default function VerificationRosterPage() {
                           {displayVerification.digilockerEmail || displayVerification.email}
                         </p>
                         {displayVerification.digilockerUsername && (
-                          <span className="mt-1 bg-[#42C2FF]/10 text-[#0369a1] text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full w-fit">
+                          <span className="mt-1 bg-[#016e1c]/10 text-[#00450e] text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full w-fit">
                             @{displayVerification.digilockerUsername}
                           </span>
                         )}
@@ -552,7 +552,7 @@ export default function VerificationRosterPage() {
                       <span className="material-symbols-outlined text-sm">sticky_note_2</span>
                       Status Notes
                     </span>
-                    <p className="text-slate-500 italic pl-3.5 border-l-2 border-[#42C2FF] font-body-sm leading-relaxed">
+                    <p className="text-slate-500 italic pl-3.5 border-l-2 border-[#016e1c] font-body-sm leading-relaxed">
                       {selectedVerification.notes}
                     </p>
                   </div>
@@ -572,7 +572,7 @@ export default function VerificationRosterPage() {
                 {displayVerification?.status === "Completed" && (
                   <button
                     onClick={() => window.open(`/admin/report?id=${displayVerification.id}`, "_blank")}
-                    className="flex-1 py-2.5 bg-gradient-to-r from-[#42C2FF] to-[#0099ff] hover:opacity-90 text-white font-bold rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-1"
+                    className="flex-1 py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] hover:opacity-90 text-white font-bold rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[16px]">print</span>
                     Print

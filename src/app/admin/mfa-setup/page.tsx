@@ -53,7 +53,7 @@ export default function MfaSetupPage() {
         width: 250,
         margin: 2,
         color: {
-          dark: "#0f172a", // slate-900
+          dark: "#181d16", // slate-900
           light: "#ffffff",
         },
       });
@@ -104,12 +104,12 @@ export default function MfaSetupPage() {
   };
 
   const handleDownloadCodes = () => {
-    const text = `Cluso Infolink Admin MFA Recovery Codes\nGenerated: ${new Date().toLocaleString()}\n\n${recoveryCodes.join("\n")}\n\nKeep these codes safe. They are single-use alternatives to your authenticator app.`;
+    const text = `Ozclu Admin MFA Recovery Codes\nGenerated: ${new Date().toLocaleString()}\n\n${recoveryCodes.join("\n")}\n\nKeep these codes safe. They are single-use alternatives to your authenticator app.`;
     const blob = new Blob([text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `cluso-mfa-recovery-codes.txt`;
+    a.download = `ozclu-mfa-recovery-codes.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -120,7 +120,7 @@ export default function MfaSetupPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#42C2FF] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-[#016e1c] border-t-transparent rounded-full animate-spin"></div>
           <span className="font-body-sm text-[#5e7285] animate-pulse">Initializing security module...</span>
         </div>
       </div>
@@ -175,7 +175,7 @@ export default function MfaSetupPage() {
             </button>
             <button
               onClick={() => router.push("/admin/roster")}
-              className="flex-1 py-3 bg-[#42C2FF] hover:bg-[#0099ff] text-white font-button-text text-sm rounded-xl cursor-pointer flex justify-center items-center gap-2"
+              className="flex-1 py-3 bg-[#016e1c] hover:bg-[#0099ff] text-white font-button-text text-sm rounded-xl cursor-pointer flex justify-center items-center gap-2"
             >
               <span>Done</span>
               <span className="material-symbols-outlined text-lg">arrow_forward</span>
@@ -204,11 +204,11 @@ export default function MfaSetupPage() {
         <div className="flex flex-col md:flex-row gap-8 items-center border-y border-slate-100 py-8">
           <div className="flex flex-col gap-4 flex-1">
             <div className="flex gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#B8FFF9] text-[#0284c7] font-bold text-xs flex items-center justify-center shrink-0">1</div>
+              <div className="w-6 h-6 rounded-full bg-[#eaf0e4] text-[#016e1c] font-bold text-xs flex items-center justify-center shrink-0">1</div>
               <p className="font-body-sm text-slate-700">Scan the QR code with your authenticator app (Google Authenticator, Microsoft Authenticator, Duo, or similar).</p>
             </div>
             <div className="flex gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#B8FFF9] text-[#0284c7] font-bold text-xs flex items-center justify-center shrink-0">2</div>
+              <div className="w-6 h-6 rounded-full bg-[#eaf0e4] text-[#016e1c] font-bold text-xs flex items-center justify-center shrink-0">2</div>
               <div className="font-body-sm text-slate-700">
                 <p>If you cannot scan the QR code, manually enter this base32 secret in your app:</p>
                 <div className="mt-2.5 bg-slate-50 border border-slate-200/50 p-2.5 rounded-lg font-mono text-center text-xs text-slate-800 font-bold select-all tracking-wider">
@@ -242,7 +242,7 @@ export default function MfaSetupPage() {
               pattern="\d{6}"
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
-              className="w-full border border-slate-200/80 rounded-xl p-3.5 font-mono text-center text-2xl tracking-[0.5em] text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] transition-all bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white placeholder-slate-300"
+              className="w-full border border-slate-200/80 rounded-xl p-3.5 font-mono text-center text-2xl tracking-[0.5em] text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white placeholder-slate-300"
               placeholder="000000"
             />
           </div>
@@ -258,7 +258,7 @@ export default function MfaSetupPage() {
             <button
               type="submit"
               disabled={verifying}
-              className="flex-2 py-3.5 bg-[#42C2FF] hover:bg-[#0099ff] text-white font-button-text text-sm rounded-xl cursor-pointer flex justify-center items-center gap-2 disabled:opacity-60"
+              className="flex-2 py-3.5 bg-[#016e1c] hover:bg-[#0099ff] text-white font-button-text text-sm rounded-xl cursor-pointer flex justify-center items-center gap-2 disabled:opacity-60"
             >
               {verifying ? (
                 <>

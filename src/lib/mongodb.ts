@@ -27,7 +27,7 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     clientPromise = client.connect();
   }
   const connectedClient = await clientPromise!;
-  const db = connectedClient.db("clusoverify");
+  const db = connectedClient.db("ozcluverify");
 
   // Validate environment on first connection
   if (!envValidated) {
@@ -70,33 +70,26 @@ async function seedDatabase(db: Db) {
       return;
     }
 
-    const hashedAdminPassword = bcrypt.hashSync("Cluso@2026", 10);
+    const hashedAdminPassword = bcrypt.hashSync("Ozclu@2026", 10);
     await db.collection("users").insertMany([
       {
-        email: "admin@cluso.in",
-        password: hashedAdminPassword,
-        fullName: "Admin User",
-        role: "admin",
-        orgName: "Cluso",
-        createdAt: new Date()
-      },
-      {
-        email: "pkumar@cluso.in",
-        password: hashedAdminPassword,
-        fullName: "P Kumar",
-        role: "admin",
-        orgName: "Cluso",
-        createdAt: new Date()
-      },
-      {
-        email: "indiaops@cluso.in",
+        email: "indiaops@ozclu.com",
         password: hashedAdminPassword,
         fullName: "India Ops",
         role: "admin",
-        orgName: "Cluso",
+        orgName: "Ozclu",
+        createdAt: new Date()
+      },
+      {
+        email: "pkumar@ozclu.com",
+        password: hashedAdminPassword,
+        fullName: "P Kumar",
+        role: "admin",
+        orgName: "Ozclu",
         createdAt: new Date()
       }
     ]);
+    console.log("[Seed] Created 2 admin users: indiaops@ozclu.com, pkumar@ozclu.com");
   } catch (error) {
     console.error("Seeding error in MongoDB:", error);
   }

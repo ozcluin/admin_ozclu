@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePortal } from "src/context/PortalContext";
+import OzcluLogo from "../../components/OzcluLogo";
 
 function BillableSummaryContent() {
   const searchParams = useSearchParams();
@@ -80,7 +81,7 @@ function BillableSummaryContent() {
   if (!loaded) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
-        <div className="w-10 h-10 border-4 border-[#1E3A5F] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-[#00450e] border-t-transparent rounded-full animate-spin"></div>
         <span className="mt-4 text-sm font-semibold text-slate-600 animate-pulse">Loading Billable Summary...</span>
       </div>
     );
@@ -101,22 +102,22 @@ function BillableSummaryContent() {
       <div className="border-[3px] border-double border-[#8C1D40] p-6 max-w-6xl mx-auto rounded-xs outer-border-container">
         
         {/* Top Header Row */}
-        <div className="flex flex-col md:flex-row justify-between items-start border-b border-[#D4F6FF]/60 pb-6 mb-6 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start border-b border-[#f0f5ea]/60 pb-6 mb-6 gap-6">
           <div className="flex-1 text-left">
-            <h1 className="text-[#1E3A5F] text-2xl font-extrabold tracking-tight mb-2">Billable Requests Summary</h1>
+            <h1 className="text-[#00450e] text-2xl font-extrabold tracking-tight mb-2">Billable Requests Summary</h1>
             <div className="space-y-1 text-xs text-slate-600 font-semibold">
-              <p>Billing Month: <span className="text-[#0F172A] font-bold">{activeMonthName} {year}</span></p>
-              <p>Billing Period: <span className="text-[#0F172A] font-bold">{startDateStr} to {endDateStr}</span></p>
-              <p>Total Billable Requests: <span className="text-[#0F172A] font-bold">{filteredVerifications.length}</span></p>
+              <p>Billing Month: <span className="text-[#181d16] font-bold">{activeMonthName} {year}</span></p>
+              <p>Billing Period: <span className="text-[#181d16] font-bold">{startDateStr} to {endDateStr}</span></p>
+              <p>Total Billable Requests: <span className="text-[#181d16] font-bold">{filteredVerifications.length}</span></p>
               {matchingInvoice && (
-                <p>Invoice Number: <span className="text-[#0F172A] font-bold font-mono">{matchingInvoice.id}</span></p>
+                <p>Invoice Number: <span className="text-[#181d16] font-bold font-mono">{matchingInvoice.id}</span></p>
               )}
             </div>
           </div>
           
-          {/* Cluso Logo */}
+          {/* Ozclu Logo */}
           <div className="self-center md:self-start shrink-0">
-            <img src="/cluso-infolink.png" alt="Cluso Logo" className="h-10 object-contain" />
+            <OzcluLogo size="sm" />
           </div>
         </div>
 
@@ -125,7 +126,7 @@ function BillableSummaryContent() {
           
           {/* Customer Details */}
           <div className="p-5 bg-white text-left border-r border-slate-200">
-            <h3 className="font-extrabold text-sm text-[#1E3A5F] border-b border-slate-100 pb-2 mb-3">Customer Details - Enterprise Details</h3>
+            <h3 className="font-extrabold text-sm text-[#00450e] border-b border-slate-100 pb-2 mb-3">Customer Details - Enterprise Details</h3>
             <table className="w-full text-xs font-semibold text-slate-600 space-y-2.5">
               <tbody>
                 <tr>
@@ -166,18 +167,18 @@ function BillableSummaryContent() {
             </table>
           </div>
 
-          {/* Cluso Infolink Details */}
+          {/* Ozclu Details */}
           <div className="p-5 bg-white text-left">
-            <h3 className="font-extrabold text-sm text-[#1E3A5F] border-b border-slate-100 pb-2 mb-3">Cluso Infolink Details</h3>
+            <h3 className="font-extrabold text-sm text-[#00450e] border-b border-slate-100 pb-2 mb-3">Ozclu Details</h3>
             <table className="w-full text-xs font-semibold text-slate-600 space-y-2.5">
               <tbody>
                 <tr>
                   <td className="w-1/3 py-1 font-bold">Company Name:</td>
-                  <td className="w-2/3 py-1 text-slate-900">{clusoSettings?.companyName || "Cluso Infolink Private Limited"}</td>
+                  <td className="w-2/3 py-1 text-slate-900">{clusoSettings?.companyName || "Ozclu Private Limited"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Login Email:</td>
-                  <td className="py-1 text-slate-900">{clusoSettings?.contactEmail || "indiaops@cluso.in"}</td>
+                  <td className="py-1 text-slate-900">{clusoSettings?.contactEmail || "indiaops@ozclu.com"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">State Tax ID / Sales Tax ID:</td>
@@ -201,7 +202,7 @@ function BillableSummaryContent() {
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Invoice Email:</td>
-                  <td className="py-1 text-slate-900">{clusoSettings?.invoiceEmail || clusoSettings?.contactEmail || "indiaops@cluso.in"}</td>
+                  <td className="py-1 text-slate-900">{clusoSettings?.invoiceEmail || clusoSettings?.contactEmail || "indiaops@ozclu.com"}</td>
                 </tr>
                 <tr>
                   <td className="py-1 font-bold">Billing same as company:</td>
@@ -219,7 +220,7 @@ function BillableSummaryContent() {
         </div>
 
         {/* Table Section Header */}
-        <h2 className="text-[#1E3A5F] text-sm font-extrabold tracking-wide uppercase text-left mb-3">Candidate-wise Billable Summary</h2>
+        <h2 className="text-[#00450e] text-sm font-extrabold tracking-wide uppercase text-left mb-3">Candidate-wise Billable Summary</h2>
 
         {/* Billable Table */}
         <div className="overflow-x-auto border border-slate-200 rounded-xl mb-4">
@@ -307,7 +308,7 @@ function BillableSummaryContent() {
         <div className="flex justify-end gap-3 mt-8 print:hidden">
           <button
             onClick={() => window.print()}
-            className="px-5 py-2.5 bg-[#1E3A5F] text-white hover:bg-[#0F172A] rounded-xl font-bold text-xs cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+            className="px-5 py-2.5 bg-[#00450e] text-white hover:bg-[#181d16] rounded-xl font-bold text-xs cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
           >
             <span>Print Report</span>
           </button>
@@ -372,7 +373,7 @@ export default function BillableSummaryPage() {
   return (
     <Suspense fallback={
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
-        <div className="w-10 h-10 border-4 border-[#1E3A5F] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-[#00450e] border-t-transparent rounded-full animate-spin"></div>
         <span className="mt-4 text-sm font-semibold text-slate-600 animate-pulse">Loading Billable Summary...</span>
       </div>
     }>

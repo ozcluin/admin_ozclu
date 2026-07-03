@@ -93,7 +93,7 @@ export function sanitizeVerification(doc: any): any {
 
   // Generate setupUrl on-the-fly if missing but email and tempPassword exist
   if (!clean.setupUrl && clean.tempPassword && clean.email) {
-    const candidatePortalUrl = process.env.CANDIDATE_PORTAL_URL || "https://candidate.verify.cluso.in";
+    const candidatePortalUrl = process.env.CANDIDATE_PORTAL_URL || "https://candidate.verify.ozclu.com";
     clean.setupUrl = `${candidatePortalUrl}/?email=${encodeURIComponent(clean.email.toLowerCase().trim())}&password=${encodeURIComponent(clean.tempPassword)}`;
   }
 

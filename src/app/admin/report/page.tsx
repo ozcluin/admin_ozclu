@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
+import OzcluLogo from "../../components/OzcluLogo";
 
 function ReportContent() {
   const searchParams = useSearchParams();
@@ -39,7 +40,7 @@ function ReportContent() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 p-6">
-        <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <span className="mt-4 text-sm font-semibold text-slate-600 animate-pulse">Generating Report...</span>
       </div>
     );
@@ -117,7 +118,7 @@ function ReportContent() {
     ? new Date(verification.completedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase()
     : new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase();
 
-  const generatedBy = verification.verifier || "Cluso Infolink";
+  const generatedBy = verification.verifier || "Ozclu";
   const verifiedBy = (verification.digilockerStatus === "Verified" || !!verification.digilockerName)
     ? "DigiLocker"
     : generatedBy;
@@ -141,7 +142,7 @@ function ReportContent() {
         <div className="flex gap-2">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-4 py-2 bg-sky-600 text-white rounded-lg font-bold text-xs hover:bg-sky-700 cursor-pointer shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg font-bold text-xs hover:bg-sky-700 cursor-pointer shadow-sm transition-all"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -170,7 +171,11 @@ function ReportContent() {
         <div className="grid grid-cols-3 items-center gap-4 mb-8">
           <div className="flex justify-start">
             <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start">
-              <img src={settings?.logo || "/cluso-infolink.png"} alt="Logo" className="object-contain max-h-full" />
+              {settings?.logo ? (
+                <img src={settings.logo} alt="Logo" className="object-contain max-h-full" />
+              ) : (
+                <OzcluLogo size="md" />
+              )}
             </div>
           </div>
           <h1 className="text-center font-sans text-[#1B365D] text-2xl sm:text-3xl font-extrabold tracking-widest uppercase mt-2">REPORT</h1>
@@ -392,17 +397,17 @@ function ReportContent() {
           <div className="text-center font-bold text-slate-900 mb-2">--END OF REPORT--</div>
           <div className="font-bold text-slate-950 mb-1 uppercase tracking-wider">Important Notice &amp; Disclaimer</div>
           <p className="mb-2">
-            This report is provided by CLUSO INFOLINK PRIVATE LIMITED on a strictly confidential basis, solely for the exclusive use of the recipient for legitimate corporate and business purposes. It may not be reproduced, redistributed, or disclosed, in whole or in part, in any manner whatsoever without prior written consent.
+            This report is provided by OZCLU PRIVATE LIMITED on a strictly confidential basis, solely for the exclusive use of the recipient for legitimate corporate and business purposes. It may not be reproduced, redistributed, or disclosed, in whole or in part, in any manner whatsoever without prior written consent.
           </p>
           <p className="mb-2">
-            CLUSO INFOLINK PRIVATE LIMITED endeavors to ensure the highest level of accuracy and diligence in procuring, collecting, and compiling this data. Consequently, CLUSO INFOLINK PRIVATE LIMITED shall not be held liable for any direct, indirect, or consequential loss, damage, or injury resulting from any errors, omissions, or negligence in the procurement or communication of this information. Reliance upon this report is strictly at the user's sole risk.
+            OZCLU PRIVATE LIMITED endeavors to ensure the highest level of accuracy and diligence in procuring, collecting, and compiling this data. Consequently, OZCLU PRIVATE LIMITED shall not be held liable for any direct, indirect, or consequential loss, damage, or injury resulting from any errors, omissions, or negligence in the procurement or communication of this information. Reliance upon this report is strictly at the user's sole risk.
           </p>
           <p className="mb-3">
             The recipient acknowledges that the handling and utilization of this data must strictly align with all prevailing Indian regulatory frameworks, including but not limited to the Digital Personal Data Protection Act, 2023 (DPDP Act) and the Information Technology Act, 2000, along with all subsequent amendments and rules.
           </p>
           <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[9px] font-semibold text-slate-500">
             <div>
-              <span className="font-bold text-slate-800">QUESTIONS?</span> If you have any questions about this report, please feel free to contact us: <span className="text-sky-600 font-bold hover:underline">support@cluso.in</span>
+              <span className="font-bold text-slate-800">QUESTIONS?</span> If you have any questions about this report, please feel free to contact us: <span className="text-primary font-bold hover:underline">support@ozclu.com</span>
             </div>
             <div className="font-mono">Rev 3.2 (15322)</div>
           </div>
@@ -410,7 +415,7 @@ function ReportContent() {
 
         {/* Centered Footer */}
         <div className="text-center text-[10px] font-bold text-slate-400 tracking-wider mt-6">
-          Generated Report By ClusoInfolink
+          Generated Report By Ozclu
         </div>
 
       </div>

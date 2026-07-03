@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "src/context/AuthContext";
+import OzcluLogo from "../components/OzcluLogo";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -53,9 +54,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#f4f9fc]">
+      <div className="flex items-center justify-center min-h-screen bg-[#f6fbf0]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#42C2FF] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-[#016e1c] border-t-transparent rounded-full animate-spin"></div>
           <span className="font-body-sm text-[#5e7285] animate-pulse">Syncing console data...</span>
         </div>
       </div>
@@ -74,16 +75,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f4f9fc] text-slate-800 font-sans">
+    <div className="flex min-h-screen bg-[#f6fbf0] text-slate-800 font-sans">
       {/* Sidebar - Desktop */}
       <aside className="w-[280px] h-screen fixed left-0 top-0 glass-sidebar flex flex-col py-8 z-30 hidden md:flex">
         <div className="px-6 mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <img 
-              src="/cluso-infolink.png" 
-              alt="Cluso Infolink Logo" 
-              className="h-10 w-auto object-contain"
-            />
+            <OzcluLogo size="md" />
           </div>
         </div>
 
@@ -96,13 +93,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer ${
                   isActive
-                    ? "bg-gradient-to-r from-[#B8FFF9]/50 to-[#EFFFFD]/50 border border-[#85F4FF]/30 text-[#0369a1] font-semibold shadow-[0_2px_10px_rgba(66,194,255,0.05)]"
+                    ? "bg-gradient-to-r from-[#eaf0e4]/50 to-[#f6fbf0]/50 border border-[#bfcab9]/30 text-[#00450e] font-semibold shadow-[0_2px_10px_rgba(1, 110, 28,0.05)]"
                     : "text-slate-500 hover:bg-white/60 hover:text-slate-950 border border-transparent"
                 }`}
               >
                 <span 
                   className={`material-symbols-outlined text-xl transition-colors duration-200 ${
-                    isActive ? "text-[#42C2FF]" : "text-slate-400 group-hover:text-slate-600"
+                    isActive ? "text-[#016e1c]" : "text-slate-400 group-hover:text-slate-600"
                   }`} 
                   style={{ fontVariationSettings: `'FILL' ${isActive ? 1 : 0}` }}
                 >
@@ -117,7 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* User info + Footer logout */}
         <div className="mx-3 px-4 py-4 bg-white/50 border border-white/60 rounded-2xl flex flex-col gap-3.5 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] rounded-full flex items-center justify-center text-[#0284c7] text-sm font-black border border-[#85F4FF]/30 shadow-inner">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] rounded-full flex items-center justify-center text-[#016e1c] text-sm font-black border border-[#bfcab9]/30 shadow-inner">
               {displayName.charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col min-w-0">
@@ -128,7 +125,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {profile?.mfaEnabled !== true ? (
             <Link
               href="/admin/mfa-setup"
-              className="flex items-center justify-center gap-2 py-2 border border-[#42C2FF]/20 hover:border-[#42C2FF]/40 bg-[#B8FFF9]/20 hover:bg-[#85F4FF]/20 text-[#0284c7] rounded-xl transition-all duration-200 w-full text-center font-bold text-[10px] uppercase tracking-wider cursor-pointer"
+              className="flex items-center justify-center gap-2 py-2 border border-[#016e1c]/20 hover:border-[#016e1c]/40 bg-[#eaf0e4]/20 hover:bg-[#bfcab9]/20 text-[#016e1c] rounded-xl transition-all duration-200 w-full text-center font-bold text-[10px] uppercase tracking-wider cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm">security</span>
               <span>Setup MFA</span>
@@ -153,16 +150,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-xs z-40 md:hidden" onClick={() => setMobileMenuOpen(false)}>
           <aside
-            className="w-72 h-full bg-[#f4f9fc] border-r border-[#42C2FF]/15 flex flex-col py-8 animate-slide-right"
+            className="w-72 h-full bg-[#f6fbf0] border-r border-[#016e1c]/15 flex flex-col py-8 animate-slide-right"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-6 mb-8 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <img 
-                  src="/cluso-infolink.png" 
-                  alt="Cluso Infolink Logo" 
-                  className="h-10 w-auto object-contain"
-                />
+                <OzcluLogo size="sm" />
               </div>
               <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 p-1.5 rounded-full hover:bg-slate-200/50 cursor-pointer">
                 <span className="material-symbols-outlined">close</span>
@@ -179,13 +172,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer ${
                       isActive
-                        ? "bg-gradient-to-r from-[#B8FFF9]/50 to-[#EFFFFD]/50 border border-[#85F4FF]/30 text-[#0369a1] font-semibold shadow-[0_2px_10px_rgba(66,194,255,0.05)]"
+                        ? "bg-gradient-to-r from-[#eaf0e4]/50 to-[#f6fbf0]/50 border border-[#bfcab9]/30 text-[#00450e] font-semibold shadow-[0_2px_10px_rgba(1, 110, 28,0.05)]"
                         : "text-slate-500 hover:bg-white/60 hover:text-slate-950 border border-transparent"
                     }`}
                   >
                     <span 
                       className={`material-symbols-outlined text-xl transition-colors duration-200 ${
-                        isActive ? "text-[#42C2FF]" : "text-slate-400 group-hover:text-slate-600"
+                        isActive ? "text-[#016e1c]" : "text-slate-400 group-hover:text-slate-600"
                       }`} 
                       style={{ fontVariationSettings: `'FILL' ${isActive ? 1 : 0}` }}
                     >
@@ -199,7 +192,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             <div className="mx-3 px-4 py-4 bg-white/50 border border-white/60 rounded-2xl flex flex-col gap-3.5 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] rounded-full flex items-center justify-center text-[#0284c7] text-sm font-black border border-[#85F4FF]/30">
+                <div className="w-9 h-9 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] rounded-full flex items-center justify-center text-[#016e1c] text-sm font-black border border-[#bfcab9]/30">
                   {displayName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col min-w-0">
@@ -211,7 +204,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   href="/admin/mfa-setup"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 py-2 border border-[#42C2FF]/20 hover:border-[#42C2FF]/40 bg-[#B8FFF9]/20 hover:bg-[#85F4FF]/20 text-[#0284c7] rounded-xl transition-all duration-200 w-full text-center font-bold text-[10px] uppercase tracking-wider cursor-pointer"
+                  className="flex items-center justify-center gap-2 py-2 border border-[#016e1c]/20 hover:border-[#016e1c]/40 bg-[#eaf0e4]/20 hover:bg-[#bfcab9]/20 text-[#016e1c] rounded-xl transition-all duration-200 w-full text-center font-bold text-[10px] uppercase tracking-wider cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">security</span>
                   <span>Setup MFA</span>
@@ -248,7 +241,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
             <span className="font-headline-md font-extrabold text-slate-900 flex items-center gap-3">
               <span className="tracking-tight text-slate-900">Verify Console</span>
-              <span className="text-[10px] bg-[#B8FFF9]/40 border border-[#85F4FF]/30 text-[#0369a1] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider font-label-caps">
+              <span className="text-[10px] bg-[#eaf0e4]/40 border border-[#bfcab9]/30 text-[#00450e] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider font-label-caps">
                 Online
               </span>
             </span>

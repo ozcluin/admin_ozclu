@@ -122,7 +122,7 @@ export default function CandidatesPage() {
             <span className="material-symbols-outlined text-[13px] text-slate-400">{icon}</span>
           )}
           {isBadge ? (
-            <span className="bg-[#42C2FF]/10 text-[#0369a1] text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded">
+            <span className="bg-[#016e1c]/10 text-[#00450e] text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded">
               {label}
             </span>
           ) : (
@@ -153,8 +153,8 @@ export default function CandidatesPage() {
       {/* Summary Stats Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card: Total */}
-        <div className="bg-white border border-[#42C2FF]/12 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(66,194,255,0.05)] transition-all">
-          <div className="w-12 h-12 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] text-[#0369a1] rounded-xl flex items-center justify-center shadow-inner">
+        <div className="bg-white border border-[#016e1c]/12 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(1, 110, 28,0.05)] transition-all">
+          <div className="w-12 h-12 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] text-[#00450e] rounded-xl flex items-center justify-center shadow-inner">
             <span className="material-symbols-outlined text-2xl font-bold">groups</span>
           </div>
           <div>
@@ -164,7 +164,7 @@ export default function CandidatesPage() {
         </div>
 
         {/* Card: Verified */}
-        <div className="bg-white border border-[#42C2FF]/12 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(66,194,255,0.05)] transition-all">
+        <div className="bg-white border border-[#016e1c]/12 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(1, 110, 28,0.05)] transition-all">
           <div className="w-12 h-12 bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center">
             <span className="material-symbols-outlined text-2xl font-bold">verified_user</span>
           </div>
@@ -175,7 +175,7 @@ export default function CandidatesPage() {
         </div>
 
         {/* Card: Pending */}
-        <div className="bg-white border border-[#42C2FF]/12 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(66,194,255,0.05)] transition-all">
+        <div className="bg-white border border-[#016e1c]/12 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(1, 110, 28,0.05)] transition-all">
           <div className="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-xl flex items-center justify-center">
             <span className="material-symbols-outlined text-2xl font-bold">pending</span>
           </div>
@@ -186,7 +186,7 @@ export default function CandidatesPage() {
         </div>
 
         {/* Card: Needs Attention */}
-        <div className="bg-white border border-[#42C2FF]/12 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(66,194,255,0.05)] transition-all">
+        <div className="bg-white border border-[#016e1c]/12 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(1, 110, 28,0.05)] transition-all">
           <div className="w-12 h-12 bg-red-500/10 text-red-600 rounded-xl flex items-center justify-center">
             <span className="material-symbols-outlined text-2xl font-bold">report_problem</span>
           </div>
@@ -198,7 +198,7 @@ export default function CandidatesPage() {
       </section>
 
       {/* Roster Controls / Filters */}
-      <section className="bg-white border border-[#42C2FF]/12 rounded-2xl p-5 flex flex-col xl:flex-row gap-4 items-center shadow-[0_4px_25px_rgba(66,194,255,0.03)]">
+      <section className="bg-white border border-[#016e1c]/12 rounded-2xl p-5 flex flex-col xl:flex-row gap-4 items-center shadow-[0_4px_25px_rgba(1, 110, 28,0.03)]">
         {/* Search */}
         <div className="w-full xl:flex-1 relative">
           <input
@@ -206,7 +206,7 @@ export default function CandidatesPage() {
             placeholder="Search by ID, name, email, Aadhaar, PAN..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all placeholder-slate-400"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400"
           />
           <span className="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">search</span>
         </div>
@@ -216,7 +216,7 @@ export default function CandidatesPage() {
           <select
             value={orgFilter}
             onChange={(e) => setOrgFilter(e.target.value)}
-            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all cursor-pointer"
+            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
           >
             <option value="all">All Organizations</option>
             {organizations.map((org) => (
@@ -232,7 +232,7 @@ export default function CandidatesPage() {
           <select
             value={digilockerFilter}
             onChange={(e) => setDigilockerFilter(e.target.value)}
-            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all cursor-pointer"
+            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
           >
             <option value="all">All DigiLocker Statuses</option>
             <option value="Verified">Verified Only</option>
@@ -245,7 +245,7 @@ export default function CandidatesPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#42C2FF]/10 focus:border-[#42C2FF] focus:bg-white transition-all cursor-pointer"
+            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
           >
             <option value="all">All Flow Statuses</option>
             <option value="Completed">Completed</option>
@@ -256,11 +256,11 @@ export default function CandidatesPage() {
       </section>
 
       {/* Main Directory Table */}
-      <section className="apple-card-static overflow-hidden border border-[#42C2FF]/10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]">
+      <section className="apple-card-static overflow-hidden border border-[#016e1c]/10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left font-body-sm whitespace-nowrap">
             <thead>
-              <tr className="border-b border-[#42C2FF]/10 bg-slate-50/50">
+              <tr className="border-b border-[#016e1c]/10 bg-slate-50/50">
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">CANDIDATE</th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">CLIENT ORG</th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">REGISTRATION DATE</th>
@@ -302,7 +302,7 @@ export default function CandidatesPage() {
                               />
                             </div>
                           ) : (
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] text-[#0284c7] border border-[#85F4FF]/30 flex items-center justify-center font-black text-sm shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] text-[#016e1c] border border-[#bfcab9]/30 flex items-center justify-center font-black text-sm shrink-0">
                               {c.name.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -341,7 +341,7 @@ export default function CandidatesPage() {
                             c.status === "Completed"
                               ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                               : c.status === "Processing"
-                              ? "bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15"
+                              ? "bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15"
                               : "bg-red-500/10 text-red-600 border-red-500/15"
                           }`}
                         >
@@ -353,7 +353,7 @@ export default function CandidatesPage() {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-1.5">
                           {hasAadhaar ? (
-                            <span className="text-[9px] bg-[#42C2FF]/10 text-[#0369a1] border border-[#42C2FF]/15 px-2 py-0.5 rounded font-extrabold" title={`Aadhaar: ${c.digilockerAadhaar}`}>
+                            <span className="text-[9px] bg-[#016e1c]/10 text-[#00450e] border border-[#016e1c]/15 px-2 py-0.5 rounded font-extrabold" title={`Aadhaar: ${c.digilockerAadhaar}`}>
                               AADHAAR
                             </span>
                           ) : (
@@ -424,7 +424,7 @@ export default function CandidatesPage() {
                     <div className="flex items-center gap-2">
                       <h3 className="font-headline-md text-slate-900 font-extrabold text-lg">Candidate Profile</h3>
                       {isLoadingDetail && (
-                        <div className="w-4 h-4 rounded-full border-2 border-[#42C2FF] border-t-transparent animate-spin" />
+                        <div className="w-4 h-4 rounded-full border-2 border-[#016e1c] border-t-transparent animate-spin" />
                       )}
                     </div>
                     <span className="text-[11px] text-slate-400 font-semibold">ID: {displayCandidate?.id}</span>
@@ -446,7 +446,7 @@ export default function CandidatesPage() {
                 <div className="flex items-start gap-4 p-1">
                   {isLoadingDetail ? (
                     <div className="w-20 h-24 bg-slate-50 rounded-2xl border border-slate-200/60 shrink-0 flex items-center justify-center shadow-inner">
-                      <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-[#42C2FF] animate-spin" />
+                      <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-[#016e1c] animate-spin" />
                     </div>
                   ) : displayCandidate?.digilockerPhoto ? (
                     <div className="w-20 h-24 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center shadow-sm">
@@ -457,7 +457,7 @@ export default function CandidatesPage() {
                       />
                     </div>
                   ) : (
-                    <div className="w-20 h-24 bg-gradient-to-br from-[#EFFFFD] via-[#B8FFF9] to-[#85F4FF] text-[#0284c7] rounded-2xl flex items-center justify-center font-black text-3xl shrink-0 border border-[#85F4FF]/30 shadow-inner">
+                    <div className="w-20 h-24 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] text-[#016e1c] rounded-2xl flex items-center justify-center font-black text-3xl shrink-0 border border-[#bfcab9]/30 shadow-inner">
                       {displayCandidate?.name.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -477,7 +477,7 @@ export default function CandidatesPage() {
                       {displayCandidate?.digilockerEmail || displayCandidate?.email}
                     </p>
                     {displayCandidate?.digilockerUsername && (
-                      <span className="mt-1 bg-[#42C2FF]/10 text-[#0369a1] text-[9.5px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full w-fit">
+                      <span className="mt-1 bg-[#016e1c]/10 text-[#00450e] text-[9.5px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full w-fit">
                         @{displayCandidate.digilockerUsername}
                       </span>
                     )}
@@ -628,7 +628,7 @@ export default function CandidatesPage() {
                         <span className="material-symbols-outlined text-sm">sticky_note_2</span>
                         Internal Flow Notes
                       </span>
-                      <p className="text-slate-500 italic pl-3.5 border-l-2 border-[#42C2FF] font-body-sm leading-relaxed">
+                      <p className="text-slate-500 italic pl-3.5 border-l-2 border-[#016e1c] font-body-sm leading-relaxed">
                         {displayCandidate.notes}
                       </p>
                     </div>
@@ -653,7 +653,7 @@ export default function CandidatesPage() {
                               Attempt #{idx + 1}
                             </span>
                             <span className="text-xs text-slate-700 font-bold mt-0.5">
-                              {att.date} · by <span className="text-[#0369a1]">{att.verifier}</span>
+                              {att.date} · by <span className="text-[#00450e]">{att.verifier}</span>
                             </span>
                           </div>
                           <span
@@ -661,7 +661,7 @@ export default function CandidatesPage() {
                               att.status === "Completed"
                                 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                                 : att.status === "Processing"
-                                ? "bg-[#42C2FF]/10 text-[#0369a1] border-[#42C2FF]/15"
+                                ? "bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15"
                                 : "bg-red-500/10 text-red-600 border-red-500/15"
                             }`}
                           >
@@ -692,7 +692,7 @@ export default function CandidatesPage() {
                 {displayCandidate?.status === "Completed" && (
                   <button
                     onClick={() => window.open(`/admin/report?id=${displayCandidate.id}`, "_blank")}
-                    className="w-full py-2.5 bg-gradient-to-r from-[#42C2FF] to-[#0099ff] hover:opacity-90 text-white font-button-text rounded-xl transition-all cursor-pointer text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-500/10"
+                    className="w-full py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] hover:opacity-90 text-white font-button-text rounded-xl transition-all cursor-pointer text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-500/10"
                   >
                     <span className="material-symbols-outlined text-base">print</span>
                     Print Report
