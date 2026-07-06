@@ -310,7 +310,7 @@ export default function CandidatesPage() {
                             <span className="font-bold text-slate-900 group-hover:text-[#0ea5e9] transition-colors">
                               {c.name}
                             </span>
-                            <span className="text-xs text-slate-400 mt-0.5">{c.email}</span>
+                            <span className="text-xs text-slate-400 mt-0.5">{c.type === "court_record" ? (c.courtRecordSummary || "Court record search") : c.email}</span>
                           </div>
                         </div>
                       </td>
@@ -323,15 +323,19 @@ export default function CandidatesPage() {
 
                       {/* DigiLocker Status */}
                       <td className="py-4 px-6">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
-                            isVerified
-                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
-                              : "bg-slate-100 text-slate-400 border-slate-200/50"
-                          }`}
-                        >
-                          {isVerified ? "Verified" : "Pending"}
-                        </span>
+                          {c.type === "court_record" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-amber-500/10 text-amber-700 border-amber-500/15">
+                              Court Record
+                            </span>
+                          ) : isVerified ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-emerald-500/10 text-emerald-600 border-emerald-500/15">
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-slate-100 text-slate-400 border-slate-200/50">
+                              Pending
+                            </span>
+                          )}
                       </td>
 
                       {/* Verification Status */}
@@ -598,6 +602,96 @@ export default function CandidatesPage() {
                         The candidate has been registered but has not yet completed their identity authentication via DigiLocker.
                       </span>
                     </div>
+                  </div>
+                )}
+
+                {/* Court Record Details Section (for court_record type) */}
+                {displayCandidate?.type === "court_record" && (
+                  <div className="flex flex-col gap-4 border-t border-slate-100 pt-4">
+                    {/* Court Record Search Banner */}
+                    <div className={`border rounded-2xl p-4 flex items-center gap-3.5 ${
+                      displayCandidate.courtRecordStatus === "completed"
+                        ? displayCandidate.courtRecordHasRecords
+                          ? "bg-rose-500/5 border-rose-500/15"
+                          : "bg-emerald-500/5 border-emerald-500/15"
+                        : displayCandidate.courtRecordStatus === "error"
+                          ? "bg-amber-500/5 border-amber-500/15"
+                          : "bg-blue-500/5 border-blue-500/15"
+                    }`}>
+                      <span className={`material-symbols-outlined text-2xl font-bold ${
+                        displayCandidate.courtRecordStatus === "completed"
+                          ? displayCandidate.courtRecordHasRecords ? "text-rose-500" : "text-emerald-500"
+                          : displayCandidate.courtRecordStatus === "error" ? "text-amber-500" : "text-blue-500"
+                      }`}>
+                        {displayCandidate.courtRecordStatus === "completed"
+                          ? displayCandidate.courtRecordHasRecords ? "gavel" : "verified_user"
+                          : displayCandidate.courtRecordStatus === "error" ? "warning" : "hourglass_top"}
+                      </span>
+                      <div className="flex flex-col">
+                        <span className={`font-body-sm font-bold ${
+                          displayCandidate.courtRecordStatus === "completed"
+                            ? displayCandidate.courtRecordHasRecords ? "text-rose-800" : "text-emerald-800"
+                            : displayCandidate.courtRecordStatus === "error" ? "text-amber-800" : "text-blue-800"
+                        }`}>
+                          {displayCandidate.courtRecordStatus === "completed"
+                            ? displayCandidate.courtRecordHasRecords
+                              ? `${displayCandidate.courtRecordTotalCases} Court Record(s) Found`
+                              : "No Court Records Found"
+                            : displayCandidate.courtRecordStatus === "error"
+                              ? "Search Encountered Errors"
+                              : "Court Record Search In Progress..."}
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                          {displayCandidate.courtRecordSummary || "Searching eCourts India..."}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Candidate Info */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {renderDetailField("Full Name", displayCandidate.name, false, "person")}
+                      {renderDetailField("Date of Birth", displayCandidate.candidateDob, false, "calendar_today")}
+                    </div>
+
+                    {/* Addresses */}
+                    {displayCandidate.addresses && displayCandidate.addresses.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <span className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold">Addresses Searched</span>
+                        {displayCandidate.addresses.map((addr: any, i: number) => (
+                          <div key={i} className="bg-slate-50/60 rounded-xl p-3 border border-slate-200/50 text-xs font-semibold text-slate-700">
+                            <span className="text-[10px] font-bold bg-slate-200/50 text-slate-600 px-1.5 py-0.5 rounded mr-2">{i + 1}</span>
+                            {[addr.address, addr.city, addr.state, addr.country].filter(Boolean).join(", ")}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Search Results Summary */}
+                    {displayCandidate.courtRecordResults && displayCandidate.courtRecordResults.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <span className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold">Court Complex Results</span>
+                        {displayCandidate.courtRecordResults.map((result: any, rIdx: number) => (
+                          <div key={rIdx} className="border border-slate-200/60 rounded-2xl overflow-hidden">
+                            <div className="bg-slate-50 px-4 py-2 flex items-center justify-between border-b border-slate-200/40">
+                              <span className="text-xs font-bold text-slate-800">{result.district}, {result.state}</span>
+                              <span className="text-[10px] font-bold text-slate-500">{result.complexSearches?.length || 0} complex(es)</span>
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                              {result.complexSearches?.map((cs: any, csIdx: number) => (
+                                <div key={csIdx} className="px-4 py-2 flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-slate-700">{cs.complexName}</span>
+                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                    cs.error ? "bg-amber-50 text-amber-700" : cs.casesFound > 0 ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+                                  }`}>
+                                    {cs.error ? "Error" : cs.casesFound > 0 ? `${cs.casesFound} Record(s)` : "Clear"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

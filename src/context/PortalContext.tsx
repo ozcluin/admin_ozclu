@@ -39,6 +39,38 @@ export interface Verification {
     notes?: string;
   }>;
   setupUrl?: string;
+  // Court Record Verification fields
+  type?: "identity" | "court_record";
+  candidateDob?: string;
+  addresses?: Array<{ address: string; city: string; state: string; country: string }>;
+  courtRecordResults?: Array<{
+    addressIndex: number;
+    address: string;
+    city: string;
+    state: string;
+    stateCode: string;
+    district: string;
+    districtCode: string;
+    complexSearches: Array<{
+      complexName: string;
+      complexCode: string;
+      casesFound: number;
+      cases: Array<{
+        caseNumber: string;
+        petitioner: string;
+        respondent: string;
+        orderDate: string;
+      }>;
+      error?: string;
+    }>;
+  }>;
+  courtRecordSummary?: string;
+  courtRecordStatus?: string;
+  courtRecordHasRecords?: boolean;
+  courtRecordTotalCases?: number;
+  courtRecordTotalComplexes?: number;
+  courtRecordErrors?: string[];
+  courtRecordProgress?: string;
 }
 
 export interface InvoiceActivity {

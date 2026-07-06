@@ -182,6 +182,7 @@ export default function VerificationRosterPage() {
             <thead>
               <tr className="border-b border-[#016e1c]/10 bg-slate-50/50">
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">REQUEST ID</th>
+                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">TYPE</th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">CANDIDATE</th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">CLIENT ORG</th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">DATE</th>
@@ -192,7 +193,7 @@ export default function VerificationRosterPage() {
             <tbody className="divide-y divide-slate-100">
               {filteredVerifications.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
                     No verifications found matching your filters.
                   </td>
                 </tr>
@@ -200,10 +201,19 @@ export default function VerificationRosterPage() {
                 filteredVerifications.map((v) => (
                   <tr key={v.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="py-4 px-6 font-mono font-bold text-slate-800">{v.id}</td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
+                        v.type === "court_record"
+                          ? "bg-amber-500/10 text-amber-700 border-amber-500/15"
+                          : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
+                      }`}>
+                        {v.type === "court_record" ? "Court" : "Identity"}
+                      </span>
+                    </td>
                     <td className="py-4 px-6 text-slate-800">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900">{v.name}</span>
-                        <span className="text-xs text-slate-400 mt-0.5">{v.email}</span>
+                        <span className="text-xs text-slate-400 mt-0.5">{v.type === "court_record" ? (v.courtRecordSummary || "Search in progress...") : v.email}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6 text-slate-600 font-medium">{v.orgName}</td>
@@ -511,8 +521,138 @@ export default function VerificationRosterPage() {
                       </div>
                     ) : null}
                   </div>
+                ) : displayVerification?.type === "court_record" ? (
+                  /* Court Record Verification Details */
+                  <div className="flex flex-col gap-6 animate-fade-in">
+                    {/* Court Record Search Banner */}
+                    <div className={`border rounded-2xl p-4 flex items-center gap-3.5 ${
+                      displayVerification.courtRecordStatus === "completed"
+                        ? displayVerification.courtRecordHasRecords
+                          ? "bg-rose-500/5 border-rose-500/15"
+                          : "bg-emerald-500/5 border-emerald-500/15"
+                        : displayVerification.courtRecordStatus === "error"
+                          ? "bg-amber-500/5 border-amber-500/15"
+                          : "bg-blue-500/5 border-blue-500/15"
+                    }`}>
+                      <span className={`material-symbols-outlined text-2xl font-bold ${
+                        displayVerification.courtRecordStatus === "completed"
+                          ? displayVerification.courtRecordHasRecords ? "text-rose-500" : "text-emerald-500"
+                          : displayVerification.courtRecordStatus === "error" ? "text-amber-500" : "text-blue-500"
+                      }`}>
+                        {displayVerification.courtRecordStatus === "completed"
+                          ? displayVerification.courtRecordHasRecords ? "gavel" : "verified_user"
+                          : displayVerification.courtRecordStatus === "error" ? "warning" : "hourglass_top"}
+                      </span>
+                      <div className="flex flex-col">
+                        <span className={`font-body-sm font-bold ${
+                          displayVerification.courtRecordStatus === "completed"
+                            ? displayVerification.courtRecordHasRecords ? "text-rose-800" : "text-emerald-800"
+                            : displayVerification.courtRecordStatus === "error" ? "text-amber-800" : "text-blue-800"
+                        }`}>
+                          {displayVerification.courtRecordStatus === "completed"
+                            ? displayVerification.courtRecordHasRecords
+                              ? `${displayVerification.courtRecordTotalCases} Court Record(s) Found`
+                              : "No Court Records Found"
+                            : displayVerification.courtRecordStatus === "error"
+                              ? "Search Encountered Errors"
+                              : "Court Record Search In Progress..."}
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                          {displayVerification.courtRecordSummary || "Searching eCourts India..."}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Candidate Details */}
+                    <div className="flex flex-col gap-3">
+                      <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                        <span className="material-symbols-outlined text-sm">person</span>
+                        Candidate Details
+                      </h5>
+                      <div className="grid grid-cols-3 gap-3">
+                        {renderDetailField("Full Name", displayVerification.name, false, "badge")}
+                        {renderDetailField("Date of Birth", displayVerification.candidateDob, false, "calendar_today")}
+                        {renderDetailField("Organization", displayVerification.orgName, false, "business")}
+                      </div>
+                    </div>
+
+                    {/* Addresses Searched */}
+                    {displayVerification.addresses && displayVerification.addresses.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                          <span className="material-symbols-outlined text-sm">location_on</span>
+                          Addresses Searched
+                        </h5>
+                        <div className="grid grid-cols-1 gap-2">
+                          {displayVerification.addresses.map((addr: any, i: number) => (
+                            <div key={i} className="bg-slate-50/60 rounded-xl p-3 border border-slate-200/50 flex items-center gap-2">
+                              <span className="text-[10px] font-bold bg-slate-200/50 text-slate-600 px-1.5 py-0.5 rounded">{i + 1}</span>
+                              <span className="text-xs font-semibold text-slate-700">
+                                {[addr.address, addr.city, addr.state, addr.country].filter(Boolean).join(", ")}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Search Results by District */}
+                    {displayVerification.courtRecordResults && displayVerification.courtRecordResults.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                          <span className="material-symbols-outlined text-sm">gavel</span>
+                          Search Results ({displayVerification.courtRecordTotalComplexes} complexes)
+                        </h5>
+                        {displayVerification.courtRecordResults.map((result: any, rIdx: number) => (
+                          <div key={rIdx} className="border border-slate-200/60 rounded-2xl overflow-hidden">
+                            <div className="bg-slate-50 px-4 py-2.5 flex items-center justify-between border-b border-slate-200/40">
+                              <span className="text-xs font-bold text-slate-800">
+                                {result.district}, {result.state}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-500">
+                                {result.complexSearches?.length || 0} complex(es)
+                              </span>
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                              {result.complexSearches?.map((cs: any, csIdx: number) => (
+                                <div key={csIdx} className="px-4 py-2.5 flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-slate-700">{cs.complexName}</span>
+                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                    cs.error
+                                      ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                      : cs.casesFound > 0
+                                        ? "bg-rose-50 text-rose-700 border border-rose-200"
+                                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  }`}>
+                                    {cs.error ? "Error" : cs.casesFound > 0 ? `${cs.casesFound} Record(s)` : "Clear"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Search Errors */}
+                    {displayVerification.courtRecordErrors && displayVerification.courtRecordErrors.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <h5 className="font-label-caps text-amber-600 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2">
+                          <span className="material-symbols-outlined text-sm">warning</span>
+                          Search Notes
+                        </h5>
+                        <div className="p-3 bg-amber-50/50 border border-amber-200/50 rounded-xl">
+                          <ul className="list-disc list-inside text-[11px] text-amber-800 font-semibold space-y-1">
+                            {displayVerification.courtRecordErrors.map((err: string, i: number) => (
+                              <li key={i}>{err}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  /* Non-DigiLocker / Pending state */
+                  /* Non-DigiLocker / Pending state (Identity Check) */
                   <div className="flex flex-col gap-4">
                     <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 flex items-center gap-3">
                       <span className="material-symbols-outlined text-slate-400 text-2xl font-light">hourglass_empty</span>
@@ -571,7 +711,12 @@ export default function VerificationRosterPage() {
                 </button>
                 {displayVerification?.status === "Completed" && (
                   <button
-                    onClick={() => window.open(`/admin/report?id=${displayVerification.id}`, "_blank")}
+                    onClick={() => {
+                      const reportPath = displayVerification.type === "court_record"
+                        ? `/admin/court-record-report?id=${displayVerification.id}`
+                        : `/admin/report?id=${displayVerification.id}`;
+                      window.open(reportPath, "_blank");
+                    }}
                     className="flex-1 py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] hover:opacity-90 text-white font-bold rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[16px]">print</span>
