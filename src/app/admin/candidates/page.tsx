@@ -785,7 +785,12 @@ export default function CandidatesPage() {
                 </button>
                 {displayCandidate?.status === "Completed" && (
                   <button
-                    onClick={() => window.open(`/admin/report?id=${displayCandidate.id}`, "_blank")}
+                    onClick={() => {
+                      const reportPath = displayCandidate.type === "court_record"
+                        ? `/admin/court-record-report?id=${displayCandidate.id}`
+                        : `/admin/report?id=${displayCandidate.id}`;
+                      window.open(reportPath, "_blank");
+                    }}
                     className="w-full py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] hover:opacity-90 text-white font-button-text rounded-xl transition-all cursor-pointer text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-500/10"
                   >
                     <span className="material-symbols-outlined text-base">print</span>
