@@ -642,7 +642,7 @@ export default function CandidatesPage() {
                               : "Court Record Search In Progress..."}
                         </span>
                         <span className="text-[11px] text-slate-500 font-semibold mt-0.5">
-                          {displayCandidate.courtRecordSummary || "Searching eCourts India..."}
+                          {displayCandidate.courtRecordSummary || displayCandidate.courtRecordProgress || "Searching eCourts India..."}
                         </span>
                       </div>
                     </div>

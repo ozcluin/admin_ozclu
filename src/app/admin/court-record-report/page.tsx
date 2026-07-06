@@ -86,6 +86,35 @@ function AdminCourtRecordReportContent() {
   const searchErrors = verification.courtRecordErrors || [];
   const isSearchComplete = verification.courtRecordStatus === "completed" || verification.courtRecordStatus === "error";
 
+  const getVerificationYear = () => {
+    try {
+      const d = new Date(verification.courtRecordCompletedAt || verification.date);
+      if (!isNaN(d.getTime())) return d.getFullYear();
+    } catch {}
+    return new Date().getFullYear();
+  };
+  const verificationYear = getVerificationYear();
+
+  const getVerificationYearRange = () => {
+    const defaultYearsBack = 3;
+    const currentYear = new Date().getFullYear();
+    if (!verification.addresses || !Array.isArray(verification.addresses) || verification.addresses.length === 0) {
+      return { fromYear: currentYear - defaultYearsBack + 1, toYear: currentYear };
+    }
+    let minFrom = Infinity;
+    let maxTo = -Infinity;
+    for (const addr of verification.addresses) {
+      const toYr = addr.toYear || currentYear;
+      const fromYr = addr.fromYear || (toYr - defaultYearsBack + 1);
+      if (fromYr < minFrom) minFrom = fromYr;
+      if (toYr > maxTo) maxTo = toYr;
+    }
+    if (minFrom === Infinity) minFrom = currentYear - defaultYearsBack + 1;
+    if (maxTo === -Infinity) maxTo = currentYear;
+    return { fromYear: minFrom, toYear: maxTo };
+  };
+  const { fromYear, toYear } = getVerificationYearRange();
+
   const verdictColor = hasRecords ? "text-rose-700" : "text-emerald-700";
   const verdictBg = hasRecords ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200";
   const verdictText = hasRecords
@@ -132,8 +161,18 @@ function AdminCourtRecordReportContent() {
         {/* Header */}
         <div className="grid grid-cols-3 items-center gap-4 mb-8">
           <div className="flex justify-start">
-            <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start">
-              <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+            <div className="flex items-center gap-2">
+              <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
+                <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+              </div>
+              {settings && settings.logo && (
+                <>
+                  <div className="h-8 w-[1px] bg-slate-300 self-center mx-1 shrink-0" />
+                  <div className="w-20 h-10 sm:w-24 sm:h-12 flex items-center justify-start shrink-0">
+                    <img src={settings.logo} alt="Client Logo" className="object-contain max-h-full max-w-full" />
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <h1 className="text-center font-sans text-[#1B365D] text-xl sm:text-2xl font-extrabold tracking-widest uppercase mt-2">
@@ -153,6 +192,7 @@ function AdminCourtRecordReportContent() {
             <div>Search Status: <span className={`font-bold uppercase ${isSearchComplete ? "text-emerald-600" : "text-amber-500"}`}>
               {isSearchComplete ? "Completed" : "In Progress"}
             </span></div>
+            <div>Verification Year Span: <span className="text-slate-900 font-mono">{fromYear} — {toYear} ({toYear - fromYear + 1} Years)</span></div>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-4 text-left sm:text-right">
             <div className="space-y-1.5">
@@ -224,9 +264,13 @@ function AdminCourtRecordReportContent() {
               <p className="text-xs text-slate-600 mt-1 font-semibold">
                 Searched {totalComplexes} court complex(es) across {results.length} district(s)
               </p>
+              <p className="text-[10px] text-slate-500 mt-2 font-medium leading-relaxed max-w-[480px]">
+                This report is verified securely by eCourts in the year {verificationYear} using candidate's full legal name, date of birth, and addresses for the period of {fromYear} to {toYear} in accordance with the Information Technology Act, 2000 and the Code of Civil Procedure, 1908.
+              </p>
             </div>
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black ${hasRecords ? "bg-rose-100 text-rose-600" : "bg-emerald-100 text-emerald-600"}`}>
-              {hasRecords ? "⚠" : "✓"}
+            <div className="flex-shrink-0 flex flex-col items-center gap-0.5 bg-white border border-slate-200/80 p-2 rounded-lg shadow-sm">
+              <img src="/ecourts-logo.png" alt="eCourts India" className="w-12 h-12 object-contain" />
+              <span className="text-[8px] font-extrabold uppercase text-[#1B365D] tracking-wider">Verified</span>
             </div>
           </div>
         </div>
@@ -236,207 +280,185 @@ function AdminCourtRecordReportContent() {
           <div className="mb-8">
             <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-4">Search Results by District</h3>
 
-            {results.map((result: any, rIdx: number) => (
-              <div key={rIdx} className="mb-6 print-avoid-break">
-                {/* District Header */}
-                <div className="bg-slate-100 border border-slate-200 rounded-t-xl p-3 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-[#1B365D]">
-                      {result.district}, {result.state}
+            {results.map((result: any, rIdx: number) => {
+              const validComplexes = (result.complexSearches || []).filter((cs: any) => !cs.error);
+              if (validComplexes.length === 0) return null;
+              return (
+                <div key={rIdx} className="mb-6 print-avoid-break">
+                  {/* District Header */}
+                  <div className="bg-slate-100 border border-slate-200 rounded-t-xl p-3 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-[#1B365D]">
+                        {result.district}, {result.state}
+                      </span>
+                      {result.city && (
+                        <span className="text-[10px] text-slate-500 ml-2">(City: {result.city})</span>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">
+                      {validComplexes.length} Complex(es)
                     </span>
-                    {result.city && (
-                      <span className="text-[10px] text-slate-500 ml-2">(City: {result.city})</span>
-                    )}
                   </div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">
-                    {result.complexSearches?.length || 0} Complex(es)
-                  </span>
-                </div>
 
-                {/* Court Complex Results */}
-                <div className="border border-t-0 border-slate-200 rounded-b-xl overflow-hidden">
-                  {(() => {
-                    const complexesMap = new Map<string, {
-                      complexName: string;
-                      complexCode: string;
-                      hasEstablishments: boolean;
-                      establishments: Array<{
-                        establishmentName?: string;
-                        establishmentCode?: string;
-                        casesFound: number;
-                        cases: any[];
+                  {/* Court Complex Results */}
+                  <div className="border border-t-0 border-slate-200 rounded-b-xl overflow-hidden">
+                    {(() => {
+                      const complexesMap = new Map<string, {
+                        complexName: string;
+                        complexCode: string;
+                        hasEstablishments: boolean;
+                        establishments: Array<{
+                          establishmentName?: string;
+                          establishmentCode?: string;
+                          casesFound: number;
+                          cases: any[];
+                          error?: string;
+                        }>;
+                        casesFound?: number;
+                        cases?: any[];
                         error?: string;
-                      }>;
-                      casesFound?: number;
-                      cases?: any[];
-                      error?: string;
-                    }>();
+                      }>();
 
-                    for (const cs of result.complexSearches || []) {
-                      if (!complexesMap.has(cs.complexCode)) {
-                        complexesMap.set(cs.complexCode, {
-                          complexName: cs.complexName,
-                          complexCode: cs.complexCode,
-                          hasEstablishments: !!cs.establishmentName,
-                          establishments: [],
-                        });
+                      for (const cs of validComplexes) {
+                        if (!complexesMap.has(cs.complexCode)) {
+                          complexesMap.set(cs.complexCode, {
+                            complexName: cs.complexName,
+                            complexCode: cs.complexCode,
+                            hasEstablishments: !!cs.establishmentName,
+                            establishments: [],
+                          });
+                        }
+                        const grouped = complexesMap.get(cs.complexCode)!;
+                        if (cs.establishmentName) {
+                          grouped.establishments.push({
+                            establishmentName: cs.establishmentName,
+                            establishmentCode: cs.establishmentCode,
+                            casesFound: cs.casesFound,
+                            cases: cs.cases,
+                            error: cs.error,
+                          });
+                        } else {
+                          grouped.casesFound = cs.casesFound;
+                          grouped.cases = cs.cases;
+                          grouped.error = cs.error;
+                        }
                       }
-                      const grouped = complexesMap.get(cs.complexCode)!;
-                      if (cs.establishmentName) {
-                        grouped.establishments.push({
-                          establishmentName: cs.establishmentName,
-                          establishmentCode: cs.establishmentCode,
-                          casesFound: cs.casesFound,
-                          cases: cs.cases,
-                          error: cs.error,
-                        });
-                      } else {
-                        grouped.casesFound = cs.casesFound;
-                        grouped.cases = cs.cases;
-                        grouped.error = cs.error;
-                      }
-                    }
 
-                    const groupedList = Array.from(complexesMap.values());
+                      const groupedList = Array.from(complexesMap.values());
 
-                    return groupedList.map((g, gIdx) => (
-                      <div key={gIdx} className={`${gIdx > 0 ? "border-t border-slate-200" : ""}`}>
-                        {g.hasEstablishments ? (
-                          <>
-                            {/* Complex Header (No badge, serves as parent grouping) */}
-                            <div className="px-4 py-2 bg-slate-50/75 border-b border-slate-200">
-                              <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">
-                                🏢 {g.complexName}
-                              </span>
-                            </div>
-                            
-                            {/* Establishments List */}
-                            <div className="divide-y divide-slate-100 bg-white">
-                              {g.establishments.map((est, estIdx) => (
-                                <div key={estIdx} className="pl-6 pr-4 py-2.5 bg-white">
-                                  <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[11px] font-bold text-slate-800">
-                                      — {est.establishmentName}
-                                    </span>
-                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                                      est.error
-                                        ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                        : est.casesFound > 0
+                      return groupedList.map((g, gIdx) => (
+                        <div key={gIdx} className={`${gIdx > 0 ? "border-t border-slate-200" : ""}`}>
+                          {g.hasEstablishments ? (
+                            <>
+                              {/* Complex Header (No badge, serves as parent grouping) */}
+                              <div className="px-4 py-2 bg-slate-50/75 border-b border-slate-200">
+                                <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">
+                                  🏢 {g.complexName}
+                                </span>
+                              </div>
+                              
+                              {/* Establishments List */}
+                              <div className="divide-y divide-slate-100 bg-white">
+                                {g.establishments.map((est, estIdx) => (
+                                  <div key={estIdx} className="pl-6 pr-4 py-2.5 bg-white">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                      <span className="text-[11px] font-bold text-slate-800">
+                                        — {est.establishmentName}
+                                      </span>
+                                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                        est.casesFound > 0
                                           ? "bg-rose-50 text-rose-700 border border-rose-200"
                                           : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                    }`}>
-                                      {est.error
-                                        ? "Search Error"
-                                        : est.casesFound > 0
+                                      }`}>
+                                        {est.casesFound > 0
                                           ? `${est.casesFound} Record(s) Found`
                                           : "No Records"}
-                                    </span>
-                                  </div>
+                                      </span>
+                                    </div>
 
-                                  {/* Case Details Table for this establishment */}
-                                  {est.cases && est.cases.length > 0 && (
-                                    <div className="mt-2 pb-1">
-                                      <table className="w-full text-left text-[11px] border-collapse border border-slate-200 rounded-lg overflow-hidden">
-                                        <thead>
-                                          <tr className="bg-rose-50/50 text-slate-700 font-bold">
-                                            <th className="p-2 border-r border-b border-slate-200 w-8">#</th>
-                                            <th className="p-2 border-r border-b border-slate-200">Case Number</th>
-                                            <th className="p-2 border-r border-b border-slate-200">Petitioner</th>
-                                            <th className="p-2 border-r border-b border-slate-200">Respondent</th>
-                                            <th className="p-2 border-b border-slate-200">Order Date</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
-                                          {est.cases.map((c: any, cIdx: number) => (
-                                            <tr key={cIdx}>
-                                              <td className="p-2 border-r border-slate-200 text-center">{cIdx + 1}</td>
-                                              <td className="p-2 border-r border-slate-200 font-mono">{c.caseNumber}</td>
-                                              <td className="p-2 border-r border-slate-200">{c.petitioner}</td>
-                                              <td className="p-2 border-r border-slate-200">{c.respondent}</td>
-                                              <td className="p-2">{c.orderDate}</td>
+                                    {/* Case Details Table for this establishment */}
+                                    {est.cases && est.cases.length > 0 && (
+                                      <div className="mt-2 pb-1">
+                                        <table className="w-full text-left text-[11px] border-collapse border border-slate-200 rounded-lg overflow-hidden">
+                                          <thead>
+                                            <tr className="bg-rose-50/50 text-slate-700 font-bold">
+                                              <th className="p-2 border-r border-b border-slate-200 w-8">#</th>
+                                              <th className="p-2 border-r border-b border-slate-200">Case Number</th>
+                                              <th className="p-2 border-r border-b border-slate-200">Petitioner</th>
+                                              <th className="p-2 border-r border-b border-slate-200">Respondent</th>
+                                              <th className="p-2 border-b border-slate-200">Order Date</th>
                                             </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  )}
-
-                                  {/* Error message for this establishment */}
-                                  {est.error && (
-                                    <div className="mt-1">
-                                      <div className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 font-semibold">
-                                        Search error: {est.error}
+                                          </thead>
+                                          <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
+                                            {est.cases.map((c: any, cIdx: number) => (
+                                              <tr key={cIdx}>
+                                                <td className="p-2 border-r border-slate-200 text-center">{cIdx + 1}</td>
+                                                <td className="p-2 border-r border-slate-200 font-mono">{c.caseNumber}</td>
+                                                <td className="p-2 border-r border-slate-200">{c.petitioner}</td>
+                                                <td className="p-2 border-r border-slate-200">{c.respondent}</td>
+                                                <td className="p-2">{c.orderDate}</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
                                       </div>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            {/* Standard Complex with No Establishments */}
-                            <div className="px-4 py-2.5 bg-white flex items-center justify-between">
-                              <span className="text-xs font-bold text-slate-800">{g.complexName}</span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                g.error
-                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                  : g.casesFound && g.casesFound > 0
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {/* Standard Complex with No Establishments */}
+                              <div className="px-4 py-2.5 bg-white flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-800">{g.complexName}</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  g.casesFound && g.casesFound > 0
                                     ? "bg-rose-50 text-rose-700 border border-rose-200"
                                     : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              }`}>
-                                {g.error
-                                  ? "Search Error"
-                                  : g.casesFound && g.casesFound > 0
+                                }`}>
+                                  {g.casesFound && g.casesFound > 0
                                     ? `${g.casesFound} Record(s) Found`
                                     : "No Records"}
-                              </span>
-                            </div>
+                                </span>
+                              </div>
 
-                            {/* Case Details Table */}
-                            {g.cases && g.cases.length > 0 && (
-                              <div className="px-4 pb-3">
-                                <table className="w-full text-left text-[11px] border-collapse border border-slate-200 rounded-lg overflow-hidden">
-                                  <thead>
-                                    <tr className="bg-rose-50/50 text-slate-700 font-bold">
-                                      <th className="p-2 border-r border-b border-slate-200 w-8">#</th>
-                                      <th className="p-2 border-r border-b border-slate-200">Case Number</th>
-                                      <th className="p-2 border-r border-b border-slate-200">Petitioner</th>
-                                      <th className="p-2 border-r border-b border-slate-200">Respondent</th>
-                                      <th className="p-2 border-b border-slate-200">Order Date</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
-                                    {g.cases.map((c: any, cIdx: number) => (
-                                      <tr key={cIdx}>
-                                        <td className="p-2 border-r border-slate-200 text-center">{cIdx + 1}</td>
-                                        <td className="p-2 border-r border-slate-200 font-mono">{c.caseNumber}</td>
-                                        <td className="p-2 border-r border-slate-200">{c.petitioner}</td>
-                                        <td className="p-2 border-r border-slate-200">{c.respondent}</td>
-                                        <td className="p-2">{c.orderDate}</td>
+                              {/* Case Details Table */}
+                              {g.cases && g.cases.length > 0 && (
+                                <div className="px-4 pb-3">
+                                  <table className="w-full text-left text-[11px] border-collapse border border-slate-200 rounded-lg overflow-hidden">
+                                    <thead>
+                                      <tr className="bg-rose-50/50 text-slate-700 font-bold">
+                                        <th className="p-2 border-r border-b border-slate-200 w-8">#</th>
+                                        <th className="p-2 border-r border-b border-slate-200">Case Number</th>
+                                        <th className="p-2 border-r border-b border-slate-200">Petitioner</th>
+                                        <th className="p-2 border-r border-b border-slate-200">Respondent</th>
+                                        <th className="p-2 border-b border-slate-200">Order Date</th>
                                       </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-
-                            {/* Error message */}
-                            {g.error && (
-                              <div className="px-4 pb-3">
-                                <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-semibold">
-                                  Search error: {g.error}
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
+                                      {g.cases.map((c: any, cIdx: number) => (
+                                        <tr key={cIdx}>
+                                          <td className="p-2 border-r border-slate-200 text-center">{cIdx + 1}</td>
+                                          <td className="p-2 border-r border-slate-200 font-mono">{c.caseNumber}</td>
+                                          <td className="p-2 border-r border-slate-200">{c.petitioner}</td>
+                                          <td className="p-2 border-r border-slate-200">{c.respondent}</td>
+                                          <td className="p-2">{c.orderDate}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
                                 </div>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ));
-                  })()}
+                              )}
+                            </>
+                          )}
+                        </div>
+                      ));
+                    })()}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

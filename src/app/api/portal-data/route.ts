@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
       return {
         ...v,
         _id: v._id.toString(),
-        ratePerVerification: org ? (org.monthlyRate || 0) : (v.ratePerVerification || 0)
+        ratePerVerification: org ? (org.monthlyRate || 0) : (v.ratePerVerification || 0) // Display rate (identity); billing uses per-service org rates
       };
     });
     const cleanOrganisations = organisations.map(o => ({ ...o, _id: o._id.toString() }));
@@ -263,7 +263,7 @@ export async function POST(req: NextRequest) {
       }
       case "inviteVerifier": {
         const { id, name, email, org, status, password, organisationId, designation } = payload;
-        // Look up org rate — all verifiers use the organisation's rate
+        // Verifier display rate uses identity rate; actual billing uses per-service org rates
         let verifierRate = 0;
         if (organisationId) {
           const orgDoc = await db.collection("organisations").findOne({ id: organisationId, isDeleted: { $ne: true } });
@@ -386,66 +386,73 @@ export async function POST(req: NextRequest) {
             isDeleted: { $ne: true }
           });
 
-          if (org && org.monthlyRate) {
-            const now = new Date();
-            const currentMonth = now.toLocaleDateString("en-US", { month: "long" });
-            const currentYear = now.getFullYear();
-            const resolvedOrgId = org.id || org._id.toString();
-            const orgNumStr = String(org.orgNumber || 0).padStart(3, "0");
-            const orgPrefix = orgName.replace(/\s+/g, "").substring(0, 3).toUpperCase();
-            const monthAbbr = currentMonth.substring(0, 3).toUpperCase();
-            const invoiceId = `INV-${orgNumStr}-${orgPrefix}-${monthAbbr}-${currentYear}`;
+          if (org) {
+            const verType = verification.type || "identity";
+            const rate = verType === "court_record"
+              ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
+              : org.monthlyRate;
 
-            // Check if a PAID invoice already exists — if so, don't touch it
-            const paidInvoice = await db.collection("invoices").findOne({
-              $or: [
-                { organisationId: resolvedOrgId },
-                { orgName: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") } }
-              ],
-              month: { $regex: new RegExp("^" + currentMonth + "$", "i") },
-              year: currentYear,
-              status: "Paid",
-              isDeleted: { $ne: true }
-            });
+            if (rate) {
+              const now = new Date();
+              const currentMonth = now.toLocaleDateString("en-US", { month: "long" });
+              const currentYear = now.getFullYear();
+              const resolvedOrgId = org.id || org._id.toString();
+              const orgNumStr = String(org.orgNumber || 0).padStart(3, "0");
+              const orgPrefix = orgName.replace(/\s+/g, "").substring(0, 3).toUpperCase();
+              const monthAbbr = currentMonth.substring(0, 3).toUpperCase();
+              const invoiceId = `INV-${orgNumStr}-${orgPrefix}-${monthAbbr}-${currentYear}`;
 
-            if (!paidInvoice) {
-              // Check if an unpaid invoice already exists for this org + month + year
-              const existingInvoice = await db.collection("invoices").findOne({
+              // Check if a PAID invoice already exists — if so, don't touch it
+              const paidInvoice = await db.collection("invoices").findOne({
                 $or: [
                   { organisationId: resolvedOrgId },
                   { orgName: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") } }
                 ],
                 month: { $regex: new RegExp("^" + currentMonth + "$", "i") },
                 year: currentYear,
-                status: { $ne: "Paid" },
+                status: "Paid",
                 isDeleted: { $ne: true }
               });
 
-              if (existingInvoice) {
-                // Increment the existing invoice amount and ensure organisationId is set
-                await db.collection("invoices").updateOne(
-                  { _id: existingInvoice._id },
-                  { $inc: { amount: org.monthlyRate }, $set: { organisationId: resolvedOrgId, generationType: existingInvoice.generationType || "Auto" } }
-                );
-              } else {
-                // Create a new invoice for this month
-                const generatedDate = now.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
-                const monthIndex = now.getMonth();
-                const lastDayOfMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
-                const dueDate = new Date(currentYear, monthIndex, lastDayOfMonth, 23, 59).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
-
-                await db.collection("invoices").insertOne({
-                  id: invoiceId,
-                  orgName,
-                  organisationId: resolvedOrgId,
-                  date: generatedDate,
-                  dueDate,
-                  amount: org.monthlyRate,
-                  status: "Unpaid",
-                  month: currentMonth,
+              if (!paidInvoice) {
+                // Check if an unpaid invoice already exists for this org + month + year
+                const existingInvoice = await db.collection("invoices").findOne({
+                  $or: [
+                    { organisationId: resolvedOrgId },
+                    { orgName: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") } }
+                  ],
+                  month: { $regex: new RegExp("^" + currentMonth + "$", "i") },
                   year: currentYear,
-                  generationType: "Auto"
+                  status: { $ne: "Paid" },
+                  isDeleted: { $ne: true }
                 });
+
+                if (existingInvoice) {
+                  // Increment the existing invoice amount and ensure organisationId is set
+                  await db.collection("invoices").updateOne(
+                    { _id: existingInvoice._id },
+                    { $inc: { amount: rate }, $set: { organisationId: resolvedOrgId, generationType: existingInvoice.generationType || "Auto" } }
+                  );
+                } else {
+                  // Create a new invoice for this month
+                  const generatedDate = now.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+                  const monthIndex = now.getMonth();
+                  const lastDayOfMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
+                  const dueDate = new Date(currentYear, monthIndex, lastDayOfMonth, 23, 59).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+
+                  await db.collection("invoices").insertOne({
+                    id: invoiceId,
+                    orgName,
+                    organisationId: resolvedOrgId,
+                    date: generatedDate,
+                    dueDate,
+                    amount: rate,
+                    status: "Unpaid",
+                    month: currentMonth,
+                    year: currentYear,
+                    generationType: "Auto"
+                  });
+                }
               }
             }
           }
@@ -497,7 +504,7 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "addOrganisation": {
-        const { id, name, paymentPlan, monthlyRate, billingDay, createdAt, ownerEmail, ownerName, ownerPassword, maxVerifiers, orgNumber } = payload;
+        const { id, name, paymentPlan, monthlyRate, billingDay, createdAt, ownerEmail, ownerName, ownerPassword, maxVerifiers, orgNumber, courtRecordRate, identityEnabled, courtRecordEnabled } = payload;
         // If orgNumber was provided by the client, use it; otherwise compute from DB
         let finalOrgNumber = orgNumber;
         if (!finalOrgNumber) {
@@ -506,6 +513,9 @@ export async function POST(req: NextRequest) {
         }
         await db.collection("organisations").insertOne({
           id, name, orgNumber: finalOrgNumber, paymentPlan, monthlyRate, billingDay, createdAt, status: "Active",
+          courtRecordRate: courtRecordRate ?? monthlyRate,
+          identityEnabled: identityEnabled ?? true,
+          courtRecordEnabled: courtRecordEnabled ?? true,
           ownerEmail: ownerEmail || null,
           ownerName: ownerName || null,
           maxVerifiers: maxVerifiers ?? 5
@@ -640,7 +650,7 @@ export async function POST(req: NextRequest) {
                 organisationId: orgId,
                 designation: "Organisation Owner",
                 status: "Active",
-                ratePerVerification: org.monthlyRate || 0,
+                ratePerVerification: org.monthlyRate || 0, // Display rate (identity); billing uses per-service org rates
                 isOwner: true,
                 createdBy: user.email
               },
@@ -846,6 +856,172 @@ export async function POST(req: NextRequest) {
           outcome: "success"
         });
         break;
+      }
+      case "reviewCourtRecord": {
+        const { verificationId, reviewedResults } = payload;
+
+        if (!verificationId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+
+        const verification = await db.collection("verifications").findOne({ id: verificationId });
+        if (!verification) {
+          return NextResponse.json({ error: "Verification not found" }, { status: 404 });
+        }
+
+        // Deep clone the court record results for modification
+        const results = JSON.parse(JSON.stringify(verification.courtRecordResults || []));
+
+        if (reviewedResults && Array.isArray(reviewedResults)) {
+          // Sort deletions in reverse order so indices stay valid
+          const deletions = reviewedResults
+            .filter((r: any) => r.action === "delete")
+            .sort((a: any, b: any) => {
+              if (a.resultIndex !== b.resultIndex) return b.resultIndex - a.resultIndex;
+              if (a.complexSearchIndex !== b.complexSearchIndex) return b.complexSearchIndex - a.complexSearchIndex;
+              return b.caseIndex - a.caseIndex;
+            });
+
+          for (const del of deletions) {
+            const result = results[del.resultIndex];
+            if (!result || !result.complexSearches) continue;
+            const cs = result.complexSearches[del.complexSearchIndex];
+            if (!cs || !cs.cases) continue;
+            if (del.caseIndex >= 0 && del.caseIndex < cs.cases.length) {
+              cs.cases.splice(del.caseIndex, 1);
+              cs.casesFound = cs.cases.length;
+            }
+          }
+        }
+
+        // Recalculate totals after deletions
+        let newTotalCases = 0;
+        for (const result of results) {
+          for (const cs of (result.complexSearches || [])) {
+            newTotalCases += (cs.cases?.length || 0);
+          }
+        }
+        const newHasRecords = newTotalCases > 0;
+
+        const reviewSummary = newHasRecords
+          ? `${newTotalCases} court record(s) confirmed after admin review.`
+          : `No court records confirmed after admin review. All records cleared.`;
+
+        // Update the verification document
+        const reviewUpdate: Record<string, any> = {
+          courtRecordResults: results,
+          courtRecordTotalCases: newTotalCases,
+          courtRecordHasRecords: newHasRecords,
+          courtRecordStatus: "completed",
+          courtRecordAdminReview: false,
+          courtRecordAdminReviewCompletedAt: new Date().toISOString(),
+          courtRecordReviewedBy: user.email,
+          courtRecordSummary: reviewSummary,
+          status: "Completed",
+          completedAt: new Date().toISOString(),
+          reportDetails: reviewSummary,
+        };
+
+        const reviewAttempt = {
+          date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+          verifier: user.email,
+          status: "Completed",
+          notes: `Admin review completed. ${newTotalCases} record(s) confirmed, ${(verification.courtRecordTotalCases || 0) - newTotalCases} record(s) removed.`
+        };
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          {
+            $set: reviewUpdate,
+            $push: { attempts: reviewAttempt } as any
+          }
+        );
+
+        // Auto-create/update invoice when verification is completed (same logic as updateVerificationStatus)
+        const orgName = verification.orgName;
+        const org = await db.collection("organisations").findOne({
+          name: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") },
+          isDeleted: { $ne: true }
+        });
+
+        if (org) {
+          const rate = org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate;
+          if (rate) {
+            const now = new Date();
+            const currentMonth = now.toLocaleDateString("en-US", { month: "long" });
+            const currentYear = now.getFullYear();
+            const resolvedOrgId = org.id || org._id.toString();
+            const orgNumStr = String(org.orgNumber || 0).padStart(3, "0");
+            const orgPrefix = orgName.replace(/\s+/g, "").substring(0, 3).toUpperCase();
+            const monthAbbr = currentMonth.substring(0, 3).toUpperCase();
+            const invoiceId = `INV-${orgNumStr}-${orgPrefix}-${monthAbbr}-${currentYear}`;
+
+            const paidInvoice = await db.collection("invoices").findOne({
+              $or: [
+                { organisationId: resolvedOrgId },
+                { orgName: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") } }
+              ],
+              month: { $regex: new RegExp("^" + currentMonth + "$", "i") },
+              year: currentYear,
+              status: "Paid",
+              isDeleted: { $ne: true }
+            });
+
+            if (!paidInvoice) {
+              const existingInvoice = await db.collection("invoices").findOne({
+                $or: [
+                  { organisationId: resolvedOrgId },
+                  { orgName: { $regex: new RegExp("^" + orgName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") } }
+                ],
+                month: { $regex: new RegExp("^" + currentMonth + "$", "i") },
+                year: currentYear,
+                status: { $ne: "Paid" },
+                isDeleted: { $ne: true }
+              });
+
+              if (existingInvoice) {
+                await db.collection("invoices").updateOne(
+                  { _id: existingInvoice._id },
+                  { $inc: { amount: rate }, $set: { organisationId: resolvedOrgId } }
+                );
+              } else {
+                const generatedDate = now.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+                const monthIndex = now.getMonth();
+                const lastDayOfMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
+                const dueDate = new Date(currentYear, monthIndex, lastDayOfMonth, 23, 59).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+
+                await db.collection("invoices").insertOne({
+                  id: invoiceId,
+                  orgName,
+                  organisationId: resolvedOrgId,
+                  date: generatedDate,
+                  dueDate,
+                  amount: rate,
+                  status: "Unpaid",
+                  month: currentMonth,
+                  year: currentYear,
+                  generationType: "Auto"
+                });
+              }
+            }
+          }
+        }
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "court_record_reviewed",
+          targetType: "verification",
+          targetId: verificationId,
+          ip,
+          userAgent,
+          outcome: "success",
+          metadata: { confirmedRecords: newTotalCases, removedRecords: (verification.courtRecordTotalCases || 0) - newTotalCases }
+        });
+
+        return NextResponse.json({ success: true, totalCases: newTotalCases, hasRecords: newHasRecords });
       }
       default:
         return NextResponse.json({ error: `Unsupported action: ${action}` }, { status: 400 });

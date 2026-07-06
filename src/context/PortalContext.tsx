@@ -5,6 +5,7 @@ import { useAuth } from "src/context/AuthContext";
 
 // Types
 export interface Verification {
+  _id?: string;
   id: string;
   name: string;
   email: string;
@@ -71,6 +72,11 @@ export interface Verification {
   courtRecordTotalComplexes?: number;
   courtRecordErrors?: string[];
   courtRecordProgress?: string;
+  courtRecordSearchStartedAt?: string;
+  courtRecordAdminReview?: boolean;
+  courtRecordAdminReviewStartedAt?: string;
+  courtRecordAdminReviewCompletedAt?: string;
+  courtRecordReviewedBy?: string;
 }
 
 export interface InvoiceActivity {
@@ -135,6 +141,9 @@ export interface Organisation {
   ownerEmail?: string;
   ownerName?: string;
   maxVerifiers?: number;
+  identityEnabled?: boolean;
+  courtRecordEnabled?: boolean;
+  courtRecordRate?: number;
 }
 
 export interface CompanySettings {
@@ -176,7 +185,7 @@ interface PortalContextType {
   addInvoice: (orgName: string, amount: number, dueDate: string) => Promise<void>;
   assignVerifier: (verificationId: string, verifierName: string | null) => Promise<void>;
   updateVerificationStatus: (verificationId: string, status: "Completed" | "Processing" | "Needs Attention", notes?: string) => Promise<void>;
-  addOrganisation: (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number) => Promise<void>;
+  addOrganisation: (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number, courtRecordRate?: number, identityEnabled?: boolean, courtRecordEnabled?: boolean) => Promise<void>;
   updateOrganisation: (id: string, updates: Partial<Organisation>) => Promise<void>;
   deleteOrganisation: (id: string) => Promise<void>;
   deactivateOrganisation: (id: string, invoiceOption: "keep" | "default") => Promise<void>;
@@ -188,6 +197,7 @@ interface PortalContextType {
   setOrganisationOwner: (orgId: string, ownerName: string, ownerEmail: string, ownerPassword?: string, maxVerifiers?: number) => Promise<void>;
   refreshData: () => Promise<void>;
   removeRecentRequestingOrg: (requestingOrgName: string, orgName?: string) => Promise<void>;
+  reviewCourtRecord: (verificationId: string, reviewedResults: Array<{ resultIndex: number; complexSearchIndex: number; caseIndex: number; action: "confirm" | "delete" }>) => Promise<any>;
 }
 
 const PortalContext = createContext<PortalContextType | undefined>(undefined);
@@ -567,7 +577,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // ── Organisation CRUD ──
 
-  const addOrganisation = async (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number) => {
+  const addOrganisation = async (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number, courtRecordRate?: number, identityEnabled?: boolean, courtRecordEnabled?: boolean) => {
     const newId = `ORG-${Math.floor(1000 + Math.random() * 9000)}`;
     // Compute next sequential org number
     const maxExisting = organisations.reduce((max, o) => Math.max(max, o.orgNumber || 0), 0);
@@ -578,6 +588,9 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       orgNumber: nextOrgNumber,
       paymentPlan: "monthly",
       monthlyRate,
+      courtRecordRate: courtRecordRate ?? monthlyRate,
+      identityEnabled: identityEnabled ?? true,
+      courtRecordEnabled: courtRecordEnabled ?? true,
       billingDay: 0,
       createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
       ownerEmail: ownerEmail || undefined,
@@ -697,8 +710,14 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     });
 
-    const completedCount = matchingVerifications.length;
-    const amount = completedCount * org.monthlyRate;
+    let amount = 0;
+    for (const v of matchingVerifications) {
+      const verType = v.type || "identity";
+      const rate = verType === "court_record"
+        ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
+        : org.monthlyRate;
+      amount += rate;
+    }
 
     const orgNum = String(org.orgNumber || 0).padStart(3, "0");
     const orgPrefix = org.name.replace(/\s+/g, "").substring(0, 3).toUpperCase();
@@ -808,6 +827,23 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const reviewCourtRecord = async (verificationId: string, reviewedResults: Array<{ resultIndex: number; complexSearchIndex: number; caseIndex: number; action: "confirm" | "delete" }>) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reviewCourtRecord", payload: { verificationId, reviewedResults } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Review failed");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed reviewing court record:", err);
+      throw err;
+    }
+  };
+
   return (
     <PortalContext.Provider
       value={{
@@ -839,6 +875,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         updateOrgSettings,
         setOrganisationOwner,
         removeRecentRequestingOrg,
+        reviewCourtRecord,
         refreshData: fetchAllData,
       }}
     >

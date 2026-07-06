@@ -4,13 +4,20 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "src/context/AuthContext";
+import { usePortal } from "src/context/PortalContext";
 import OzcluLogo from "../components/OzcluLogo";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isLoading, logout, profile, user } = useAuth();
+  const { verifications } = usePortal();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Count verifications pending admin court record review
+  const pendingReviewCount = verifications.filter(
+    (v) => v.courtRecordAdminReview === true && v.courtRecordStatus === "admin_review"
+  ).length;
 
   // Route protection — redirect to login if not authenticated, or to MFA verification if pending
   useEffect(() => {
@@ -106,6 +113,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {item.icon}
                 </span>
                 <span className="text-sm font-medium">{item.name}</span>
+                {item.path === "/admin/roster" && pendingReviewCount > 0 && (
+                  <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-rose-500 text-white text-[10px] font-black rounded-full animate-pulse shadow-sm">
+                    {pendingReviewCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -248,8 +260,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div className="flex items-center gap-3">
-            <button aria-label="notifications" className="text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer">
+            <button aria-label="notifications" className="relative text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer">
               <span className="material-symbols-outlined text-xl">notifications</span>
+              {pendingReviewCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full shadow-sm animate-pulse">
+                  {pendingReviewCount}
+                </span>
+              )}
             </button>
             
             {/* User info badge */}
@@ -270,7 +287,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 mt-16 p-margin-mobile md:p-8 max-w-container-max mx-auto w-full">
+        <main className={`flex-1 mt-16 p-margin-mobile md:p-8 w-full ${pathname === "/admin/roster" ? "max-w-none" : "max-w-container-max mx-auto"}`}>
           {children}
         </main>
       </div>

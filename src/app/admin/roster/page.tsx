@@ -4,7 +4,12 @@ import React, { useState } from "react";
 import { usePortal, Verification } from "src/context/PortalContext";
 
 export default function VerificationRosterPage() {
-  const { verifications, updateVerificationStatus, fetchVerificationDetail, refreshData } = usePortal();
+  const { verifications, updateVerificationStatus, fetchVerificationDetail, refreshData, reviewCourtRecord } = usePortal();
+
+  // Court record review state
+  const [reviewDeletedCases, setReviewDeletedCases] = useState<Set<string>>(new Set());
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -38,6 +43,36 @@ export default function VerificationRosterPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [orgFilter, setOrgFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilterType, setDateFilterType] = useState("all");
+  const [customDate, setCustomDate] = useState("");
+
+  // Sort state
+  const [sortField, setSortField] = useState<"id" | "date" | "name" | "orgName" | "status">("date");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  // Show time map state
+  const [showTimeMap, setShowTimeMap] = useState<Record<string, boolean>>({});
+
+  // Helper to extract exact creation timestamp (with time) from MongoDB ObjectId
+  const getExactTime = (v: any) => {
+    if (v._id && v._id.length === 24) {
+      const timestampSec = parseInt(v._id.substring(0, 8), 16);
+      if (!isNaN(timestampSec)) return timestampSec * 1000;
+    }
+    const parsed = new Date(v.date).getTime();
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const getExactTimeString = (v: any) => {
+    if (v._id && v._id.length === 24) {
+      const timestampSec = parseInt(v._id.substring(0, 8), 16);
+      if (!isNaN(timestampSec)) {
+        const d = new Date(timestampSec * 1000);
+        return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+      }
+    }
+    return "";
+  };
 
   // Details drawer state
   const [selectedVerification, setSelectedVerification] = useState<Verification | null>(null);
@@ -74,8 +109,86 @@ export default function VerificationRosterPage() {
       v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       v.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       v.id.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesOrg && matchesSearch;
+
+    const matchesDate = (() => {
+      if (dateFilterType === "all") return true;
+
+      const recordDate = new Date(v.date);
+      if (isNaN(recordDate.getTime())) return true;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const compareDate = new Date(recordDate);
+      compareDate.setHours(0, 0, 0, 0);
+
+      if (dateFilterType === "today") {
+        return compareDate.getTime() === today.getTime();
+      }
+      if (dateFilterType === "yesterday") {
+        return compareDate.getTime() === yesterday.getTime();
+      }
+      if (dateFilterType === "last7") {
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return compareDate >= sevenDaysAgo;
+      }
+      if (dateFilterType === "last30") {
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return compareDate >= thirtyDaysAgo;
+      }
+      if (dateFilterType === "custom") {
+        if (!customDate) return true;
+        // Format both to local YYYY-MM-DD for comparison
+        const formatDateToYYYYMMDD = (d: Date) => {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+        return formatDateToYYYYMMDD(recordDate) === customDate;
+      }
+      return true;
+    })();
+
+    return matchesStatus && matchesOrg && matchesSearch && matchesDate;
   });
+
+  // Sorted verifications
+  const sortedVerifications = [...filteredVerifications].sort((a, b) => {
+    let aVal: any = a[sortField];
+    let bVal: any = b[sortField];
+
+    if (sortField === "date") {
+      const aTime = getExactTime(a);
+      const bTime = getExactTime(b);
+      return sortDirection === "asc" ? aTime - bTime : bTime - aTime;
+    }
+
+    if (typeof aVal === "string") {
+      aVal = aVal.toLowerCase();
+    }
+    if (typeof bVal === "string") {
+      bVal = bVal.toLowerCase();
+    }
+
+    if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (field: "id" | "date" | "name" | "orgName" | "status") => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection(field === "date" ? "desc" : "asc");
+    }
+  };
 
   const handleOpenStatusModal = (v: Verification) => {
     setStatusModalVer(v);
@@ -146,7 +259,7 @@ export default function VerificationRosterPage() {
           <span className="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">search</span>
         </div>
 
-        <div className="w-full md:w-56 flex flex-col gap-1">
+        <div className="w-full md:w-48 flex flex-col gap-1">
           <select
             value={orgFilter}
             onChange={(e) => setOrgFilter(e.target.value)}
@@ -161,7 +274,7 @@ export default function VerificationRosterPage() {
           </select>
         </div>
 
-        <div className="w-full md:w-48 flex flex-col gap-1">
+        <div className="w-full md:w-40 flex flex-col gap-1">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -173,6 +286,37 @@ export default function VerificationRosterPage() {
             <option value="Needs Attention">Needs Attention</option>
           </select>
         </div>
+
+        <div className="w-full md:w-40 flex flex-col gap-1">
+          <select
+            value={dateFilterType}
+            onChange={(e) => {
+              setDateFilterType(e.target.value);
+              if (e.target.value !== "custom") {
+                setCustomDate("");
+              }
+            }}
+            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
+          >
+            <option value="all">All Dates</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="last7">Last 7 Days</option>
+            <option value="last30">Last 30 Days</option>
+            <option value="custom">Specific Date...</option>
+          </select>
+        </div>
+
+        {dateFilterType === "custom" && (
+          <div className="w-full md:w-40 flex flex-col gap-1 animate-fade-in">
+            <input
+              type="date"
+              value={customDate}
+              onChange={(e) => setCustomDate(e.target.value)}
+              className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
+            />
+          </div>
+        )}
       </section>
 
       {/* Main Roster Table */}
@@ -181,25 +325,102 @@ export default function VerificationRosterPage() {
           <table className="w-full text-left font-body-sm whitespace-nowrap">
             <thead>
               <tr className="border-b border-[#016e1c]/10 bg-slate-50/50">
-                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">REQUEST ID</th>
+                <th
+                  onClick={() => handleSort("id")}
+                  className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] hover:text-[#016e1c] transition-colors cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>REQUEST ID</span>
+                    <span className="material-symbols-outlined text-[12px] font-bold text-slate-400">
+                      {sortField === "id"
+                        ? sortDirection === "asc"
+                          ? "arrow_upward"
+                          : "arrow_downward"
+                        : "unfold_more"}
+                    </span>
+                  </div>
+                </th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">TYPE</th>
-                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">CANDIDATE</th>
-                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">CLIENT ORG</th>
-                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">DATE</th>
-                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">STATUS</th>
+                <th
+                  onClick={() => handleSort("name")}
+                  className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] hover:text-[#016e1c] transition-colors cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>CANDIDATE</span>
+                    <span className="material-symbols-outlined text-[12px] font-bold text-slate-400">
+                      {sortField === "name"
+                        ? sortDirection === "asc"
+                          ? "arrow_upward"
+                          : "arrow_downward"
+                        : "unfold_more"}
+                    </span>
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort("orgName")}
+                  className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] hover:text-[#016e1c] transition-colors cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>CLIENT ORG</span>
+                    <span className="material-symbols-outlined text-[12px] font-bold text-slate-400">
+                      {sortField === "orgName"
+                        ? sortDirection === "asc"
+                          ? "arrow_upward"
+                          : "arrow_downward"
+                        : "unfold_more"}
+                    </span>
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort("date")}
+                  className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] hover:text-[#016e1c] transition-colors cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>DATE</span>
+                    <span className="material-symbols-outlined text-[12px] font-bold text-slate-400">
+                      {sortField === "date"
+                        ? sortDirection === "asc"
+                          ? "arrow_upward"
+                          : "arrow_downward"
+                        : "unfold_more"}
+                    </span>
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort("status")}
+                  className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] hover:text-[#016e1c] transition-colors cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>STATUS</span>
+                    <span className="material-symbols-outlined text-[12px] font-bold text-slate-400">
+                      {sortField === "status"
+                        ? sortDirection === "asc"
+                          ? "arrow_upward"
+                          : "arrow_downward"
+                        : "unfold_more"}
+                    </span>
+                  </div>
+                </th>
                 <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] text-right">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredVerifications.length === 0 ? (
+              {sortedVerifications.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
                     No verifications found matching your filters.
                   </td>
                 </tr>
               ) : (
-                filteredVerifications.map((v) => (
-                  <tr key={v.id} className="hover:bg-slate-50/50 transition-colors">
+                sortedVerifications.map((v, idx) => (
+                  <tr
+                    key={`${v.id}-${sortField}-${sortDirection}`}
+                    className={`hover:bg-slate-50/50 transition-colors animate-fade-in ${v.courtRecordAdminReview && v.courtRecordStatus === "admin_review" ? "border-l-[3px] border-l-rose-500" : ""}`}
+                    style={{
+                      animationDelay: `${Math.min(idx * 20, 200)}ms`,
+                      animationFillMode: "both"
+                    }}
+                  >
                     <td className="py-4 px-6 font-mono font-bold text-slate-800">{v.id}</td>
                     <td className="py-4 px-6">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
@@ -217,21 +438,42 @@ export default function VerificationRosterPage() {
                       </div>
                     </td>
                     <td className="py-4 px-6 text-slate-600 font-medium">{v.orgName}</td>
-                    <td className="py-4 px-6 text-slate-500 font-medium">{v.date}</td>
+                    <td
+                      onClick={() => setShowTimeMap((prev) => ({ ...prev, [v.id]: !prev[v.id] }))}
+                      className="py-4 px-6 text-slate-500 font-medium cursor-pointer select-none group"
+                      title="Click to view time"
+                    >
+                      <div className="flex flex-col">
+                        <span className="group-hover:text-[#016e1c] transition-colors">{v.date}</span>
+                        {showTimeMap[v.id] && (
+                          <span className="text-[10.5px] text-slate-400 font-mono mt-0.5 animate-fade-in font-bold">
+                            {getExactTimeString(v)}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-4 px-6">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
                           v.status === "Completed"
                             ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
+                            : (v.type === "court_record" && v.courtRecordStatus === "admin_review")
+                            ? "bg-rose-500/10 text-rose-600 border-rose-500/15"
                             : v.status === "Processing"
                             ? "bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15"
                             : "bg-red-500/10 text-red-600 border-red-500/15"
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          v.status === "Completed" ? "bg-emerald-500" : v.status === "Processing" ? "bg-[#016e1c]" : "bg-red-500"
+                          v.status === "Completed"
+                            ? "bg-emerald-500"
+                            : (v.type === "court_record" && v.courtRecordStatus === "admin_review")
+                            ? "bg-rose-500 animate-pulse"
+                            : v.status === "Processing"
+                            ? "bg-[#016e1c]"
+                            : "bg-red-500"
                         }`}></span>
-                        {v.status}
+                        {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : v.status}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
@@ -558,7 +800,7 @@ export default function VerificationRosterPage() {
                               : "Court Record Search In Progress..."}
                         </span>
                         <span className="text-[11px] text-slate-500 font-semibold mt-0.5">
-                          {displayVerification.courtRecordSummary || "Searching eCourts India..."}
+                          {displayVerification.courtRecordSummary || displayVerification.courtRecordProgress || "Searching eCourts India..."}
                         </span>
                       </div>
                     </div>
@@ -603,34 +845,36 @@ export default function VerificationRosterPage() {
                           <span className="material-symbols-outlined text-sm">gavel</span>
                           Search Results ({displayVerification.courtRecordTotalComplexes} complexes)
                         </h5>
-                        {displayVerification.courtRecordResults.map((result: any, rIdx: number) => (
-                          <div key={rIdx} className="border border-slate-200/60 rounded-2xl overflow-hidden">
-                            <div className="bg-slate-50 px-4 py-2.5 flex items-center justify-between border-b border-slate-200/40">
-                              <span className="text-xs font-bold text-slate-800">
-                                {result.district}, {result.state}
-                              </span>
-                              <span className="text-[10px] font-bold text-slate-500">
-                                {result.complexSearches?.length || 0} complex(es)
-                              </span>
-                            </div>
-                            <div className="divide-y divide-slate-100">
-                              {result.complexSearches?.map((cs: any, csIdx: number) => (
-                                <div key={csIdx} className="px-4 py-2.5 flex items-center justify-between">
-                                  <span className="text-xs font-semibold text-slate-700">{cs.complexName}</span>
-                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                                    cs.error
-                                      ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                      : cs.casesFound > 0
+                        {displayVerification.courtRecordResults.map((result: any, rIdx: number) => {
+                          const validComplexes = (result.complexSearches || []).filter((cs: any) => !cs.error);
+                          if (validComplexes.length === 0) return null;
+                          return (
+                            <div key={rIdx} className="border border-slate-200/60 rounded-2xl overflow-hidden">
+                              <div className="bg-slate-50 px-4 py-2.5 flex items-center justify-between border-b border-slate-200/40">
+                                <span className="text-xs font-bold text-slate-800">
+                                  {result.district}, {result.state}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-500">
+                                  {validComplexes.length} complex(es)
+                                </span>
+                              </div>
+                              <div className="divide-y divide-slate-100">
+                                {validComplexes.map((cs: any, csIdx: number) => (
+                                  <div key={csIdx} className="px-4 py-2.5 flex items-center justify-between">
+                                    <span className="text-xs font-semibold text-slate-700">{cs.complexName}</span>
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                      cs.casesFound > 0
                                         ? "bg-rose-50 text-rose-700 border border-rose-200"
                                         : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                  }`}>
-                                    {cs.error ? "Error" : cs.casesFound > 0 ? `${cs.casesFound} Record(s)` : "Clear"}
-                                  </span>
-                                </div>
-                              ))}
+                                    }`}>
+                                      {cs.casesFound > 0 ? `${cs.casesFound} Record(s)` : "Clear"}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
 
@@ -647,6 +891,132 @@ export default function VerificationRosterPage() {
                               <li key={i}>{err}</li>
                             ))}
                           </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Admin Review Panel */}
+                    {displayVerification.courtRecordAdminReview && displayVerification.courtRecordStatus === "admin_review" && (
+                      <div className="flex flex-col gap-4 mt-2">
+                        <div className="border-2 border-rose-300 bg-rose-50/50 rounded-2xl p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="material-symbols-outlined text-2xl text-rose-500 font-bold">rate_review</span>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-sm text-rose-800">Admin Review Required</span>
+                              <span className="text-[11px] text-rose-600 font-semibold">Review each record below and confirm or delete before sending to client.</span>
+                            </div>
+                          </div>
+
+                          {reviewSuccess && (
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-3 flex items-center gap-2">
+                              <span className="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>
+                              <span className="text-xs font-bold text-emerald-700">Review submitted successfully! Results have been sent to the client.</span>
+                            </div>
+                          )}
+
+                          {/* Reviewable Cases */}
+                          <div className="flex flex-col gap-2 mt-2">
+                            {(displayVerification.courtRecordResults || []).map((result: any, rIdx: number) => (
+                              <div key={rIdx}>
+                                {(result.complexSearches || []).map((cs: any, csIdx: number) => (
+                                  (cs.cases || []).map((c: any, cIdx: number) => {
+                                    const caseKey = `${rIdx}-${csIdx}-${cIdx}`;
+                                    const isDeleted = reviewDeletedCases.has(caseKey);
+                                    return (
+                                      <div
+                                        key={caseKey}
+                                        className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 mb-1.5 ${
+                                          isDeleted
+                                            ? "bg-slate-50 border-slate-200 opacity-50"
+                                            : "bg-white border-rose-200"
+                                        }`}
+                                      >
+                                        <div className="flex flex-col min-w-0 flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                              {cs.complexName || cs.establishmentName || "Court"}
+                                            </span>
+                                          </div>
+                                          <span className="text-xs font-bold text-slate-800 mt-1 font-mono">{c.caseNumber}</span>
+                                          <span className="text-[11px] text-slate-500 font-semibold">
+                                            {c.petitioner} vs {c.respondent}
+                                          </span>
+                                          <span className="text-[10px] text-slate-400 font-medium">Order: {c.orderDate}</span>
+                                        </div>
+                                        <div className="flex gap-1.5 shrink-0 ml-3">
+                                          {isDeleted ? (
+                                            <button
+                                              onClick={() => {
+                                                setReviewDeletedCases(prev => {
+                                                  const next = new Set(prev);
+                                                  next.delete(caseKey);
+                                                  return next;
+                                                });
+                                              }}
+                                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-200 text-slate-600 hover:bg-slate-300 cursor-pointer transition-all"
+                                            >
+                                              Undo
+                                            </button>
+                                          ) : (
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  setReviewDeletedCases(prev => {
+                                                    const next = new Set(prev);
+                                                    next.add(caseKey);
+                                                    return next;
+                                                  });
+                                                }}
+                                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1"
+                                              >
+                                                <span className="material-symbols-outlined text-[13px]">delete</span>
+                                                Delete
+                                              </button>
+                                              <button
+                                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default flex items-center gap-1"
+                                              >
+                                                <span className="material-symbols-outlined text-[13px]">check</span>
+                                                Confirmed
+                                              </button>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Quick Actions */}
+                          <div className="flex gap-2 mt-3 pt-3 border-t border-rose-200">
+                            <button
+                              onClick={() => {
+                                // Mark ALL cases as deleted
+                                const allKeys = new Set<string>();
+                                (displayVerification.courtRecordResults || []).forEach((result: any, rIdx: number) => {
+                                  (result.complexSearches || []).forEach((cs: any, csIdx: number) => {
+                                    (cs.cases || []).forEach((_: any, cIdx: number) => {
+                                      allKeys.add(`${rIdx}-${csIdx}-${cIdx}`);
+                                    });
+                                  });
+                                });
+                                setReviewDeletedCases(allKeys);
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1.5"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">delete_sweep</span>
+                              Set All to No Records
+                            </button>
+                            <button
+                              onClick={() => setReviewDeletedCases(new Set())}
+                              className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 cursor-pointer transition-all flex items-center gap-1.5"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">undo</span>
+                              Reset All
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -721,6 +1091,51 @@ export default function VerificationRosterPage() {
                   >
                     <span className="material-symbols-outlined text-[16px]">print</span>
                     Print
+                  </button>
+                )}
+                {displayVerification?.courtRecordAdminReview && displayVerification?.courtRecordStatus === "admin_review" && (
+                  <button
+                    disabled={isSubmittingReview}
+                    onClick={async () => {
+                      if (!displayVerification) return;
+                      setIsSubmittingReview(true);
+                      setReviewSuccess(false);
+                      try {
+                        // Build reviewed results from deleted cases set
+                        const reviewedResults: Array<{ resultIndex: number; complexSearchIndex: number; caseIndex: number; action: "confirm" | "delete" }> = [];
+                        (displayVerification.courtRecordResults || []).forEach((result: any, rIdx: number) => {
+                          (result.complexSearches || []).forEach((cs: any, csIdx: number) => {
+                            (cs.cases || []).forEach((_: any, cIdx: number) => {
+                              const caseKey = `${rIdx}-${csIdx}-${cIdx}`;
+                              reviewedResults.push({
+                                resultIndex: rIdx,
+                                complexSearchIndex: csIdx,
+                                caseIndex: cIdx,
+                                action: reviewDeletedCases.has(caseKey) ? "delete" : "confirm"
+                              });
+                            });
+                          });
+                        });
+                        await reviewCourtRecord(displayVerification.id, reviewedResults);
+                        setReviewSuccess(true);
+                        setReviewDeletedCases(new Set());
+                        // Refresh detail
+                        const detail = await fetchVerificationDetail(displayVerification.id);
+                        setSelectedDetail(detail);
+                      } catch (err) {
+                        console.error("Review failed:", err);
+                      } finally {
+                        setIsSubmittingReview(false);
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 hover:opacity-90 text-white font-bold rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-1 disabled:opacity-50"
+                  >
+                    {isSubmittingReview ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span className="material-symbols-outlined text-[16px]">send</span>
+                    )}
+                    Send to Client
                   </button>
                 )}
                 <button

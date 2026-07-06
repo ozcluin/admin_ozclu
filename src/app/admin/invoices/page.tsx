@@ -64,6 +64,14 @@ export default function ManageInvoicesPage() {
   const [payNotes, setPayNotes] = useState("");
   const [paymentSaving, setPaymentSaving] = useState(false);
 
+  // ── Payment Plan editing ──
+  const [editingPlan, setEditingPlan] = useState(false);
+  const [planRate, setPlanRate] = useState("");
+  const [planCourtRate, setPlanCourtRate] = useState("");
+  const [planIdentityEnabled, setPlanIdentityEnabled] = useState(true);
+  const [planCourtEnabled, setPlanCourtEnabled] = useState(true);
+  const [planSaving, setPlanSaving] = useState(false);
+
   // ── Verifier creation under org ──
   const [vName, setVName] = useState("");
   const [vEmail, setVEmail] = useState("");
@@ -375,6 +383,7 @@ export default function ManageInvoicesPage() {
     setSelectedOrgId(org.id);
     setActiveTab("overview");
     setEditingPayment(false);
+    setEditingPlan(false);
     setEditingEnterprise(false);
     setEditingOwner(false);
     // Preload payment fields
@@ -383,6 +392,29 @@ export default function ManageInvoicesPage() {
     setPayIfscCode(org.ifscCode || "");
     setPayUpiId(org.upiId || "");
     setPayNotes(org.paymentNotes || "");
+  };
+
+  const openPlanEdit = (org: Organisation) => {
+    setPlanRate(String(org.monthlyRate || 0));
+    // Check if courtRecordRate is custom, else default to monthlyRate
+    const customCourtRate = org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate;
+    setPlanCourtRate(String(customCourtRate || 0));
+    setPlanIdentityEnabled(org.identityEnabled !== false);
+    setPlanCourtEnabled(org.courtRecordEnabled !== false);
+    setEditingPlan(true);
+  };
+
+  const handleSavePlan = async () => {
+    if (!selectedOrgId) return;
+    setPlanSaving(true);
+    await updateOrganisation(selectedOrgId, {
+      monthlyRate: parseFloat(planRate) || 0,
+      courtRecordRate: parseFloat(planCourtRate) || 0,
+      identityEnabled: planIdentityEnabled,
+      courtRecordEnabled: planCourtEnabled,
+    });
+    setEditingPlan(false);
+    setPlanSaving(false);
   };
 
   const openEnterpriseEdit = (orgSettings: any) => {
@@ -483,7 +515,7 @@ export default function ManageInvoicesPage() {
     if (!vEmail.trim() || !vEmail.includes("@")) { setVError("Valid email is required"); return; }
     if (!selectedOrg) return;
 
-    // Use organization monthlyRate as the verifier's rate
+    // Verifier display rate uses identity rate; actual billing uses per-service org rates
     const orgRate = selectedOrg.monthlyRate || 0;
     await inviteVerifier(vName, vEmail, selectedOrg.name, vPassword || undefined, orgRate, selectedOrgId || undefined, vDesignation || undefined);
     setVSuccess(`Verifier ${vName} added successfully!`);
@@ -656,7 +688,7 @@ export default function ManageInvoicesPage() {
                   const orgVers = verifications.filter(
                     (v) => v.orgName.toLowerCase() === org.name.toLowerCase()
                   );
-                  const completedCount = orgVers.filter((v) => {
+                  const currentMonthCompleted = orgVers.filter((v) => {
                     if (v.status !== "Completed") return false;
                     try {
                       const d = new Date(v.completedAt || v.date);
@@ -665,8 +697,14 @@ export default function ManageInvoicesPage() {
                     } catch {
                       return false;
                     }
-                  }).length;
-                  liveTotal = completedCount * org.monthlyRate;
+                  });
+                  liveTotal = currentMonthCompleted.reduce((sum, v) => {
+                    const verType = v.type || "identity";
+                    const rate = verType === "court_record"
+                      ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
+                      : org.monthlyRate;
+                    return sum + rate;
+                  }, 0);
                 }
                 const totalDues = unpaid + liveTotal;
 
@@ -713,7 +751,12 @@ export default function ManageInvoicesPage() {
                           Active
                         </span>
                       )}
-                      <span className="font-body-sm font-extrabold text-slate-800">${org.monthlyRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">/ verification</span></span>
+                      <span className="font-body-sm font-extrabold text-slate-800">
+                        ${org.monthlyRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">ID</span>
+                        {org.courtRecordRate !== undefined && org.courtRecordRate !== org.monthlyRate && (
+                          <> · ${org.courtRecordRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">CR</span></>
+                        )}
+                      </span>
                       
                       <span className="font-body-sm font-bold text-[#00450e] bg-[#eaf0e4]/40 border border-[#bfcab9]/30 px-2 py-0.5 rounded-md text-[10px] ml-auto">Dues: ${totalDues.toFixed(2)}</span>
                     </div>
@@ -1061,7 +1104,7 @@ export default function ManageInvoicesPage() {
                   const orgVers = verifications.filter(
                     (v) => v.orgName.toLowerCase() === selectedOrg.name.toLowerCase()
                   );
-                  completedCount = orgVers.filter((v) => {
+                  const currentMonthCompleted = orgVers.filter((v) => {
                     if (v.status !== "Completed") return false;
                     try {
                       const d = new Date(v.completedAt || v.date);
@@ -1070,8 +1113,15 @@ export default function ManageInvoicesPage() {
                     } catch {
                       return false;
                     }
-                  }).length;
-                  liveTotal = completedCount * selectedOrg.monthlyRate;
+                  });
+                  completedCount = currentMonthCompleted.length;
+                  liveTotal = currentMonthCompleted.reduce((sum, v) => {
+                    const verType = v.type || "identity";
+                    const rate = verType === "court_record"
+                      ? (selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate)
+                      : selectedOrg.monthlyRate;
+                    return sum + rate;
+                  }, 0);
                 }
                 const totalDues = orgUnpaidBalance + liveTotal;
 
@@ -1083,26 +1133,126 @@ export default function ManageInvoicesPage() {
                   <div className="flex flex-col gap-5 animate-fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                       {/* Payment Plan Card */}
-                      <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">payments</span>
-                          <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Payment Plan</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15">
-                            Monthly
-                          </span>
-                        </div>
-                        <p className="font-body-md font-extrabold text-slate-900 text-2xl mt-4 tracking-tight">
-                          ${selectedOrg.monthlyRate.toLocaleString("en-US")}
-                          <span className="text-xs font-medium text-slate-400"> / verification</span>
-                        </p>
-                        <div className="mt-4 pt-3.5 border-t border-slate-100">
-                          <div className="flex items-center gap-2 opacity-40">
-                            <span className="material-symbols-outlined text-[14px] text-slate-500">block</span>
-                            <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Pay As You Go — Disabled</span>
+                      <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50 flex flex-col justify-between min-h-[190px]">
+                        {!editingPlan ? (
+                          <>
+                            <div>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">payments</span>
+                                  <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Payment Plan</span>
+                                </div>
+                                <button
+                                  onClick={() => openPlanEdit(selectedOrg)}
+                                  className="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer p-1 border-none bg-transparent"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">edit</span>
+                                </button>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.identityEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Identity Check
+                                  </span>
+                                  <span className="text-xs font-extrabold text-slate-900">
+                                    {selectedOrg.identityEnabled !== false ? `$${selectedOrg.monthlyRate.toLocaleString("en-US")}` : "Disabled"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.courtRecordEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Court Check
+                                  </span>
+                                  <span className="text-xs font-extrabold text-slate-900">
+                                    {selectedOrg.courtRecordEnabled !== false ? `$${(selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate).toLocaleString("en-US")}` : "Disabled"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wide">Plan: Monthly</span>
+                              {selectedOrg.paymentPlan === "pay_as_you_go" && (
+                                <span className="text-[9px] text-amber-600 font-extrabold uppercase tracking-wide">Pay As You Go</span>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-2.5 text-left flex-1 justify-between">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="material-symbols-outlined text-[16px] text-emerald-600 font-bold">payments</span>
+                              <span className="font-label-caps text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold">Configure Services</span>
+                            </div>
+                            
+                            {/* Identity Check Toggle */}
+                            <div className="flex items-center justify-between">
+                              <label className="relative inline-flex items-center cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={planIdentityEnabled}
+                                  onChange={(e) => setPlanIdentityEnabled(e.target.checked)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+                                <span className="ms-2 text-xs font-bold text-slate-700">Identity Check</span>
+                              </label>
+                              <div className="flex items-center gap-0.5">
+                                <span className="text-xs font-extrabold text-slate-400">$</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={planRate}
+                                  onChange={(e) => setPlanRate(e.target.value)}
+                                  disabled={!planIdentityEnabled}
+                                  className="w-14 border border-slate-200 rounded-lg p-1 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-xs text-center font-bold disabled:opacity-40"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Court Check Toggle */}
+                            <div className="flex items-center justify-between">
+                              <label className="relative inline-flex items-center cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={planCourtEnabled}
+                                  onChange={(e) => setPlanCourtEnabled(e.target.checked)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+                                <span className="ms-2 text-xs font-bold text-slate-700">Court Check</span>
+                              </label>
+                              <div className="flex items-center gap-0.5">
+                                <span className="text-xs font-extrabold text-slate-400">$</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={planCourtRate}
+                                  onChange={(e) => setPlanCourtRate(e.target.value)}
+                                  disabled={!planCourtEnabled}
+                                  className="w-14 border border-slate-200 rounded-lg p-1 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-xs text-center font-bold disabled:opacity-40"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2 mt-1.5 shrink-0">
+                              <button
+                                onClick={handleSavePlan}
+                                disabled={planSaving}
+                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm shadow-emerald-500/10"
+                              >
+                                {planSaving ? "Saving..." : "Save"}
+                              </button>
+                              <button
+                                onClick={() => setEditingPlan(false)}
+                                className="flex-1 py-2 border border-slate-200 text-slate-600 font-bold rounded-lg text-[10px] transition-all cursor-pointer bg-white"
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Billing Details Card */}
@@ -2490,6 +2640,10 @@ export default function ManageInvoicesPage() {
                               const completedDateStr = v.completedAt
                                 ? new Date(v.completedAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
                                 : v.date;
+                              const verType = v.type || "identity";
+                              const rowRate = verType === "court_record"
+                                ? (selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate)
+                                : selectedOrg.monthlyRate;
                               return (
                                 <tr key={v.id}>
                                   <td className="py-2.5 px-3 font-mono text-xs text-primary font-bold">{v.id}</td>
@@ -2497,7 +2651,7 @@ export default function ManageInvoicesPage() {
                                   <td className="py-2.5 px-3 text-xs text-slate-500 font-mono">{v.email}</td>
                                   <td className="py-2.5 px-3 text-xs text-slate-600 font-medium">{completedDateStr}</td>
                                   <td className="py-2.5 px-3 text-xs font-black text-slate-900 text-right">
-                                    ${(vRate ? parseFloat(vRate) : selectedOrg.monthlyRate || 0).toLocaleString("en-US")}
+                                    ${(rowRate || 0).toLocaleString("en-US")}
                                   </td>
                                 </tr>
                               );

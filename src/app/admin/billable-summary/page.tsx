@@ -60,7 +60,13 @@ function BillableSummaryContent() {
   });
 
   const perVerificationRate = organisation?.monthlyRate || 0;
-  const subTotal = filteredVerifications.length * perVerificationRate;
+  const subTotal = filteredVerifications.reduce((sum, v) => {
+    const verType = v.type || "identity";
+    const rate = verType === "court_record"
+      ? (organisation?.courtRecordRate !== undefined ? organisation.courtRecordRate : perVerificationRate)
+      : perVerificationRate;
+    return sum + rate;
+  }, 0);
 
   useEffect(() => {
     if (organisations.length > 0) {
@@ -261,6 +267,12 @@ function BillableSummaryContent() {
                     }
                   } catch {}
 
+                  const verType = v.type || "identity";
+                  const serviceName = verType === "court_record" ? "Court Record Check" : "Identity Verification";
+                  const rate = verType === "court_record"
+                    ? (organisation?.courtRecordRate !== undefined ? organisation.courtRecordRate : perVerificationRate)
+                    : perVerificationRate;
+
                   return (
                     <tr key={v.id || idx} className="hover:bg-slate-50/50">
                       <td className="py-2 px-2 font-semibold text-slate-900 whitespace-nowrap">{idx + 1}</td>
@@ -269,11 +281,11 @@ function BillableSummaryContent() {
                       <td className="py-2 px-2">{settings?.contactFirstName ? `${settings.contactFirstName} ${settings.contactLastName || ""}`.trim() : "Contact Person"}</td>
                       <td className="py-2 px-2">{v.requestingOrgName || orgName}</td>
                       <td className="py-2 px-2 font-bold text-emerald-700 whitespace-nowrap">Verified</td>
-                      <td className="py-2 px-2">Identity Verification</td>
+                      <td className="py-2 px-2">{serviceName}</td>
                       <td className="py-2 px-2">India</td>
                       <td className="py-2 px-2 whitespace-nowrap">USD</td>
-                      <td className="py-2 px-2 text-right font-mono whitespace-nowrap">${perVerificationRate.toFixed(2)}</td>
-                      <td className="py-2 px-2 text-right font-mono whitespace-nowrap">${perVerificationRate.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right font-mono whitespace-nowrap">${rate.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right font-mono whitespace-nowrap">${rate.toFixed(2)}</td>
                     </tr>
                   );
                 })
