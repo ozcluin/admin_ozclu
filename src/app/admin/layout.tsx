@@ -240,7 +240,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {/* Page Canvas Container */}
-      <div className="flex-1 md:ml-[280px] flex flex-col min-h-screen">
+      <div className="flex-1 min-w-0 md:ml-[280px] flex flex-col min-h-screen">
         {/* Top AppBar */}
         <header className="h-16 fixed top-0 right-0 w-full md:w-[calc(100%-280px)] glass-header z-20 flex justify-between items-center px-8 transition-all duration-200">
           <div className="flex items-center gap-4">
@@ -287,7 +287,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Content Area */}
-        <main className={`flex-1 mt-16 p-margin-mobile md:p-8 w-full ${pathname === "/admin/roster" ? "max-w-none" : "max-w-container-max mx-auto"}`}>
+        <main className={`flex-1 min-w-0 mt-16 p-margin-mobile md:p-8 w-full ${pathname === "/admin/roster" ? "max-w-none" : "max-w-container-max mx-auto"}`}>
           {children}
         </main>
       </div>

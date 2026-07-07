@@ -199,10 +199,6 @@ function AdminCourtRecordReportContent() {
               <div>Generated At: <span className="text-slate-900 font-mono">{generatedAtDate}</span></div>
               <div>Verified By: <span className="text-slate-900">eCourts India (Automated)</span></div>
             </div>
-            <div className="flex-shrink-0 flex flex-col items-center gap-0.5 bg-white border border-slate-200/80 p-1.5 rounded-lg shadow-sm">
-              <img src="/ecourts-logo.png" alt="eCourts India Verified" className="w-10 h-10 object-contain" />
-              <span className="text-[8px] font-extrabold uppercase text-[#1B365D] tracking-wider">Verified</span>
-            </div>
           </div>
         </div>
 

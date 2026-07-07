@@ -93,10 +93,7 @@ export default function VerificationRosterPage() {
     }
   };
 
-  // Edit status modal states
-  const [statusModalVer, setStatusModalVer] = useState<Verification | null>(null);
-  const [editStatus, setEditStatus] = useState<"Completed" | "Processing" | "Needs Attention">("Completed");
-  const [editNotes, setEditNotes] = useState("");
+
 
   // Get unique organizations list for filter
   const organizations = Array.from(new Set(verifications.map((v) => v.orgName)));
@@ -190,19 +187,7 @@ export default function VerificationRosterPage() {
     }
   };
 
-  const handleOpenStatusModal = (v: Verification) => {
-    setStatusModalVer(v);
-    setEditStatus(v.status);
-    setEditNotes(v.notes || "");
-  };
 
-  const handleSaveStatus = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (statusModalVer) {
-      updateVerificationStatus(statusModalVer.id, editStatus, editNotes);
-      setStatusModalVer(null);
-    }
-  };
 
   // Helper to render a field card inside the details drawer
   const renderDetailField = (
@@ -485,13 +470,6 @@ export default function VerificationRosterPage() {
                           <span className="material-symbols-outlined text-[15px]">visibility</span>
                           Details
                         </button>
-                        <button
-                          onClick={() => handleOpenStatusModal(v)}
-                          className="px-3.5 py-1.5 apple-button-primary rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <span>Status</span>
-                          <span className="material-symbols-outlined text-[12px] font-bold">edit</span>
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -502,73 +480,6 @@ export default function VerificationRosterPage() {
         </div>
       </section>
 
-      {/* Edit Status Modal */}
-      {statusModalVer && (
-        <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white border border-[#016e1c]/12 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
-            <button
-              onClick={() => setStatusModalVer(null)}
-              className="absolute right-5 top-5 p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-
-            <h3 className="font-headline-md text-slate-900 font-extrabold mb-1">Update Verification Flow</h3>
-            <p className="font-body-sm text-slate-500 mb-6">
-              Subject: <span className="font-bold text-slate-700">{statusModalVer.name}</span> ({statusModalVer.id})
-            </p>
-
-            <form onSubmit={handleSaveStatus} className="flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">Verification Status</label>
-                <div className="flex gap-1.5 bg-slate-50 border border-slate-200/80 rounded-xl p-1">
-                  {(["Processing", "Completed", "Needs Attention"] as const).map((stat) => (
-                    <button
-                      key={stat}
-                      type="button"
-                      onClick={() => setEditStatus(stat)}
-                      className={`flex-1 py-2 rounded-lg font-button-text text-xs text-center transition-all cursor-pointer ${
-                        editStatus === stat
-                          ? "bg-white text-slate-800 shadow-sm border border-slate-200/50 font-bold"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
-                    >
-                      {stat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">Internal Flow Notes</label>
-                <textarea
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                  rows={3}
-                  className="w-full bg-slate-50/50 border border-slate-200/80 rounded-xl px-4 py-2.5 font-body-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all placeholder-slate-400 resize-none"
-                  placeholder="Notes about verification hurdles, checks completed..."
-                />
-              </div>
-
-              <div className="mt-4 flex justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setStatusModalVer(null)}
-                  className="px-4.5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-button-text rounded-xl text-xs cursor-pointer transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 apple-button-primary rounded-xl font-button-text text-xs hover:brightness-105 transition-all cursor-pointer"
-                >
-                  Save Status
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* DigiLocker Details Fullscreen Popup */}
       {selectedVerification && (
@@ -1138,17 +1049,6 @@ export default function VerificationRosterPage() {
                     Send to Client
                   </button>
                 )}
-                <button
-                  onClick={() => {
-                    const ver = selectedVerification;
-                    setSelectedVerification(null);
-                    handleOpenStatusModal(ver);
-                  }}
-                  className="flex-1 py-2.5 apple-button-primary rounded-xl font-semibold hover:brightness-105 transition-all cursor-pointer text-sm flex items-center justify-center gap-1"
-                >
-                  <span className="material-symbols-outlined text-[16px] font-bold">edit</span>
-                  Update Status
-                </button>
               </div>
             </div>
           </div>
