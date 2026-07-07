@@ -141,7 +141,7 @@ export const authOptions: NextAuthOptions = {
         token.mfaPending = (user as any).mfaPending || false;
         token.mfaVerified = (user as any).mfaVerified || false;
       }
-      // Allow MFA verification to upgrade the session
+      // Allow session updates (MFA verification, name change, etc.)
       if (trigger === "update" && session) {
         if (session.mfaVerified === true) {
           token.mfaVerified = true;
@@ -149,6 +149,9 @@ export const authOptions: NextAuthOptions = {
         }
         if (session.mfaEnabled !== undefined) {
           token.mfaEnabled = session.mfaEnabled;
+        }
+        if (session.fullName !== undefined) {
+          token.fullName = session.fullName;
         }
       }
       return token;

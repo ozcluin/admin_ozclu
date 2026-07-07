@@ -2,12 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import { usePortal } from "src/context/PortalContext";
+import { useAuth } from "src/context/AuthContext";
 
 export default function AdminProfilePage() {
   const { settings, updateSettings } = usePortal();
+  const { profile, updateSession } = useAuth();
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Admin name state
+  const [adminName, setAdminName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameSuccess, setNameSuccess] = useState("");
+  const [nameError, setNameError] = useState("");
 
   // Form states
   const [companyName, setCompanyName] = useState("");
@@ -40,6 +48,40 @@ export default function AdminProfilePage() {
       setBillingAddress(settings.billingAddress || "Evoma #14, Old Madras Road, Near Garden City College, Bhattarahalli, Binna Mangala, Krishnarajapuram, Bengaluru, Karnataka, 560049");
     }
   }, [settings]);
+
+  // Sync admin name from profile
+  useEffect(() => {
+    if (profile?.full_name) {
+      setAdminName(profile.full_name);
+    }
+  }, [profile]);
+
+  const handleNameUpdate = async () => {
+    if (!adminName.trim()) {
+      setNameError("Name cannot be empty.");
+      return;
+    }
+    setSavingName(true);
+    setNameSuccess("");
+    setNameError("");
+    try {
+      const res = await fetch("/api/profile/update-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName: adminName.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update name");
+      // Update the session so the name reflects immediately in the sidebar/header
+      await updateSession({ fullName: data.fullName });
+      setNameSuccess("Name updated successfully!");
+      setTimeout(() => setNameSuccess(""), 4500);
+    } catch (err: any) {
+      setNameError(err.message || "Failed to update name.");
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +144,64 @@ export default function AdminProfilePage() {
       {/* Main Settings Panel */}
       <form onSubmit={handleSubmit} className="bg-white border border-[#016e1c]/12 rounded-3xl p-6 md:p-8 flex flex-col gap-8 shadow-[0_4px_25px_rgba(1, 110, 28,0.03)]">
         
+        {/* Section 0: Admin Account */}
+        <div className="flex flex-col gap-5">
+          <h3 className="font-headline-md text-slate-900 font-extrabold text-sm border-b border-slate-100 pb-2 mb-1 flex items-center gap-2">
+            <span className="material-symbols-outlined text-slate-400 text-[18px]">person</span>
+            <span>Admin Account</span>
+          </h3>
+
+          {nameSuccess && (
+            <div className="bg-emerald-500/5 text-emerald-600 border border-emerald-500/15 rounded-xl p-3 font-body-sm flex items-center gap-2 animate-fade-in">
+              <span className="material-symbols-outlined text-lg">check_circle</span>
+              <span className="font-bold text-xs">{nameSuccess}</span>
+            </div>
+          )}
+          {nameError && (
+            <div className="bg-rose-500/5 text-rose-600 border border-rose-500/15 rounded-xl p-3 font-body-sm flex items-center gap-2 animate-fade-in">
+              <span className="material-symbols-outlined text-lg">error</span>
+              <span className="font-bold text-xs">{nameError}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">Admin Display Name</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={adminName} 
+                  onChange={(e) => setAdminName(e.target.value)}
+                  placeholder="Enter your name" 
+                  className="flex-1 border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={handleNameUpdate}
+                  disabled={savingName || adminName.trim() === (profile?.full_name || "")}
+                  className="px-4 py-2.5 bg-gradient-to-br from-[#181d16] via-[#3f4a3d] to-[#00450e] hover:brightness-110 text-white font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs disabled:opacity-40 disabled:cursor-not-allowed border-none shadow-sm"
+                >
+                  {savingName ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <span className="material-symbols-outlined text-[14px]">save</span>
+                  )}
+                  Update Name
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">Email</label>
+              <input 
+                type="email" 
+                value={profile?.email || ""} 
+                disabled
+                className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-500 bg-slate-50 cursor-not-allowed"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Section 1: Organisation Identity */}
         <div className="flex flex-col gap-5">
           <h3 className="font-headline-md text-slate-900 font-extrabold text-sm border-b border-slate-100 pb-2 mb-1 flex items-center gap-2">

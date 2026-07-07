@@ -24,6 +24,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   verifyMfa: (code: string) => Promise<void>;
   verifyRecoveryCode: (code: string) => Promise<void>;
+  updateSession: (data?: any) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,6 +103,7 @@ const AuthConsumer: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         logout,
         verifyMfa,
         verifyRecoveryCode,
+        updateSession: update,
       }}
     >
       {children}
