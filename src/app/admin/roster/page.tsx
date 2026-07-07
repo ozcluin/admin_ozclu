@@ -9,6 +9,7 @@ export default function VerificationRosterPage() {
   // Court record review state
   const [reviewDeletedCases, setReviewDeletedCases] = useState<Set<string>>(new Set());
   const [reviewSelectedCases, setReviewSelectedCases] = useState<Set<string>>(new Set());
+  const [expandedComplexes, setExpandedComplexes] = useState<Set<string>>(new Set());
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
@@ -751,44 +752,233 @@ export default function VerificationRosterPage() {
                     )}
 
                     {/* Search Results by District */}
-                    {displayVerification.courtRecordResults && displayVerification.courtRecordResults.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                          <span className="material-symbols-outlined text-sm">gavel</span>
-                          Search Results ({displayVerification.courtRecordTotalComplexes} complexes)
-                        </h5>
-                        {displayVerification.courtRecordResults.map((result: any, rIdx: number) => {
-                          const validComplexes = (result.complexSearches || []).filter((cs: any) => !cs.error);
-                          if (validComplexes.length === 0) return null;
-                          return (
-                            <div key={rIdx} className="border border-slate-200/60 rounded-2xl overflow-hidden">
-                              <div className="bg-slate-50 px-4 py-2.5 flex items-center justify-between border-b border-slate-200/40">
-                                <span className="text-xs font-bold text-slate-800">
-                                  {result.district}, {result.state}
+                    {displayVerification.courtRecordResults && displayVerification.courtRecordResults.length > 0 && (() => {
+                      const isReviewMode = displayVerification.courtRecordAdminReview && displayVerification.courtRecordStatus === "admin_review";
+                      // Collect all case keys for Select All
+                      const allCaseKeys: string[] = [];
+                      if (isReviewMode) {
+                        (displayVerification.courtRecordResults || []).forEach((result: any, rIdx: number) => {
+                          (result.complexSearches || []).forEach((cs: any, csIdx: number) => {
+                            (cs.cases || []).forEach((_: any, cIdx: number) => {
+                              allCaseKeys.push(`${rIdx}-${csIdx}-${cIdx}`);
+                            });
+                          });
+                        });
+                      }
+                      const allSelected = allCaseKeys.length > 0 && allCaseKeys.every(k => reviewSelectedCases.has(k));
+                      const someSelected = reviewSelectedCases.size > 0;
+                      return (
+                        <div className="flex flex-col gap-3">
+                          <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                            <span className="material-symbols-outlined text-sm">gavel</span>
+                            Search Results ({displayVerification.courtRecordTotalComplexes} complexes)
+                          </h5>
+
+                          {/* Select All + Bulk Actions Bar (only in review mode) */}
+                          {isReviewMode && allCaseKeys.length > 0 && (
+                            <div className="flex items-center justify-between px-2 py-1.5 bg-rose-50/40 border border-rose-200/50 rounded-xl">
+                              <label className="flex items-center gap-2 cursor-pointer select-none group">
+                                <input
+                                  type="checkbox"
+                                  checked={allSelected}
+                                  onChange={() => {
+                                    if (allSelected) {
+                                      setReviewSelectedCases(new Set());
+                                    } else {
+                                      setReviewSelectedCases(new Set(allCaseKeys));
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600"
+                                />
+                                <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">
+                                  Select All ({allCaseKeys.length} cases)
                                 </span>
-                                <span className="text-[10px] font-bold text-slate-500">
-                                  {validComplexes.length} complex(es)
-                                </span>
-                              </div>
-                              <div className="divide-y divide-slate-100">
-                                {validComplexes.map((cs: any, csIdx: number) => (
-                                  <div key={csIdx} className="px-4 py-2.5 flex items-center justify-between">
-                                    <span className="text-xs font-semibold text-slate-700">{cs.complexName}</span>
-                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                                      cs.casesFound > 0
-                                        ? "bg-rose-50 text-rose-700 border border-rose-200"
-                                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                    }`}>
-                                      {cs.casesFound > 0 ? `${cs.casesFound} Record(s)` : "Clear"}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
+                              </label>
+                              {someSelected && (
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => {
+                                      setReviewDeletedCases(prev => {
+                                        const next = new Set(prev);
+                                        reviewSelectedCases.forEach(k => next.add(k));
+                                        return next;
+                                      });
+                                      setReviewSelectedCases(new Set());
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1"
+                                  >
+                                    <span className="material-symbols-outlined text-[13px]">delete</span>
+                                    Delete Selected ({reviewSelectedCases.size})
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setReviewDeletedCases(prev => {
+                                        const next = new Set(prev);
+                                        reviewSelectedCases.forEach(k => next.delete(k));
+                                        return next;
+                                      });
+                                      setReviewSelectedCases(new Set());
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 cursor-pointer transition-all flex items-center gap-1"
+                                  >
+                                    <span className="material-symbols-outlined text-[13px]">check</span>
+                                    Confirm Selected ({reviewSelectedCases.size})
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                          )}
+
+                          {displayVerification.courtRecordResults.map((result: any, rIdx: number) => {
+                            const validComplexes = (result.complexSearches || []).filter((cs: any) => !cs.error);
+                            if (validComplexes.length === 0) return null;
+                            return (
+                              <div key={rIdx} className="border border-slate-200/60 rounded-2xl overflow-hidden">
+                                <div className="bg-slate-50 px-4 py-2.5 flex items-center justify-between border-b border-slate-200/40">
+                                  <span className="text-xs font-bold text-slate-800">
+                                    {result.district}, {result.state}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-500">
+                                    {validComplexes.length} complex(es)
+                                  </span>
+                                </div>
+                                <div className="divide-y divide-slate-100">
+                                  {validComplexes.map((cs: any, csIdx: number) => {
+                                    const complexKey = `${rIdx}-${csIdx}`;
+                                    const isExpanded = expandedComplexes.has(complexKey);
+                                    const hasCases = cs.cases && cs.cases.length > 0;
+                                    const canExpand = isReviewMode && hasCases;
+                                    return (
+                                      <div key={csIdx}>
+                                        <div
+                                          onClick={() => {
+                                            if (!canExpand) return;
+                                            setExpandedComplexes(prev => {
+                                              const next = new Set(prev);
+                                              if (next.has(complexKey)) {
+                                                next.delete(complexKey);
+                                              } else {
+                                                next.add(complexKey);
+                                              }
+                                              return next;
+                                            });
+                                          }}
+                                          className={`px-4 py-2.5 flex items-center justify-between ${
+                                            canExpand ? "cursor-pointer hover:bg-slate-50/80 transition-colors" : ""
+                                          } ${isExpanded ? "bg-rose-50/30" : ""}`}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            {canExpand && (
+                                              <span className={`material-symbols-outlined text-[16px] text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
+                                                chevron_right
+                                              </span>
+                                            )}
+                                            <span className="text-xs font-semibold text-slate-700">{cs.complexName}</span>
+                                          </div>
+                                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                            cs.casesFound > 0
+                                              ? "bg-rose-50 text-rose-700 border border-rose-200"
+                                              : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                          }`}>
+                                            {cs.casesFound > 0 ? `${cs.casesFound} Record(s)` : "Clear"}
+                                          </span>
+                                        </div>
+                                        {/* Expanded cases inline */}
+                                        {canExpand && isExpanded && (
+                                          <div className="px-4 pb-3 pt-1 bg-slate-50/30 border-t border-slate-100">
+                                            {(cs.cases || []).map((c: any, cIdx: number) => {
+                                              const caseKey = `${rIdx}-${csIdx}-${cIdx}`;
+                                              const isDeleted = reviewDeletedCases.has(caseKey);
+                                              const isChecked = reviewSelectedCases.has(caseKey);
+                                              return (
+                                                <div
+                                                  key={caseKey}
+                                                  className={`flex items-center p-2.5 rounded-xl border transition-all duration-200 mb-1.5 ${
+                                                    isDeleted
+                                                      ? "bg-slate-50 border-slate-200 opacity-50"
+                                                      : isChecked
+                                                        ? "bg-rose-50/30 border-rose-300 ring-1 ring-rose-200"
+                                                        : "bg-white border-slate-200"
+                                                  }`}
+                                                >
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={() => {
+                                                      setReviewSelectedCases(prev => {
+                                                        const next = new Set(prev);
+                                                        if (next.has(caseKey)) {
+                                                          next.delete(caseKey);
+                                                        } else {
+                                                          next.add(caseKey);
+                                                        }
+                                                        return next;
+                                                      });
+                                                    }}
+                                                    className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600 shrink-0 mr-3"
+                                                  />
+                                                  <div className="flex flex-col min-w-0 flex-1">
+                                                    <span className="text-xs font-bold text-slate-800 font-mono">{c.caseNumber}</span>
+                                                    <span className="text-[11px] text-slate-500 font-semibold">
+                                                      {c.petitioner} vs {c.respondent}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400 font-medium">Order: {c.orderDate}</span>
+                                                  </div>
+                                                  <div className="flex gap-1.5 shrink-0 ml-3">
+                                                    {isDeleted ? (
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setReviewDeletedCases(prev => {
+                                                            const next = new Set(prev);
+                                                            next.delete(caseKey);
+                                                            return next;
+                                                          });
+                                                        }}
+                                                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-200 text-slate-600 hover:bg-slate-300 cursor-pointer transition-all"
+                                                      >
+                                                        Undo
+                                                      </button>
+                                                    ) : (
+                                                      <>
+                                                        <button
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setReviewDeletedCases(prev => {
+                                                              const next = new Set(prev);
+                                                              next.add(caseKey);
+                                                              return next;
+                                                            });
+                                                          }}
+                                                          className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1"
+                                                        >
+                                                          <span className="material-symbols-outlined text-[13px]">delete</span>
+                                                          Delete
+                                                        </button>
+                                                        <button
+                                                          className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default flex items-center gap-1"
+                                                        >
+                                                          <span className="material-symbols-outlined text-[13px]">check</span>
+                                                          Confirmed
+                                                        </button>
+                                                      </>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
 
                     {/* Search Errors */}
                     {displayVerification.courtRecordErrors && displayVerification.courtRecordErrors.length > 0 && (
@@ -826,170 +1016,6 @@ export default function VerificationRosterPage() {
                             </div>
                           )}
 
-                          {/* Reviewable Cases */}
-                          {(() => {
-                            // Collect all case keys for Select All logic
-                            const allCaseKeys: string[] = [];
-                            (displayVerification.courtRecordResults || []).forEach((result: any, rIdx: number) => {
-                              (result.complexSearches || []).forEach((cs: any, csIdx: number) => {
-                                (cs.cases || []).forEach((_: any, cIdx: number) => {
-                                  allCaseKeys.push(`${rIdx}-${csIdx}-${cIdx}`);
-                                });
-                              });
-                            });
-                            const allSelected = allCaseKeys.length > 0 && allCaseKeys.every(k => reviewSelectedCases.has(k));
-                            const someSelected = reviewSelectedCases.size > 0;
-                            return (
-                              <>
-                                {/* Select All + Bulk Actions Bar */}
-                                <div className="flex items-center justify-between mt-2 mb-1 px-1">
-                                  <label className="flex items-center gap-2 cursor-pointer select-none group">
-                                    <input
-                                      type="checkbox"
-                                      checked={allSelected}
-                                      onChange={() => {
-                                        if (allSelected) {
-                                          setReviewSelectedCases(new Set());
-                                        } else {
-                                          setReviewSelectedCases(new Set(allCaseKeys));
-                                        }
-                                      }}
-                                      className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600"
-                                    />
-                                    <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">
-                                      Select All ({allCaseKeys.length} cases)
-                                    </span>
-                                  </label>
-                                  {someSelected && (
-                                    <div className="flex gap-1.5 animate-fade-in">
-                                      <button
-                                        onClick={() => {
-                                          setReviewDeletedCases(prev => {
-                                            const next = new Set(prev);
-                                            reviewSelectedCases.forEach(k => next.add(k));
-                                            return next;
-                                          });
-                                          setReviewSelectedCases(new Set());
-                                        }}
-                                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1"
-                                      >
-                                        <span className="material-symbols-outlined text-[13px]">delete</span>
-                                        Delete Selected ({reviewSelectedCases.size})
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          setReviewDeletedCases(prev => {
-                                            const next = new Set(prev);
-                                            reviewSelectedCases.forEach(k => next.delete(k));
-                                            return next;
-                                          });
-                                          setReviewSelectedCases(new Set());
-                                        }}
-                                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 cursor-pointer transition-all flex items-center gap-1"
-                                      >
-                                        <span className="material-symbols-outlined text-[13px]">check</span>
-                                        Confirm Selected ({reviewSelectedCases.size})
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                  {(displayVerification.courtRecordResults || []).map((result: any, rIdx: number) => (
-                                    <div key={rIdx}>
-                                      {(result.complexSearches || []).map((cs: any, csIdx: number) => (
-                                        (cs.cases || []).map((c: any, cIdx: number) => {
-                                          const caseKey = `${rIdx}-${csIdx}-${cIdx}`;
-                                          const isDeleted = reviewDeletedCases.has(caseKey);
-                                          const isChecked = reviewSelectedCases.has(caseKey);
-                                          return (
-                                            <div
-                                              key={caseKey}
-                                              className={`flex items-center p-3 rounded-xl border transition-all duration-200 mb-1.5 ${
-                                                isDeleted
-                                                  ? "bg-slate-50 border-slate-200 opacity-50"
-                                                  : isChecked
-                                                    ? "bg-rose-50/30 border-rose-300 ring-1 ring-rose-200"
-                                                    : "bg-white border-rose-200"
-                                              }`}
-                                            >
-                                              {/* Checkbox */}
-                                              <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={() => {
-                                                  setReviewSelectedCases(prev => {
-                                                    const next = new Set(prev);
-                                                    if (next.has(caseKey)) {
-                                                      next.delete(caseKey);
-                                                    } else {
-                                                      next.add(caseKey);
-                                                    }
-                                                    return next;
-                                                  });
-                                                }}
-                                                className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600 shrink-0 mr-3"
-                                              />
-                                              <div className="flex flex-col min-w-0 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                                                    {cs.complexName || cs.establishmentName || "Court"}
-                                                  </span>
-                                                </div>
-                                                <span className="text-xs font-bold text-slate-800 mt-1 font-mono">{c.caseNumber}</span>
-                                                <span className="text-[11px] text-slate-500 font-semibold">
-                                                  {c.petitioner} vs {c.respondent}
-                                                </span>
-                                                <span className="text-[10px] text-slate-400 font-medium">Order: {c.orderDate}</span>
-                                              </div>
-                                              <div className="flex gap-1.5 shrink-0 ml-3">
-                                                {isDeleted ? (
-                                                  <button
-                                                    onClick={() => {
-                                                      setReviewDeletedCases(prev => {
-                                                        const next = new Set(prev);
-                                                        next.delete(caseKey);
-                                                        return next;
-                                                      });
-                                                    }}
-                                                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-200 text-slate-600 hover:bg-slate-300 cursor-pointer transition-all"
-                                                  >
-                                                    Undo
-                                                  </button>
-                                                ) : (
-                                                  <>
-                                                    <button
-                                                      onClick={() => {
-                                                        setReviewDeletedCases(prev => {
-                                                          const next = new Set(prev);
-                                                          next.add(caseKey);
-                                                          return next;
-                                                        });
-                                                      }}
-                                                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1"
-                                                    >
-                                                      <span className="material-symbols-outlined text-[13px]">delete</span>
-                                                      Delete
-                                                    </button>
-                                                    <button
-                                                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default flex items-center gap-1"
-                                                    >
-                                                      <span className="material-symbols-outlined text-[13px]">check</span>
-                                                      Confirmed
-                                                    </button>
-                                                  </>
-                                                )}
-                                              </div>
-                                            </div>
-                                          );
-                                        })
-                                      ))}
-                                    </div>
-                                  ))}
-                                </div>
-                              </>
-                            );
-                          })()}
                           </div>
 
                           {/* Quick Actions */}
