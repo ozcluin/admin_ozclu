@@ -830,7 +830,8 @@ export default function VerificationRosterPage() {
                           )}
 
                           {displayVerification.courtRecordResults.map((result: any, rIdx: number) => {
-                            const validComplexes = (result.complexSearches || []).filter((cs: any) => !cs.error);
+                            const allComplexes = result.complexSearches || [];
+                            const validComplexes = allComplexes.filter((cs: any) => !cs.error);
                             if (validComplexes.length === 0) return null;
                             return (
                               <div key={rIdx} className="border border-slate-200/60 rounded-2xl overflow-hidden">
@@ -843,7 +844,8 @@ export default function VerificationRosterPage() {
                                   </span>
                                 </div>
                                 <div className="divide-y divide-slate-100">
-                                  {validComplexes.map((cs: any, csIdx: number) => {
+                                  {allComplexes.map((cs: any, csIdx: number) => {
+                                    if (cs.error) return null;
                                     const complexKey = `${rIdx}-${csIdx}`;
                                     const isExpanded = expandedComplexes.has(complexKey);
                                     const hasCases = cs.cases && cs.cases.length > 0;
