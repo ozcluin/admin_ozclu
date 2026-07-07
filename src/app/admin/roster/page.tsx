@@ -1016,8 +1016,6 @@ export default function VerificationRosterPage() {
                             </div>
                           )}
 
-                          </div>
-
                           {/* Quick Actions */}
                           <div className="flex gap-2 mt-3 pt-3 border-t border-rose-200">
                             <button
