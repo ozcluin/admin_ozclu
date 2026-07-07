@@ -8,6 +8,7 @@ export default function VerificationRosterPage() {
 
   // Court record review state
   const [reviewDeletedCases, setReviewDeletedCases] = useState<Set<string>>(new Set());
+  const [reviewSelectedCases, setReviewSelectedCases] = useState<Set<string>>(new Set());
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
@@ -826,78 +827,169 @@ export default function VerificationRosterPage() {
                           )}
 
                           {/* Reviewable Cases */}
-                          <div className="flex flex-col gap-2 mt-2">
-                            {(displayVerification.courtRecordResults || []).map((result: any, rIdx: number) => (
-                              <div key={rIdx}>
-                                {(result.complexSearches || []).map((cs: any, csIdx: number) => (
-                                  (cs.cases || []).map((c: any, cIdx: number) => {
-                                    const caseKey = `${rIdx}-${csIdx}-${cIdx}`;
-                                    const isDeleted = reviewDeletedCases.has(caseKey);
-                                    return (
-                                      <div
-                                        key={caseKey}
-                                        className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 mb-1.5 ${
-                                          isDeleted
-                                            ? "bg-slate-50 border-slate-200 opacity-50"
-                                            : "bg-white border-rose-200"
-                                        }`}
+                          {(() => {
+                            // Collect all case keys for Select All logic
+                            const allCaseKeys: string[] = [];
+                            (displayVerification.courtRecordResults || []).forEach((result: any, rIdx: number) => {
+                              (result.complexSearches || []).forEach((cs: any, csIdx: number) => {
+                                (cs.cases || []).forEach((_: any, cIdx: number) => {
+                                  allCaseKeys.push(`${rIdx}-${csIdx}-${cIdx}`);
+                                });
+                              });
+                            });
+                            const allSelected = allCaseKeys.length > 0 && allCaseKeys.every(k => reviewSelectedCases.has(k));
+                            const someSelected = reviewSelectedCases.size > 0;
+                            return (
+                              <>
+                                {/* Select All + Bulk Actions Bar */}
+                                <div className="flex items-center justify-between mt-2 mb-1 px-1">
+                                  <label className="flex items-center gap-2 cursor-pointer select-none group">
+                                    <input
+                                      type="checkbox"
+                                      checked={allSelected}
+                                      onChange={() => {
+                                        if (allSelected) {
+                                          setReviewSelectedCases(new Set());
+                                        } else {
+                                          setReviewSelectedCases(new Set(allCaseKeys));
+                                        }
+                                      }}
+                                      className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600"
+                                    />
+                                    <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">
+                                      Select All ({allCaseKeys.length} cases)
+                                    </span>
+                                  </label>
+                                  {someSelected && (
+                                    <div className="flex gap-1.5 animate-fade-in">
+                                      <button
+                                        onClick={() => {
+                                          setReviewDeletedCases(prev => {
+                                            const next = new Set(prev);
+                                            reviewSelectedCases.forEach(k => next.add(k));
+                                            return next;
+                                          });
+                                          setReviewSelectedCases(new Set());
+                                        }}
+                                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1"
                                       >
-                                        <div className="flex flex-col min-w-0 flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                                              {cs.complexName || cs.establishmentName || "Court"}
-                                            </span>
-                                          </div>
-                                          <span className="text-xs font-bold text-slate-800 mt-1 font-mono">{c.caseNumber}</span>
-                                          <span className="text-[11px] text-slate-500 font-semibold">
-                                            {c.petitioner} vs {c.respondent}
-                                          </span>
-                                          <span className="text-[10px] text-slate-400 font-medium">Order: {c.orderDate}</span>
-                                        </div>
-                                        <div className="flex gap-1.5 shrink-0 ml-3">
-                                          {isDeleted ? (
-                                            <button
-                                              onClick={() => {
-                                                setReviewDeletedCases(prev => {
-                                                  const next = new Set(prev);
-                                                  next.delete(caseKey);
-                                                  return next;
-                                                });
-                                              }}
-                                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-200 text-slate-600 hover:bg-slate-300 cursor-pointer transition-all"
+                                        <span className="material-symbols-outlined text-[13px]">delete</span>
+                                        Delete Selected ({reviewSelectedCases.size})
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setReviewDeletedCases(prev => {
+                                            const next = new Set(prev);
+                                            reviewSelectedCases.forEach(k => next.delete(k));
+                                            return next;
+                                          });
+                                          setReviewSelectedCases(new Set());
+                                        }}
+                                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 cursor-pointer transition-all flex items-center gap-1"
+                                      >
+                                        <span className="material-symbols-outlined text-[13px]">check</span>
+                                        Confirm Selected ({reviewSelectedCases.size})
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                  {(displayVerification.courtRecordResults || []).map((result: any, rIdx: number) => (
+                                    <div key={rIdx}>
+                                      {(result.complexSearches || []).map((cs: any, csIdx: number) => (
+                                        (cs.cases || []).map((c: any, cIdx: number) => {
+                                          const caseKey = `${rIdx}-${csIdx}-${cIdx}`;
+                                          const isDeleted = reviewDeletedCases.has(caseKey);
+                                          const isChecked = reviewSelectedCases.has(caseKey);
+                                          return (
+                                            <div
+                                              key={caseKey}
+                                              className={`flex items-center p-3 rounded-xl border transition-all duration-200 mb-1.5 ${
+                                                isDeleted
+                                                  ? "bg-slate-50 border-slate-200 opacity-50"
+                                                  : isChecked
+                                                    ? "bg-rose-50/30 border-rose-300 ring-1 ring-rose-200"
+                                                    : "bg-white border-rose-200"
+                                              }`}
                                             >
-                                              Undo
-                                            </button>
-                                          ) : (
-                                            <>
-                                              <button
-                                                onClick={() => {
-                                                  setReviewDeletedCases(prev => {
+                                              {/* Checkbox */}
+                                              <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={() => {
+                                                  setReviewSelectedCases(prev => {
                                                     const next = new Set(prev);
-                                                    next.add(caseKey);
+                                                    if (next.has(caseKey)) {
+                                                      next.delete(caseKey);
+                                                    } else {
+                                                      next.add(caseKey);
+                                                    }
                                                     return next;
                                                   });
                                                 }}
-                                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1"
-                                              >
-                                                <span className="material-symbols-outlined text-[13px]">delete</span>
-                                                Delete
-                                              </button>
-                                              <button
-                                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default flex items-center gap-1"
-                                              >
-                                                <span className="material-symbols-outlined text-[13px]">check</span>
-                                                Confirmed
-                                              </button>
-                                            </>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })
-                                ))}
-                              </div>
-                            ))}
+                                                className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600 shrink-0 mr-3"
+                                              />
+                                              <div className="flex flex-col min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                    {cs.complexName || cs.establishmentName || "Court"}
+                                                  </span>
+                                                </div>
+                                                <span className="text-xs font-bold text-slate-800 mt-1 font-mono">{c.caseNumber}</span>
+                                                <span className="text-[11px] text-slate-500 font-semibold">
+                                                  {c.petitioner} vs {c.respondent}
+                                                </span>
+                                                <span className="text-[10px] text-slate-400 font-medium">Order: {c.orderDate}</span>
+                                              </div>
+                                              <div className="flex gap-1.5 shrink-0 ml-3">
+                                                {isDeleted ? (
+                                                  <button
+                                                    onClick={() => {
+                                                      setReviewDeletedCases(prev => {
+                                                        const next = new Set(prev);
+                                                        next.delete(caseKey);
+                                                        return next;
+                                                      });
+                                                    }}
+                                                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-200 text-slate-600 hover:bg-slate-300 cursor-pointer transition-all"
+                                                  >
+                                                    Undo
+                                                  </button>
+                                                ) : (
+                                                  <>
+                                                    <button
+                                                      onClick={() => {
+                                                        setReviewDeletedCases(prev => {
+                                                          const next = new Set(prev);
+                                                          next.add(caseKey);
+                                                          return next;
+                                                        });
+                                                      }}
+                                                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200 cursor-pointer transition-all flex items-center gap-1"
+                                                    >
+                                                      <span className="material-symbols-outlined text-[13px]">delete</span>
+                                                      Delete
+                                                    </button>
+                                                    <button
+                                                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default flex items-center gap-1"
+                                                    >
+                                                      <span className="material-symbols-outlined text-[13px]">check</span>
+                                                      Confirmed
+                                                    </button>
+                                                  </>
+                                                )}
+                                              </div>
+                                            </div>
+                                          );
+                                        })
+                                      ))}
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            );
+                          })()}
                           </div>
 
                           {/* Quick Actions */}
