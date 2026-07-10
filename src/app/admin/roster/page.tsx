@@ -728,6 +728,9 @@ export default function VerificationRosterPage() {
                         {renderDetailField("Full Name", displayVerification.name, false, "badge")}
                         {renderDetailField("Date of Birth", displayVerification.candidateDob, false, "calendar_today")}
                         {renderDetailField("Organization", displayVerification.orgName, false, "business")}
+                        {renderDetailField("Father's Name", displayVerification.candidateFatherName, false, "person")}
+                        {renderDetailField("Mother's Name", displayVerification.candidateMotherName, false, "person")}
+                        {displayVerification.candidateIsMarried && renderDetailField("Husband's Name", displayVerification.candidateHusbandName, false, "person")}
                       </div>
                     </div>
 

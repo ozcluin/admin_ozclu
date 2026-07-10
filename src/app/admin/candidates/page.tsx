@@ -651,6 +651,9 @@ export default function CandidatesPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {renderDetailField("Full Name", displayCandidate.name, false, "person")}
                       {renderDetailField("Date of Birth", displayCandidate.candidateDob, false, "calendar_today")}
+                      {renderDetailField("Father's Name", displayCandidate.candidateFatherName, false, "person")}
+                      {renderDetailField("Mother's Name", displayCandidate.candidateMotherName, false, "person")}
+                      {displayCandidate.candidateIsMarried && renderDetailField("Husband's Name", displayCandidate.candidateHusbandName, false, "person")}
                     </div>
 
                     {/* Addresses */}

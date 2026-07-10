@@ -209,6 +209,11 @@ function AdminCourtRecordReportContent() {
             <div className="space-y-1.5 text-xs">
               <div><span className="text-slate-500 font-semibold">Full Name:</span> <span className="font-bold text-slate-800">{verification.name}</span></div>
               <div><span className="text-slate-500 font-semibold">Date of Birth:</span> <span className="font-semibold text-slate-800">{verification.candidateDob || "-"}</span></div>
+              <div><span className="text-slate-500 font-semibold">Father&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateFatherName || "-"}</span></div>
+              <div><span className="text-slate-500 font-semibold">Mother&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateMotherName || "-"}</span></div>
+              {verification.candidateIsMarried && verification.candidateHusbandName && (
+                <div><span className="text-slate-500 font-semibold">Husband&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateHusbandName}</span></div>
+              )}
             </div>
           </div>
           <div>

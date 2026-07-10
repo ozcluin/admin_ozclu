@@ -43,6 +43,10 @@ export interface Verification {
   // Court Record Verification fields
   type?: "identity" | "court_record";
   candidateDob?: string;
+  candidateFatherName?: string;
+  candidateMotherName?: string;
+  candidateIsMarried?: boolean;
+  candidateHusbandName?: string;
   addresses?: Array<{ address: string; city: string; state: string; country: string }>;
   courtRecordResults?: Array<{
     addressIndex: number;
