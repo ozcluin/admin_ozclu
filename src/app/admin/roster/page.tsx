@@ -726,7 +726,10 @@ export default function VerificationRosterPage() {
                       </h5>
                       <div className="grid grid-cols-3 gap-3">
                         {renderDetailField("Full Name", displayVerification.name, false, "badge")}
+                        {displayVerification.gender && renderDetailField("Gender", displayVerification.gender, false, "wc")}
                         {renderDetailField("Date of Birth", displayVerification.candidateDob, false, "calendar_today")}
+                        {displayVerification.idProofType && renderDetailField("ID Type", displayVerification.idProofType, false, "id_card")}
+                        {displayVerification.idProofNumber && renderDetailField("ID Number", displayVerification.idProofNumber, false, "pin")}
                         {renderDetailField("Organization", displayVerification.orgName, false, "business")}
                         {renderDetailField("Father's Name", displayVerification.candidateFatherName, false, "person")}
                         {renderDetailField("Mother's Name", displayVerification.candidateMotherName, false, "person")}

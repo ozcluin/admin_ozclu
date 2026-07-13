@@ -208,7 +208,16 @@ function AdminCourtRecordReportContent() {
             <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2">Candidate Details</h3>
             <div className="space-y-1.5 text-xs">
               <div><span className="text-slate-500 font-semibold">Full Name:</span> <span className="font-bold text-slate-800">{verification.name}</span></div>
+              {verification.gender && (
+                <div><span className="text-slate-500 font-semibold">Gender:</span> <span className="font-semibold text-slate-800">{verification.gender}</span></div>
+              )}
               <div><span className="text-slate-500 font-semibold">Date of Birth:</span> <span className="font-semibold text-slate-800">{verification.candidateDob || "-"}</span></div>
+              {verification.idProofType && (
+                <div><span className="text-slate-500 font-semibold">ID Type:</span> <span className="font-semibold text-slate-800">{verification.idProofType}</span></div>
+              )}
+              {verification.idProofNumber && (
+                <div><span className="text-slate-500 font-semibold">ID Number:</span> <span className="font-semibold text-slate-800">{verification.idProofNumber}</span></div>
+              )}
               <div><span className="text-slate-500 font-semibold">Father&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateFatherName || "-"}</span></div>
               <div><span className="text-slate-500 font-semibold">Mother&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateMotherName || "-"}</span></div>
               {verification.candidateIsMarried && verification.candidateHusbandName && (

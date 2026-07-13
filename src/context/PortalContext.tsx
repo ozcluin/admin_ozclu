@@ -47,6 +47,11 @@ export interface Verification {
   candidateMotherName?: string;
   candidateIsMarried?: boolean;
   candidateHusbandName?: string;
+  gender?: string;
+  idProofType?: string;
+  idProofNumber?: string;
+  hasIdProofFile?: boolean;
+  idProofFile?: string;
   addresses?: Array<{ address: string; city: string; state: string; country: string }>;
   courtRecordResults?: Array<{
     addressIndex: number;
