@@ -275,7 +275,7 @@ function AdminCourtRecordReportContent() {
                 Searched {totalComplexes} court complex(es) across {results.length} district(s)
               </p>
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-relaxed max-w-[480px]">
-                This report is verified securely by eCourts in the year {verificationYear} using candidate's full legal name, date of birth, and addresses for the period of {fromYear} to {toYear} in accordance with the Information Technology Act, 2000 and the Code of Civil Procedure, 1908.
+                This report is generated through a secure verification process using the information provided by the candidate against records available on the eCourts India system for the period {fromYear}–{toYear}. The search is conducted in accordance with applicable Indian laws, including the Information Technology Act, 2000, and the Code of Civil Procedure, 1908.
               </p>
             </div>
             <div className="flex-shrink-0 flex flex-col items-center gap-0.5 bg-white border border-slate-200/80 p-2 rounded-lg shadow-sm">
