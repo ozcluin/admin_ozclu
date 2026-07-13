@@ -988,22 +988,7 @@ export default function VerificationRosterPage() {
                       );
                     })()}
 
-                    {/* Search Errors */}
-                    {displayVerification.courtRecordErrors && displayVerification.courtRecordErrors.length > 0 && (
-                      <div className="flex flex-col gap-2">
-                        <h5 className="font-label-caps text-amber-600 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2">
-                          <span className="material-symbols-outlined text-sm">warning</span>
-                          Search Notes
-                        </h5>
-                        <div className="p-3 bg-amber-50/50 border border-amber-200/50 rounded-xl">
-                          <ul className="list-disc list-inside text-[11px] text-amber-800 font-semibold space-y-1">
-                            {displayVerification.courtRecordErrors.map((err: string, i: number) => (
-                              <li key={i}>{err}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
+
 
                     {/* Admin Review Panel */}
                     {displayVerification.courtRecordAdminReview && displayVerification.courtRecordStatus === "admin_review" && (
