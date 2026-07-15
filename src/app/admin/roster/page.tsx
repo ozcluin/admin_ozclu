@@ -335,7 +335,7 @@ export default function VerificationRosterPage() {
       {/* Main Roster Table */}
       <section className="apple-card-static overflow-hidden border border-[#016e1c]/10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]">
         <div className="overflow-x-auto">
-          <table className="w-full text-left font-body-sm whitespace-nowrap">
+          <table className="w-full text-left font-body-sm table-fixed">
             <thead>
               <tr className="border-b border-[#016e1c]/10 bg-slate-50/50">
                 <th
@@ -353,10 +353,10 @@ export default function VerificationRosterPage() {
                     </span>
                   </div>
                 </th>
-                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px]">TYPE</th>
+                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] w-[80px]">TYPE</th>
                 <th
                   onClick={() => handleSort("name")}
-                  className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] hover:text-[#016e1c] transition-colors cursor-pointer select-none"
+                  className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] hover:text-[#016e1c] transition-colors cursor-pointer select-none w-[240px]"
                 >
                   <div className="flex items-center gap-1.5">
                     <span>CANDIDATE</span>
@@ -435,8 +435,8 @@ export default function VerificationRosterPage() {
                       animationFillMode: "both"
                     }}
                   >
-                    <td className="py-4 px-6 font-mono font-bold text-slate-800">{v.id}</td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-6 font-mono font-bold text-slate-800 whitespace-nowrap">{v.id}</td>
+                    <td className="py-4 px-6 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
                         v.type === "court_record"
                           ? "bg-amber-500/10 text-amber-700 border-amber-500/15"
@@ -446,12 +446,12 @@ export default function VerificationRosterPage() {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-slate-800">
-                      <div className="flex flex-col max-w-[220px]">
+                      <div className="flex flex-col">
                         <span className="font-bold text-slate-900 truncate">{v.name}</span>
-                        <span className="text-xs text-slate-400 mt-0.5 leading-relaxed break-words">{v.type === "court_record" ? (v.courtRecordSummary || "Search in progress...") : v.email}</span>
+                        <span className="text-xs text-slate-400 mt-0.5 leading-relaxed whitespace-normal">{v.type === "court_record" ? (v.courtRecordSummary || "Search in progress...") : v.email}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-slate-600 font-medium">{v.orgName}</td>
+                    <td className="py-4 px-6 text-slate-600 font-medium whitespace-nowrap">{v.orgName}</td>
                     <td
                       onClick={() => setShowTimeMap((prev) => ({ ...prev, [v.id]: !prev[v.id] }))}
                       className="py-4 px-6 text-slate-500 font-medium cursor-pointer select-none group"
