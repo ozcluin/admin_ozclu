@@ -84,7 +84,7 @@ function AdminCourtRecordReportContent() {
   const totalComplexes = verification.courtRecordTotalComplexes || 0;
   const results = verification.courtRecordResults || [];
   const searchErrors = verification.courtRecordErrors || [];
-  const isSearchComplete = verification.courtRecordStatus === "completed" || verification.courtRecordStatus === "error";
+  const isSearchComplete = verification.courtRecordStatus === "completed" || verification.courtRecordStatus === "error" || verification.courtRecordStatus === "needs_admin_retry";
 
   const getVerificationYear = () => {
     try {

@@ -614,30 +614,32 @@ export default function CandidatesPage() {
                         ? displayCandidate.courtRecordHasRecords
                           ? "bg-rose-500/5 border-rose-500/15"
                           : "bg-emerald-500/5 border-emerald-500/15"
-                        : displayCandidate.courtRecordStatus === "error"
+                        : (displayCandidate.courtRecordStatus === "error" || displayCandidate.courtRecordStatus === "needs_admin_retry")
                           ? "bg-amber-500/5 border-amber-500/15"
                           : "bg-blue-500/5 border-blue-500/15"
                     }`}>
                       <span className={`material-symbols-outlined text-2xl font-bold ${
                         displayCandidate.courtRecordStatus === "completed"
                           ? displayCandidate.courtRecordHasRecords ? "text-rose-500" : "text-emerald-500"
-                          : displayCandidate.courtRecordStatus === "error" ? "text-amber-500" : "text-blue-500"
+                          : (displayCandidate.courtRecordStatus === "error" || displayCandidate.courtRecordStatus === "needs_admin_retry") ? "text-amber-500" : "text-blue-500"
                       }`}>
                         {displayCandidate.courtRecordStatus === "completed"
                           ? displayCandidate.courtRecordHasRecords ? "gavel" : "verified_user"
-                          : displayCandidate.courtRecordStatus === "error" ? "warning" : "hourglass_top"}
+                          : (displayCandidate.courtRecordStatus === "error" || displayCandidate.courtRecordStatus === "needs_admin_retry") ? "warning" : "hourglass_top"}
                       </span>
                       <div className="flex flex-col">
                         <span className={`font-body-sm font-bold ${
                           displayCandidate.courtRecordStatus === "completed"
                             ? displayCandidate.courtRecordHasRecords ? "text-rose-800" : "text-emerald-800"
-                            : displayCandidate.courtRecordStatus === "error" ? "text-amber-800" : "text-blue-800"
+                            : (displayCandidate.courtRecordStatus === "error" || displayCandidate.courtRecordStatus === "needs_admin_retry") ? "text-amber-800" : "text-blue-800"
                         }`}>
                           {displayCandidate.courtRecordStatus === "completed"
                             ? displayCandidate.courtRecordHasRecords
                               ? `${displayCandidate.courtRecordTotalCases} Court Record(s) Found`
                               : "No Court Records Found"
-                            : displayCandidate.courtRecordStatus === "error"
+                            : displayCandidate.courtRecordStatus === "needs_admin_retry"
+                              ? "Search Failed — Admin Retry Required"
+                              : displayCandidate.courtRecordStatus === "error"
                               ? "Search Encountered Errors"
                               : "Court Record Search In Progress..."}
                         </span>

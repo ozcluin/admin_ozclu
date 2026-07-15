@@ -207,6 +207,7 @@ interface PortalContextType {
   refreshData: () => Promise<void>;
   removeRecentRequestingOrg: (requestingOrgName: string, orgName?: string) => Promise<void>;
   reviewCourtRecord: (verificationId: string, reviewedResults: Array<{ resultIndex: number; complexSearchIndex: number; caseIndex: number; action: "confirm" | "delete" }>) => Promise<any>;
+  adminRetryCourtSearch: (verificationId: string, overrides?: { candidateName?: string; addresses?: any[] }) => Promise<any>;
 }
 
 const PortalContext = createContext<PortalContextType | undefined>(undefined);
@@ -853,6 +854,23 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const adminRetryCourtSearch = async (verificationId: string, overrides?: { candidateName?: string; addresses?: any[] }) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "adminRetryCourtSearch", payload: { verificationId, ...overrides } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Retry failed");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed admin retry court search:", err);
+      throw err;
+    }
+  };
+
   return (
     <PortalContext.Provider
       value={{
@@ -885,6 +903,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setOrganisationOwner,
         removeRecentRequestingOrg,
         reviewCourtRecord,
+        adminRetryCourtSearch,
         refreshData: fetchAllData,
       }}
     >

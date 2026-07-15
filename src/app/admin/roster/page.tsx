@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { usePortal, Verification } from "src/context/PortalContext";
 
 export default function VerificationRosterPage() {
-  const { verifications, updateVerificationStatus, fetchVerificationDetail, refreshData, reviewCourtRecord } = usePortal();
+  const { verifications, updateVerificationStatus, fetchVerificationDetail, refreshData, reviewCourtRecord, adminRetryCourtSearch } = usePortal();
 
   // Court record review state
   const [reviewDeletedCases, setReviewDeletedCases] = useState<Set<string>>(new Set());
@@ -12,6 +12,7 @@ export default function VerificationRosterPage() {
   const [expandedComplexes, setExpandedComplexes] = useState<Set<string>>(new Set());
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -402,7 +403,7 @@ export default function VerificationRosterPage() {
                 sortedVerifications.map((v, idx) => (
                   <tr
                     key={`${v.id}-${sortField}-${sortDirection}`}
-                    className={`hover:bg-slate-50/50 transition-colors animate-fade-in ${v.courtRecordAdminReview && v.courtRecordStatus === "admin_review" ? "border-l-[3px] border-l-rose-500" : ""}`}
+                    className={`hover:bg-slate-50/50 transition-colors animate-fade-in ${v.courtRecordAdminReview && v.courtRecordStatus === "admin_review" ? "border-l-[3px] border-l-rose-500" : v.courtRecordStatus === "needs_admin_retry" ? "border-l-[3px] border-l-amber-500" : ""}`}
                     style={{
                       animationDelay: `${Math.min(idx * 20, 200)}ms`,
                       animationFillMode: "both"
@@ -446,6 +447,8 @@ export default function VerificationRosterPage() {
                             ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                             : (v.type === "court_record" && v.courtRecordStatus === "admin_review")
                             ? "bg-rose-500/10 text-rose-600 border-rose-500/15"
+                            : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry")
+                            ? "bg-amber-500/10 text-amber-600 border-amber-500/15"
                             : v.status === "Processing"
                             ? "bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15"
                             : "bg-red-500/10 text-red-600 border-red-500/15"
@@ -456,11 +459,13 @@ export default function VerificationRosterPage() {
                             ? "bg-emerald-500"
                             : (v.type === "court_record" && v.courtRecordStatus === "admin_review")
                             ? "bg-rose-500 animate-pulse"
+                            : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry")
+                            ? "bg-amber-500 animate-pulse"
                             : v.status === "Processing"
                             ? "bg-[#016e1c]"
                             : "bg-red-500"
                         }`}></span>
-                        {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : v.status}
+                        {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry") ? "Under Review" : v.status === "Needs Attention" ? "Reviewing with attorney" : v.status}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
@@ -685,30 +690,32 @@ export default function VerificationRosterPage() {
                         ? displayVerification.courtRecordHasRecords
                           ? "bg-rose-500/5 border-rose-500/15"
                           : "bg-emerald-500/5 border-emerald-500/15"
-                        : displayVerification.courtRecordStatus === "error"
+                        : (displayVerification.courtRecordStatus === "error" || displayVerification.courtRecordStatus === "needs_admin_retry")
                           ? "bg-amber-500/5 border-amber-500/15"
                           : "bg-blue-500/5 border-blue-500/15"
                     }`}>
                       <span className={`material-symbols-outlined text-2xl font-bold ${
                         displayVerification.courtRecordStatus === "completed"
                           ? displayVerification.courtRecordHasRecords ? "text-rose-500" : "text-emerald-500"
-                          : displayVerification.courtRecordStatus === "error" ? "text-amber-500" : "text-blue-500"
+                          : (displayVerification.courtRecordStatus === "error" || displayVerification.courtRecordStatus === "needs_admin_retry") ? "text-amber-500" : "text-blue-500"
                       }`}>
                         {displayVerification.courtRecordStatus === "completed"
                           ? displayVerification.courtRecordHasRecords ? "gavel" : "verified_user"
-                          : displayVerification.courtRecordStatus === "error" ? "warning" : "hourglass_top"}
+                          : (displayVerification.courtRecordStatus === "error" || displayVerification.courtRecordStatus === "needs_admin_retry") ? "warning" : "hourglass_top"}
                       </span>
                       <div className="flex flex-col">
                         <span className={`font-body-sm font-bold ${
                           displayVerification.courtRecordStatus === "completed"
                             ? displayVerification.courtRecordHasRecords ? "text-rose-800" : "text-emerald-800"
-                            : displayVerification.courtRecordStatus === "error" ? "text-amber-800" : "text-blue-800"
+                            : (displayVerification.courtRecordStatus === "error" || displayVerification.courtRecordStatus === "needs_admin_retry") ? "text-amber-800" : "text-blue-800"
                         }`}>
                           {displayVerification.courtRecordStatus === "completed"
                             ? displayVerification.courtRecordHasRecords
                               ? `${displayVerification.courtRecordTotalCases} Court Record(s) Found`
                               : "No Court Records Found"
-                            : displayVerification.courtRecordStatus === "error"
+                            : displayVerification.courtRecordStatus === "needs_admin_retry"
+                              ? "Search Failed — Admin Retry Required"
+                              : displayVerification.courtRecordStatus === "error"
                               ? "Search Encountered Errors"
                               : "Court Record Search In Progress..."}
                         </span>
@@ -990,6 +997,49 @@ export default function VerificationRosterPage() {
 
 
 
+                    {/* Admin Retry Panel — for searches that exhausted auto-retries */}
+                    {displayVerification.type === "court_record" && displayVerification.courtRecordStatus === "needs_admin_retry" && (
+                      <div className="flex flex-col gap-4 mt-2">
+                        <div className="border-2 border-amber-300 bg-amber-50/50 rounded-2xl p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="material-symbols-outlined text-2xl text-amber-500 font-bold">refresh</span>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-sm text-amber-800">eCourts Search Failed — Admin Retry Required</span>
+                              <span className="text-[11px] text-amber-600 font-semibold">
+                                Automatic retries exhausted ({displayVerification.courtRecordRetryAttempts || 3} attempts). You can retry with the same or modified search parameters.
+                              </span>
+                            </div>
+                          </div>
+
+                          {displayVerification.courtRecordLastError && (
+                            <div className="bg-amber-100/60 rounded-lg p-3 mb-3">
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-amber-700 block mb-1">Last Error</span>
+                              <p className="text-xs text-amber-800 font-mono">{displayVerification.courtRecordLastError}</p>
+                            </div>
+                          )}
+
+                          <div className="bg-white/70 rounded-xl p-3 border border-amber-200/50">
+                            <span className="text-[10px] uppercase tracking-wider font-bold text-amber-700 block mb-2">Search Parameters</span>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-slate-400 font-semibold">Name:</span>
+                                <span className="ml-1 text-slate-700 font-bold">{displayVerification.name}</span>
+                              </div>
+                              {displayVerification.addresses?.map((addr: any, i: number) => (
+                                <div key={i}>
+                                  <span className="text-slate-400 font-semibold">Address {i + 1}:</span>
+                                  <span className="ml-1 text-slate-700 font-bold">
+                                    {[addr.city, addr.state].filter(Boolean).join(", ")}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+
                     {/* Admin Review Panel */}
                     {displayVerification.courtRecordAdminReview && displayVerification.courtRecordStatus === "admin_review" && (
                       <div className="flex flex-col gap-4 mt-2">
@@ -1156,6 +1206,31 @@ export default function VerificationRosterPage() {
                       <span className="material-symbols-outlined text-[16px]">send</span>
                     )}
                     Send to Client
+                  </button>
+                )}
+                {displayVerification?.type === "court_record" && displayVerification?.courtRecordStatus === "needs_admin_retry" && (
+                  <button
+                    disabled={isRetrying}
+                    onClick={async () => {
+                      if (!displayVerification) return;
+                      setIsRetrying(true);
+                      try {
+                        await adminRetryCourtSearch(displayVerification.id);
+                        setSelectedVerification(null);
+                      } catch (err) {
+                        console.error("Admin retry failed:", err);
+                      } finally {
+                        setIsRetrying(false);
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:opacity-90 text-white font-bold rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-1 disabled:opacity-50"
+                  >
+                    {isRetrying ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span className="material-symbols-outlined text-[16px]">refresh</span>
+                    )}
+                    Retry Search
                   </button>
                 )}
               </div>

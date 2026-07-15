@@ -1023,6 +1023,113 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, totalCases: newTotalCases, hasRecords: newHasRecords });
       }
+      case "adminRetryCourtSearch": {
+        const { verificationId, candidateName: overrideName, addresses: overrideAddresses } = payload;
+
+        if (!verificationId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+
+        const verification = await db.collection("verifications").findOne({ id: verificationId });
+        if (!verification) {
+          return NextResponse.json({ error: "Verification not found" }, { status: 404 });
+        }
+
+        // Only allow retry on verifications that exhausted auto-retries or errored
+        if (verification.courtRecordStatus !== "needs_admin_retry" && verification.courtRecordStatus !== "error") {
+          return NextResponse.json({ error: "This verification is not in a retryable state" }, { status: 400 });
+        }
+
+        // Use overrides if provided (admin may have edited the search params)
+        const searchName = overrideName?.trim() || verification.name;
+        const searchAddresses = (overrideAddresses && Array.isArray(overrideAddresses) && overrideAddresses.length > 0)
+          ? overrideAddresses
+          : verification.addresses;
+
+        // Reset the verification status for a fresh search
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          {
+            $set: {
+              status: "Processing",
+              courtRecordStatus: "searching",
+              courtRecordSummary: "Admin-initiated retry in progress...",
+              courtRecordSearchStartedAt: new Date().toISOString(),
+              courtRecordProgress: "Admin-initiated eCourts search...",
+              // Update name/addresses if admin changed them
+              ...(overrideName ? { name: searchName } : {}),
+              ...(overrideAddresses && overrideAddresses.length > 0 ? { addresses: searchAddresses } : {}),
+            },
+            $unset: {
+              courtRecordErrors: "",
+              courtRecordResults: "",
+              courtRecordTotalCases: "",
+              courtRecordTotalComplexes: "",
+              courtRecordCompletedAt: "",
+              courtRecordHasRecords: "",
+              courtRecordFailedAt: "",
+              courtRecordRetryAttempts: "",
+              courtRecordLastError: "",
+              completedAt: "",
+            },
+          }
+        );
+
+        // Log audit event
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "court_record_admin_retry",
+          targetType: "verification",
+          targetId: verificationId,
+          ip,
+          userAgent,
+          outcome: "success",
+          metadata: {
+            previousStatus: verification.courtRecordStatus,
+            previousAttempts: verification.courtRecordRetryAttempts || 0,
+            nameOverridden: !!overrideName,
+            addressesOverridden: !!(overrideAddresses && overrideAddresses.length > 0),
+          }
+        });
+
+        // Fire and forget the eCourts search on the client portal
+        const clientPortalUrl = process.env.CLIENT_PORTAL_URL || "https://verify.ozclu.com";
+        const searchUrl = `${clientPortalUrl}/api/ecourts-search`;
+        const internalSecret = process.env.NEXTAUTH_SECRET || "";
+
+        fetch(searchUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-api-key": internalSecret,
+          },
+          body: JSON.stringify({
+            verificationId,
+            candidateName: searchName,
+            addresses: searchAddresses,
+          }),
+        }).catch((err) => {
+          console.error(`[ADMIN] Failed to trigger eCourts retry for ${verificationId}:`, err.message);
+        });
+
+        // Add attempt record
+        const retryAttempt = {
+          date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase(),
+          verifier: user.email,
+          status: "Processing",
+          notes: `Admin-initiated retry. Previous auto-retries: ${verification.courtRecordRetryAttempts || 0}. ${overrideName ? `Name updated to: ${searchName}.` : ""}`
+        };
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          { $push: { attempts: retryAttempt } as any }
+        );
+
+        return NextResponse.json({ success: true });
+      }
       default:
         return NextResponse.json({ error: `Unsupported action: ${action}` }, { status: 400 });
     }

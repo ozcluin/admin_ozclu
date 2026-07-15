@@ -14,9 +14,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { verifications } = usePortal();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Count verifications pending admin court record review
+  // Count verifications pending admin attention (court record review + failed auto-retries)
   const pendingReviewCount = verifications.filter(
-    (v) => v.courtRecordAdminReview === true && v.courtRecordStatus === "admin_review"
+    (v) => (v.courtRecordAdminReview === true && v.courtRecordStatus === "admin_review") ||
+           (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry")
   ).length;
 
   // Route protection — redirect to login if not authenticated, or to MFA verification if pending
