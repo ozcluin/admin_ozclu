@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { usePortal, Verification } from "src/context/PortalContext";
 
 export default function VerificationRosterPage() {
@@ -13,6 +13,31 @@ export default function VerificationRosterPage() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  // Handle highlight-verification from notification clicks
+  const checkAndHighlight = useCallback(() => {
+    const id = sessionStorage.getItem("highlight_verification");
+    if (id) {
+      sessionStorage.removeItem("highlight_verification");
+      setHighlightId(id);
+      // Scroll to the row after a short delay for DOM render
+      setTimeout(() => {
+        const row = document.getElementById(`roster-row-${id}`);
+        if (row) {
+          row.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 300);
+      // Clear highlight after 3 seconds
+      setTimeout(() => setHighlightId(null), 3000);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAndHighlight();
+    window.addEventListener("highlight-verification", checkAndHighlight);
+    return () => window.removeEventListener("highlight-verification", checkAndHighlight);
+  }, [checkAndHighlight]);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -403,7 +428,8 @@ export default function VerificationRosterPage() {
                 sortedVerifications.map((v, idx) => (
                   <tr
                     key={`${v.id}-${sortField}-${sortDirection}`}
-                    className={`hover:bg-slate-50/50 transition-colors animate-fade-in ${v.courtRecordAdminReview && v.courtRecordStatus === "admin_review" ? "border-l-[3px] border-l-rose-500" : v.courtRecordStatus === "needs_admin_retry" ? "border-l-[3px] border-l-amber-500" : ""}`}
+                    id={`roster-row-${v.id}`}
+                    className={`hover:bg-slate-50/50 transition-all duration-500 animate-fade-in ${v.courtRecordAdminReview && v.courtRecordStatus === "admin_review" ? "border-l-[3px] border-l-rose-500" : v.courtRecordStatus === "needs_admin_retry" ? "border-l-[3px] border-l-amber-500" : ""} ${highlightId === v.id ? "!bg-[#eaf0e4] ring-2 ring-[#016e1c]/30 ring-inset" : ""}`}
                     style={{
                       animationDelay: `${Math.min(idx * 20, 200)}ms`,
                       animationFillMode: "both"
@@ -420,9 +446,9 @@ export default function VerificationRosterPage() {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-slate-800">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-900">{v.name}</span>
-                        <span className="text-xs text-slate-400 mt-0.5">{v.type === "court_record" ? (v.courtRecordSummary || "Search in progress...") : v.email}</span>
+                      <div className="flex flex-col max-w-[220px]">
+                        <span className="font-bold text-slate-900 truncate">{v.name}</span>
+                        <span className="text-xs text-slate-400 mt-0.5 leading-relaxed break-words">{v.type === "court_record" ? (v.courtRecordSummary || "Search in progress...") : v.email}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6 text-slate-600 font-medium">{v.orgName}</td>

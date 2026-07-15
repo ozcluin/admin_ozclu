@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "src/context/AuthContext";
@@ -13,14 +13,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { isAuthenticated, isLoading, logout, profile, user } = useAuth();
   const { verifications } = usePortal();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [dismissedNotifs, setDismissedNotifs] = useState<Set<string>>(new Set());
+  const notifRef = useRef<HTMLDivElement>(null);
 
-  // Count verifications pending admin attention (court record review + failed auto-retries)
-  const pendingReviewCount = verifications.filter(
+  // Pending verifications for notifications
+  const pendingVerifications = verifications.filter(
     (v) => (v.courtRecordAdminReview === true && v.courtRecordStatus === "admin_review") ||
            (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry")
-  ).length;
+  );
+  const visibleNotifications = pendingVerifications.filter(v => !dismissedNotifs.has(v.id));
+  const pendingReviewCount = visibleNotifications.length;
 
-  // Route protection — redirect to login if not authenticated, or to MFA verification if pending
+  // Close notification dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    if (notifOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notifOpen]);
+
+  const handleNotifClick = useCallback((vId: string) => {
+    setNotifOpen(false);
+    // Store highlight target in sessionStorage so roster page can pick it up
+    sessionStorage.setItem("highlight_verification", vId);
+    if (pathname === "/admin/roster") {
+      window.dispatchEvent(new Event("highlight-verification"));
+    } else {
+      router.push("/admin/roster");
+    }
+  }, [pathname, router]);
+
+  const dismissNotif = useCallback((vId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDismissedNotifs(prev => new Set(prev).add(vId));
+  }, []);
+
+  // Route protection
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
@@ -32,26 +64,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isAuthenticated, isLoading, profile, router]);
 
   const navItems = [
-    {
-      name: "Verification Roster",
-      path: "/admin/roster",
-      icon: "assignment",
-    },
-    {
-      name: "Candidate Database",
-      path: "/admin/candidates",
-      icon: "folder_shared",
-    },
-    {
-      name: "Manage Invoices",
-      path: "/admin/invoices",
-      icon: "account_balance_wallet",
-    },
-    {
-      name: "Admin Profile",
-      path: "/admin/profile",
-      icon: "settings",
-    },
+    { name: "Verification Roster", path: "/admin/roster", icon: "assignment" },
+    { name: "Candidate Database", path: "/admin/candidates", icon: "folder_shared" },
+    { name: "Manage Invoices", path: "/admin/invoices", icon: "account_balance_wallet" },
+    { name: "Admin Profile", path: "/admin/profile", icon: "settings" },
   ];
 
   const handleLogout = async () => {
@@ -59,7 +75,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push("/");
   };
 
-  // Show loading spinner while checking auth
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#f6fbf0]">
@@ -71,10 +86,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Don't render layout if not authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   const displayName = profile?.full_name || user?.email || "Admin";
 
@@ -198,6 +210,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       {item.icon}
                     </span>
                     <span className="text-sm font-medium">{item.name}</span>
+                    {item.path === "/admin/roster" && pendingReviewCount > 0 && (
+                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-rose-500 text-white text-[10px] font-black rounded-full animate-pulse shadow-sm">
+                        {pendingReviewCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -245,7 +262,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Top AppBar */}
         <header className="h-16 fixed top-0 right-0 w-full md:w-[calc(100%-280px)] glass-header z-20 flex justify-between items-center px-8 transition-all duration-200">
           <div className="flex items-center gap-4">
-            {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(true)}
               className="p-2 -ml-2 text-slate-600 hover:bg-slate-200/40 rounded-xl md:hidden cursor-pointer"
@@ -261,14 +277,115 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div className="flex items-center gap-3">
-            <button aria-label="notifications" className="relative text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer">
-              <span className="material-symbols-outlined text-xl">notifications</span>
-              {pendingReviewCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full shadow-sm animate-pulse">
-                  {pendingReviewCount}
-                </span>
+            {/* Notification Bell + Dropdown */}
+            <div className="relative" ref={notifRef}>
+              <button
+                aria-label="notifications"
+                onClick={() => setNotifOpen(prev => !prev)}
+                className={`relative text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 p-2 rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer ${notifOpen ? "bg-slate-200/30 text-slate-800" : ""}`}
+              >
+                <span className="material-symbols-outlined text-xl">notifications</span>
+                {pendingReviewCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full shadow-sm animate-pulse">
+                    {pendingReviewCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {notifOpen && (
+                <div
+                  className="absolute right-0 top-[calc(100%+8px)] w-[320px] sm:w-[380px] bg-white border border-slate-200/80 rounded-2xl shadow-xl overflow-hidden notif-dropdown-enter"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base text-slate-500">notifications_active</span>
+                      <span className="text-xs font-bold text-slate-700">Notifications</span>
+                      {pendingReviewCount > 0 && (
+                        <span className="text-[9px] bg-rose-500 text-white px-1.5 py-0.5 rounded-full font-bold">{pendingReviewCount}</span>
+                      )}
+                    </div>
+                    {pendingReviewCount > 0 && (
+                      <button
+                        onClick={() => setDismissedNotifs(new Set(pendingVerifications.map(v => v.id)))}
+                        className="text-[10px] text-slate-400 hover:text-slate-600 font-semibold cursor-pointer transition-colors"
+                      >
+                        Clear all
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Notification List */}
+                  <div className="max-h-[360px] overflow-y-auto">
+                    {visibleNotifications.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 gap-2">
+                        <span className="material-symbols-outlined text-3xl text-slate-300">notifications_off</span>
+                        <span className="text-xs text-slate-400 font-medium">No pending notifications</span>
+                      </div>
+                    ) : (
+                      visibleNotifications.map((v, i) => (
+                        <div
+                          key={v.id}
+                          onClick={() => handleNotifClick(v.id)}
+                          className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors duration-150 border-b border-slate-50 last:border-0 group notif-item-enter"
+                          style={{ animationDelay: `${i * 0.05}s` }}
+                        >
+                          <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                            v.courtRecordStatus === "needs_admin_retry"
+                              ? "bg-amber-100 text-amber-600"
+                              : "bg-rose-100 text-rose-600"
+                          }`}>
+                            <span className="material-symbols-outlined text-base">
+                              {v.courtRecordStatus === "needs_admin_retry" ? "refresh" : "rate_review"}
+                            </span>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-bold text-slate-800 truncate">{v.name}</span>
+                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
+                                v.courtRecordStatus === "needs_admin_retry"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-rose-100 text-rose-700"
+                              }`}>
+                                {v.courtRecordStatus === "needs_admin_retry" ? "Retry" : "Review"}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed line-clamp-2">
+                              {v.courtRecordStatus === "needs_admin_retry"
+                                ? `Auto-retry failed after ${v.courtRecordRetryAttempts || 3} attempts. Manual retry needed.`
+                                : "Court record search requires admin review before completion."}
+                            </p>
+                            <span className="text-[9px] text-slate-400 font-mono mt-1 block">{v.id}</span>
+                          </div>
+
+                          <button
+                            onClick={(e) => dismissNotif(v.id, e)}
+                            className="mt-0.5 p-1 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all opacity-0 group-hover:opacity-100 cursor-pointer shrink-0"
+                            title="Dismiss"
+                          >
+                            <span className="material-symbols-outlined text-sm">close</span>
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  {pendingReviewCount > 0 && (
+                    <div className="border-t border-slate-100 px-4 py-2.5 bg-slate-50/50">
+                      <button
+                        onClick={() => { setNotifOpen(false); router.push("/admin/roster"); }}
+                        className="w-full text-center text-[10px] font-bold text-[#016e1c] hover:text-[#00450e] transition-colors cursor-pointer"
+                      >
+                        View all in Roster →
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
-            </button>
+            </div>
             
             {/* User info badge */}
             <div className="hidden sm:flex flex-col text-right mr-1">
@@ -292,6 +409,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {children}
         </main>
       </div>
+
+      {/* Notification dropdown animations */}
+      <style jsx>{`
+        .notif-dropdown-enter {
+          animation: notifSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .notif-item-enter {
+          animation: notifItemIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes notifSlideDown {
+          from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes notifItemIn {
+          from { opacity: 0; transform: translateX(-6px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }
