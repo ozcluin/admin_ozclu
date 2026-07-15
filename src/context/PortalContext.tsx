@@ -86,6 +86,9 @@ export interface Verification {
   courtRecordAdminReviewStartedAt?: string;
   courtRecordAdminReviewCompletedAt?: string;
   courtRecordReviewedBy?: string;
+  courtRecordRetryAttempts?: number;
+  courtRecordLastError?: string;
+  courtRecordFailedAt?: string;
 }
 
 export interface InvoiceActivity {
