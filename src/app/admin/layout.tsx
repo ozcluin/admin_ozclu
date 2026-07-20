@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const displayName = profile?.full_name || user?.email || "Admin";
 
-  if (pathname.includes("/admin/report") || pathname.includes("/admin/court-record-report")) {
+  if (pathname.includes("/admin/report") || pathname.includes("/admin/court-record-report") || pathname.includes("/admin/employment-report") || pathname.includes("/admin/education-report")) {
     return <>{children}</>;
   }
 

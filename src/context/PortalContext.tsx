@@ -12,7 +12,7 @@ export interface Verification {
   orgName: string;
   requestingOrgName?: string;
   date: string;
-  status: "Completed" | "Processing" | "Needs Attention";
+  status: "Completed" | "Processing" | "Needs Attention" | "Verified" | "Discrepancy";
   verifier: string | null;
   reportDetails?: string;
   notes?: string;
@@ -40,8 +40,28 @@ export interface Verification {
     notes?: string;
   }>;
   setupUrl?: string;
+  // Generic verification attempts (works for all types)
+  verificationAttempts?: Array<{
+    date: string;
+    verificationMode: string;
+    status: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+    loggedBy?: string;
+  }>;
+  // Report data
+  reportData?: Record<string, unknown> | null;
+  reportGeneratedAt?: string;
+  reportGeneratedBy?: string;
   // Court Record Verification fields
-  type?: "identity" | "court_record";
+  type?: "identity" | "court_record" | "employment" | "education";
   candidateDob?: string;
   candidateFatherName?: string;
   candidateMotherName?: string;
@@ -89,6 +109,81 @@ export interface Verification {
   courtRecordRetryAttempts?: number;
   courtRecordLastError?: string;
   courtRecordFailedAt?: string;
+  // Employment Verification fields
+  candidateMobile?: string;
+  employmentData?: {
+    country?: string;
+    state?: string;
+    city?: string;
+    companyName?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    companyTelephoneCode?: string;
+    companyTelephone?: string;
+    department?: string;
+    position?: string;
+    employmentPeriodFrom?: string;
+    employmentPeriodTo?: string;
+    employeeCode?: string;
+    reportingManagerName?: string;
+    reportingManagerDepartment?: string;
+    reportingManagerContactCode?: string;
+    reportingManagerContact?: string;
+    reportingManagerEmail?: string;
+    annualCTC?: string;
+    employmentType?: string;
+    agencyDetails?: string;
+    reasonForLeaving?: string;
+    remarks?: string;
+  };
+  employmentDataSubmitted?: boolean;
+  employmentDataSubmittedAt?: string;
+  employmentAttempts?: Array<{
+    date: string;
+    verificationMode: string;
+    result: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+    sendEmail?: boolean;
+    loggedBy?: string;
+  }>;
+  // Education Verification fields
+  educationData?: {
+    degreeType?: string;
+    courseName?: string;
+    boardUniversity?: string;
+    institutionName?: string;
+    rollNumber?: string;
+    passingYear?: string;
+    certificateFile?: string;
+    certificateFileName?: string;
+  };
+  educationDataSubmitted?: boolean;
+  educationDataSubmittedAt?: string;
+  educationAttempts?: Array<{
+    date: string;
+    verificationMode: string;
+    result: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+    sendEmail?: boolean;
+    loggedBy?: string;
+  }>;
+  sendToCustomer?: boolean;
 }
 
 export interface InvoiceActivity {
@@ -211,6 +306,51 @@ interface PortalContextType {
   removeRecentRequestingOrg: (requestingOrgName: string, orgName?: string) => Promise<void>;
   reviewCourtRecord: (verificationId: string, reviewedResults: Array<{ resultIndex: number; complexSearchIndex: number; caseIndex: number; action: "confirm" | "delete" }>) => Promise<any>;
   adminRetryCourtSearch: (verificationId: string, overrides?: { candidateName?: string; addresses?: any[] }) => Promise<any>;
+  logEmploymentAttempt: (verificationId: string, attempt: {
+    verificationMode: string;
+    result: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+    sendEmail?: boolean;
+  }) => Promise<any>;
+  logVerificationAttempt: (verificationId: string, attempt: {
+    verificationMode: string;
+    status: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+  }) => Promise<any>;
+  saveReportData: (verificationId: string, reportData: Record<string, unknown>) => Promise<any>;
+  deleteEmploymentAttempt: (verificationId: string, attemptIndex: number) => Promise<any>;
+  logEducationAttempt: (verificationId: string, attempt: {
+    verificationMode: string;
+    result: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+    sendEmail?: boolean;
+  }) => Promise<any>;
+  deleteEducationAttempt: (verificationId: string, attemptIndex: number) => Promise<any>;
+  sendToCustomer: (verificationId: string) => Promise<any>;
 }
 
 const PortalContext = createContext<PortalContextType | undefined>(undefined);
@@ -874,6 +1014,162 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const logEmploymentAttempt = async (verificationId: string, attempt: {
+    verificationMode: string;
+    result: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+    sendEmail?: boolean;
+  }) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logEmploymentAttempt", payload: { verificationId, ...attempt } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to log attempt");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed logging employment attempt:", err);
+      throw err;
+    }
+  };
+
+  const logVerificationAttempt = async (verificationId: string, attempt: {
+    verificationMode: string;
+    status: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+  }) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logVerificationAttempt", payload: { verificationId, ...attempt } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to log attempt");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed logging verification attempt:", err);
+      throw err;
+    }
+  };
+
+  const deleteEmploymentAttempt = async (verificationId: string, attemptIndex: number) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "deleteEmploymentAttempt", payload: { verificationId, attemptIndex } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete attempt");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed deleting employment attempt:", err);
+      throw err;
+    }
+  };
+
+  const deleteEducationAttempt = async (verificationId: string, attemptIndex: number) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "deleteEducationAttempt", payload: { verificationId, attemptIndex } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete attempt");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed deleting education attempt:", err);
+      throw err;
+    }
+  };
+
+  const logEducationAttempt = async (verificationId: string, attempt: {
+    verificationMode: string;
+    result: string;
+    comment?: string;
+    verifierNote?: string;
+    respondentName?: string;
+    respondentEmail?: string;
+    respondentComment?: string;
+    extraPayment?: boolean;
+    markAsPaid?: boolean;
+    askCustomerApproval?: boolean;
+    screenshot?: string;
+    sendEmail?: boolean;
+  }) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logEducationAttempt", payload: { verificationId, ...attempt } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to log attempt");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed logging education attempt:", err);
+      throw err;
+    }
+  };
+
+  const saveReportData = async (verificationId: string, reportData: Record<string, unknown>) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "saveReportData", payload: { verificationId, reportData } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save report");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed saving report data:", err);
+      throw err;
+    }
+  };
+  const sendToCustomer = async (verificationId: string) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "sendToCustomer", payload: { verificationId } })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send report to customer");
+      fetchAllData();
+      return data;
+    } catch (err) {
+      console.error("Failed sending report to customer:", err);
+      throw err;
+    }
+  };
+
   return (
     <PortalContext.Provider
       value={{
@@ -907,6 +1203,13 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         removeRecentRequestingOrg,
         reviewCourtRecord,
         adminRetryCourtSearch,
+        logEmploymentAttempt,
+        logVerificationAttempt,
+        saveReportData,
+        deleteEmploymentAttempt,
+        logEducationAttempt,
+        deleteEducationAttempt,
+        sendToCustomer,
         refreshData: fetchAllData,
       }}
     >

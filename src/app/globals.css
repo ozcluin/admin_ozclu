@@ -274,3 +274,23 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid rgba(1, 110, 28, 0.1);
 }
+
+@media print {
+  .no-print, [no-print] {
+    display: none !important;
+  }
+  .print-border {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .print-break-before {
+    page-break-before: always !important;
+    break-before: always !important;
+  }
+}

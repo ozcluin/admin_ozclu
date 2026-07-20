@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { usePortal, Verification } from "src/context/PortalContext";
 
 export default function VerificationRosterPage() {
-  const { verifications, updateVerificationStatus, fetchVerificationDetail, refreshData, reviewCourtRecord, adminRetryCourtSearch } = usePortal();
+  const { verifications, updateVerificationStatus, fetchVerificationDetail, refreshData, reviewCourtRecord, adminRetryCourtSearch, logEmploymentAttempt, logVerificationAttempt, deleteEmploymentAttempt, logEducationAttempt, deleteEducationAttempt, sendToCustomer } = usePortal();
 
   // Court record review state
   const [reviewDeletedCases, setReviewDeletedCases] = useState<Set<string>>(new Set());
@@ -106,6 +106,24 @@ export default function VerificationRosterPage() {
   const [selectedVerification, setSelectedVerification] = useState<Verification | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<Verification | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
+  // Employment Log Attempt state
+  const [empAttemptMode, setEmpAttemptMode] = useState("Manual");
+  const [empAttemptResult, setEmpAttemptResult] = useState("In Progress");
+  const [empAttemptComment, setEmpAttemptComment] = useState("");
+  const [empAttemptVerifierNote, setEmpAttemptVerifierNote] = useState("");
+  const [empAttemptRespondentName, setEmpAttemptRespondentName] = useState("");
+  const [empAttemptRespondentEmail, setEmpAttemptRespondentEmail] = useState("");
+  const [empAttemptRespondentComment, setEmpAttemptRespondentComment] = useState("");
+  const [empAttemptExtraPayment, setEmpAttemptExtraPayment] = useState(false);
+  const [empAttemptMarkAsPaid, setEmpAttemptMarkAsPaid] = useState(false);
+  const [empAttemptAskApproval, setEmpAttemptAskApproval] = useState(false);
+  const [empAttemptScreenshot, setEmpAttemptScreenshot] = useState("");
+  const [empAttemptSendEmail, setEmpAttemptSendEmail] = useState(false);
+  const [empAttemptSubmitting, setEmpAttemptSubmitting] = useState(false);
+  const [empAttemptSuccess, setEmpAttemptSuccess] = useState("");
+  const [empAttemptError, setEmpAttemptError] = useState("");
+  const [showLogAttemptForm, setShowLogAttemptForm] = useState(false);
 
   const handleSelectVerification = async (v: Verification) => {
     setSelectedVerification(v);
@@ -332,8 +350,8 @@ export default function VerificationRosterPage() {
         )}
       </section>
 
-      {/* Main Roster Table */}
-      <section className="apple-card-static overflow-hidden border border-[#016e1c]/10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]">
+      {/* Main Roster Table - Desktop View */}
+      <section className="hidden xl:block apple-card-static overflow-hidden border border-[#016e1c]/10 shadow-[0_4px_30px_rgba(0,0,0,0.01)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left font-body-sm table-fixed">
             <thead>
@@ -353,7 +371,7 @@ export default function VerificationRosterPage() {
                     </span>
                   </div>
                 </th>
-                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] w-[80px]">TYPE</th>
+                <th className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] w-[130px]">TYPE</th>
                 <th
                   onClick={() => handleSort("name")}
                   className="py-4 px-6 font-label-caps text-slate-500 font-bold text-[10px] hover:text-[#016e1c] transition-colors cursor-pointer select-none w-[240px]"
@@ -440,18 +458,30 @@ export default function VerificationRosterPage() {
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
                         v.type === "court_record"
                           ? "bg-amber-500/10 text-amber-700 border-amber-500/15"
+                          : v.type === "employment"
+                          ? "bg-blue-500/10 text-blue-700 border-blue-500/15"
+                          : v.type === "education"
+                          ? "bg-purple-550/10 text-purple-700 border-purple-550/15"
                           : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                       }`}>
-                        {v.type === "court_record" ? "Court" : "Identity"}
+                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : "Identity"}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-slate-800">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900 truncate">{v.name}</span>
-                        <span className="text-xs text-slate-400 mt-0.5 leading-relaxed whitespace-normal">{v.type === "court_record" ? (v.courtRecordSummary || "Search in progress...") : v.email}</span>
+                        <span className="text-xs text-slate-400 mt-0.5 leading-relaxed whitespace-normal">
+                          {v.type === "court_record"
+                            ? (v.courtRecordSummary || "Search in progress...")
+                            : v.type === "employment"
+                            ? (v.employmentData?.companyName || v.email)
+                            : v.type === "education"
+                            ? ((v.educationData?.courseName && `${v.educationData.courseName} @ ${v.educationData.boardUniversity}`) || v.email)
+                            : v.email}
+                        </span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-slate-600 font-medium whitespace-nowrap">{v.orgName}</td>
+                    <td className="py-4 px-6 text-slate-600 font-medium whitespace-normal break-words leading-relaxed">{v.orgName}</td>
                     <td
                       onClick={() => setShowTimeMap((prev) => ({ ...prev, [v.id]: !prev[v.id] }))}
                       className="py-4 px-6 text-slate-500 font-medium cursor-pointer select-none group"
@@ -513,6 +543,105 @@ export default function VerificationRosterPage() {
         </div>
       </section>
 
+      {/* Mobile/Tablet Cards View - One Block per Row */}
+      <div className="block xl:hidden space-y-4">
+        {sortedVerifications.length === 0 ? (
+          <div className="bg-white border border-[#016e1c]/10 rounded-2xl p-8 text-center text-slate-400 font-medium shadow-sm">
+            No verifications found matching your filters.
+          </div>
+        ) : (
+          sortedVerifications.map((v, idx) => {
+            const hasReview = v.courtRecordAdminReview && v.courtRecordStatus === "admin_review";
+            const needsRetry = v.courtRecordStatus === "needs_admin_retry";
+            return (
+              <div
+                key={v.id}
+                id={`roster-row-mobile-${v.id}`}
+                className={`bg-white border border-[#016e1c]/10 rounded-2xl p-5 shadow-[0_2px_15px_rgba(0,0,0,0.02)] flex flex-col gap-4 transition-all duration-500 animate-fade-in ${
+                  hasReview
+                    ? "border-l-[4px] border-l-rose-500"
+                    : needsRetry
+                    ? "border-l-[4px] border-l-amber-500"
+                    : ""
+                } ${highlightId === v.id ? "!bg-[#eaf0e4] ring-2 ring-[#016e1c]/30 ring-inset" : ""}`}
+                style={{
+                  animationDelay: `${Math.min(idx * 20, 200)}ms`,
+                  animationFillMode: "both"
+                }}
+              >
+                {/* ID & Status Badge Row */}
+                <div className="flex justify-between items-center gap-2">
+                  <span className="font-mono font-bold text-slate-800 text-xs">{v.id}</span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
+                      v.status === "Completed"
+                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
+                        : (v.type === "court_record" && v.courtRecordStatus === "admin_review")
+                        ? "bg-rose-500/10 text-rose-600 border-rose-500/15"
+                        : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry")
+                        ? "bg-amber-500/10 text-amber-700 border-amber-500/15"
+                        : v.status === "Processing"
+                        ? "bg-[#016e1c]/10 text-[#00450e] border-[#016e1c]/15"
+                        : "bg-red-500/10 text-red-600 border-red-500/15"
+                    }`}
+                  >
+                    {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry") ? "Under Review" : v.status === "Needs Attention" ? "Reviewing with attorney" : v.status}
+                  </span>
+                </div>
+
+                {/* Candidate Name & Type Badge Row */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-wide uppercase border ${
+                      v.type === "court_record"
+                        ? "bg-amber-500/10 text-amber-700 border-amber-500/15"
+                        : v.type === "employment"
+                        ? "bg-blue-500/10 text-blue-700 border-blue-500/15"
+                        : v.type === "education"
+                        ? "bg-purple-550/10 text-purple-700 border-purple-550/15"
+                        : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
+                    }`}>
+                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : "Identity"}
+                    </span>
+                    <h4 className="font-bold text-slate-900 text-sm">{v.name}</h4>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                    {v.type === "court_record"
+                      ? (v.courtRecordSummary || "Search in progress...")
+                      : v.type === "employment"
+                      ? (v.employmentData?.companyName || v.email)
+                      : v.type === "education"
+                      ? ((v.educationData?.courseName && `${v.educationData.courseName} @ ${v.educationData.boardUniversity}`) || v.email)
+                      : v.email}
+                  </p>
+                </div>
+
+                {/* Metadata Details Grid */}
+                <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 text-xs">
+                  <div>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider">Client Org</span>
+                    <span className="font-semibold text-slate-700">{v.orgName}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider">Date Initiated</span>
+                    <span className="font-semibold text-slate-700">{v.date}</span>
+                  </div>
+                </div>
+
+                {/* View Details Action Button */}
+                <button
+                  onClick={() => handleSelectVerification(v)}
+                  className="w-full py-2.5 bg-slate-50 border border-slate-200/80 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-800 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[15px]">visibility</span>
+                  Details
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+
 
       {/* DigiLocker Details Fullscreen Popup */}
       {selectedVerification && (
@@ -538,6 +667,16 @@ export default function VerificationRosterPage() {
                     {displayVerification?.digilockerStatus === "Verified" ? "verified_user" : "pending"}
                   </span>
                   <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5 select-none">
+                      <button
+                        onClick={() => setSelectedVerification(null)}
+                        className="hover:text-[#016e1c] hover:underline cursor-pointer transition-colors"
+                      >
+                        Verification Roster
+                      </button>
+                      <span className="text-slate-300">/</span>
+                      <span className="text-[#016e1c] font-black">Verification Details</span>
+                    </div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-headline-md text-slate-900 font-extrabold text-lg">Verification Details</h3>
                       {isLoadingDetail && (
@@ -561,7 +700,7 @@ export default function VerificationRosterPage() {
               <div className="max-w-5xl mx-auto w-full flex flex-col gap-6">
 
                 {/* Candidate Onboarding Status */}
-                {displayVerification?.onboardingStatus === "setup_pending" && (
+                 {displayVerification?.onboardingStatus === "setup_pending" && (
                   <div className="p-4 bg-amber-500/5 border border-amber-500/15 rounded-2xl text-sm flex items-center gap-3">
                     <span className="material-symbols-outlined text-amber-500 text-xl">hourglass_top</span>
                     <div className="flex flex-col">
@@ -571,7 +710,609 @@ export default function VerificationRosterPage() {
                   </div>
                 )}
 
-                {displayVerification?.digilockerStatus === "Verified" ? (
+                {(displayVerification?.type === "employment" || displayVerification?.type === "education") && (
+                  <div className={`p-4 border rounded-2xl text-sm flex items-center gap-3 ${
+                    displayVerification.sendToCustomer
+                      ? "bg-emerald-500/5 border-emerald-500/15"
+                      : "bg-amber-500/5 border-amber-500/15"
+                  }`}>
+                    <span className={`material-symbols-outlined text-xl ${
+                      displayVerification.sendToCustomer ? "text-emerald-500" : "text-amber-500"
+                    }`}>
+                      {displayVerification.sendToCustomer ? "visibility" : "visibility_off"}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className={`font-bold text-xs ${
+                        displayVerification.sendToCustomer ? "text-emerald-700" : "text-amber-700"
+                      }`}>
+                        {displayVerification.sendToCustomer ? "Report Published to Client" : "Draft (Hidden from Client)"}
+                      </span>
+                      <span className="text-[10.5px] text-slate-500 mt-0.5">
+                        {displayVerification.sendToCustomer
+                          ? "The client can view and download the findings report PDF."
+                          : "The client sees 'Under Review' and cannot access the report until you click 'Send to Customer'."}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {displayVerification?.type === "employment" || displayVerification?.type === "education" ? (
+                  <div className="flex flex-col gap-6 animate-fade-in">
+                    {/* Employment / Education Status Banner */}
+                    <div className={`border rounded-2xl p-4 flex items-center gap-3.5 ${
+                      (displayVerification.type === "employment" ? displayVerification.employmentDataSubmitted : displayVerification.educationDataSubmitted)
+                        ? "bg-emerald-500/5 border-emerald-500/15"
+                        : "bg-blue-500/5 border-blue-500/15"
+                    }`}>
+                      <span className={`material-symbols-outlined text-2xl font-bold ${
+                        (displayVerification.type === "employment" ? displayVerification.employmentDataSubmitted : displayVerification.educationDataSubmitted) ? "text-emerald-500" : "text-blue-500"
+                      }`}>
+                        {(displayVerification.type === "employment" ? displayVerification.employmentDataSubmitted : displayVerification.educationDataSubmitted) ? "task_alt" : "hourglass_top"}
+                      </span>
+                      <div className="flex flex-col">
+                        <span className={`font-body-sm font-bold ${
+                          (displayVerification.type === "employment" ? displayVerification.employmentDataSubmitted : displayVerification.educationDataSubmitted) ? "text-emerald-800" : "text-blue-800"
+                        }`}>
+                          {displayVerification.type === "employment"
+                            ? (displayVerification.employmentDataSubmitted ? "Employment Data Submitted by Candidate" : "Awaiting Candidate Submission")
+                            : (displayVerification.educationDataSubmitted ? "Education Data Submitted by Candidate" : "Awaiting Candidate Submission")}
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                          {displayVerification.type === "employment"
+                            ? (displayVerification.employmentDataSubmittedAt
+                              ? `Submitted on ${new Date(displayVerification.employmentDataSubmittedAt).toLocaleString("en-US", { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}`
+                              : "Candidate has not yet filled the employment form")
+                            : (displayVerification.educationDataSubmittedAt
+                              ? `Submitted on ${new Date(displayVerification.educationDataSubmittedAt).toLocaleString("en-US", { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}`
+                              : "Candidate has not yet filled the education form")}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* ═══ PERSONAL DETAILS TABLE ═══ */}
+                    <div className="flex flex-col gap-2">
+                      <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                        <span className="material-symbols-outlined text-sm">person</span>
+                        Personal Details
+                      </h5>
+                      <div className="overflow-x-auto border border-slate-200/60 rounded-xl">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                              <th className="p-2.5 border-r border-slate-200 w-2/5">Information Required</th>
+                              <th className="p-2.5">Provided Response</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Full name (as per government ID)</td>
+                              <td className="p-2.5 font-bold text-slate-900">{displayVerification.digilockerName || displayVerification.name || "-"}</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Date of birth</td>
+                              <td className="p-2.5">{displayVerification.digilockerDob || displayVerification.candidateDob || "-"}</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Mobile number</td>
+                              <td className="p-2.5">{displayVerification.digilockerMobile || displayVerification.candidateMobile || "-"}</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Current residential address</td>
+                              <td className="p-2.5">{displayVerification.addresses && displayVerification.addresses.length > 0
+                                ? [displayVerification.addresses[0].address, displayVerification.addresses[0].city, displayVerification.addresses[0].state, displayVerification.addresses[0].country].filter(Boolean).join(", ")
+                                : "-"}</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Primary government ID number</td>
+                              <td className="p-2.5 font-mono">{displayVerification.digilockerAadhaar || displayVerification.digilockerPan || displayVerification.idProofNumber || "-"}</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email address</td>
+                              <td className="p-2.5">{displayVerification.digilockerEmail || displayVerification.email || "-"}</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Nationality</td>
+                              <td className="p-2.5">{"Indian"}</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Gender</td>
+                              <td className="p-2.5">{displayVerification.digilockerGender || displayVerification.gender || "-"}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* ═══ EDUCATION CHECK TABLE ═══ */}
+                    {displayVerification.type === "education" && displayVerification.educationData && (
+                      <div className="flex flex-col gap-2">
+                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                          <span className="material-symbols-outlined text-sm">school</span>
+                          Education Details
+                        </h5>
+                        <div className="overflow-x-auto border border-slate-200/60 rounded-xl mb-4">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                                <th className="p-2.5 border-r border-slate-200 w-2/5">Academic Field</th>
+                                <th className="p-2.5">Candidate Input Value</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree Category</td>
+                                <td className="p-2.5">{displayVerification.educationData.degreeType || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Course / Degree Name</td>
+                                <td className="p-2.5 font-bold text-slate-900">{displayVerification.educationData.courseName || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Board / University</td>
+                                <td className="p-2.5">{displayVerification.educationData.boardUniversity || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">School / College Name</td>
+                                <td className="p-2.5">{displayVerification.educationData.institutionName || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Roll / Registration No.</td>
+                                <td className="p-2.5 font-mono">{displayVerification.educationData.rollNumber || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Passing Year</td>
+                                <td className="p-2.5 font-mono">{displayVerification.educationData.passingYear || "-"}</td>
+                              </tr>
+                              {displayVerification.educationData.certificateFile && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree / Marksheet Proof</td>
+                                  <td className="p-2.5">
+                                    <a
+                                      href={displayVerification.educationData.certificateFile}
+                                      download={displayVerification.educationData.certificateFileName || `certificate-${displayVerification.id}.png`}
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-650 text-white rounded-lg hover:bg-purple-800 transition-colors font-bold text-[10px] uppercase tracking-wider cursor-pointer shadow-xs"
+                                    >
+                                      <span className="material-symbols-outlined text-[13px]">download</span>
+                                      Download Certificate
+                                    </a>
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ═══ EMPLOYMENT CHECK TABLE ═══ */}
+                    {displayVerification.employmentData && (
+                      <div className="flex flex-col gap-2">
+                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                          <span className="material-symbols-outlined text-sm">work</span>
+                          Employment Check
+                        </h5>
+                        <div className="overflow-x-auto border border-slate-200/60 rounded-xl">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                                <th className="p-2.5 border-r border-slate-200 w-2/5">Information Required</th>
+                                <th className="p-2.5">Provided Response</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Country</td>
+                                <td className="p-2.5">{displayVerification.employmentData.country || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">State</td>
+                                <td className="p-2.5">{displayVerification.employmentData.state || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">City</td>
+                                <td className="p-2.5">{displayVerification.employmentData.city || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Name</td>
+                                <td className="p-2.5 font-bold text-slate-900">{displayVerification.employmentData.companyName || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Address - Line 1</td>
+                                <td className="p-2.5">{displayVerification.employmentData.addressLine1 || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Address - Line 2</td>
+                                <td className="p-2.5">{displayVerification.employmentData.addressLine2 || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Telephone</td>
+                                <td className="p-2.5">{displayVerification.employmentData.companyTelephone ? `${displayVerification.employmentData.companyTelephoneCode || ""} ${displayVerification.employmentData.companyTelephone}` : "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department</td>
+                                <td className="p-2.5">{displayVerification.employmentData.department || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Position</td>
+                                <td className="p-2.5">{displayVerification.employmentData.position || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - From</td>
+                                <td className="p-2.5 font-mono">{displayVerification.employmentData.employmentPeriodFrom || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - To</td>
+                                <td className="p-2.5 font-mono">{displayVerification.employmentData.employmentPeriodTo || "Present"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employee Code</td>
+                                <td className="p-2.5 font-mono">{displayVerification.employmentData.employeeCode || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reporting Manager Name</td>
+                                <td className="p-2.5">{displayVerification.employmentData.reportingManagerName || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department of Reporting Manager</td>
+                                <td className="p-2.5">{displayVerification.employmentData.reportingManagerDepartment || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Contact No of Reporting Manager</td>
+                                <td className="p-2.5">{displayVerification.employmentData.reportingManagerContact ? `${displayVerification.employmentData.reportingManagerContactCode || ""} ${displayVerification.employmentData.reportingManagerContact}` : "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email ID of Reporting Manager</td>
+                                <td className="p-2.5">{displayVerification.employmentData.reportingManagerEmail || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Annual CTC</td>
+                                <td className="p-2.5 font-mono">{displayVerification.employmentData.annualCTC || "-"}</td>
+                              </tr>
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment is Permanent or Temporary</td>
+                                <td className="p-2.5">{displayVerification.employmentData.employmentType || "-"}</td>
+                              </tr>
+                              {displayVerification.employmentData.agencyDetails && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Agency Details (if temporary or contractual)</td>
+                                  <td className="p-2.5">{displayVerification.employmentData.agencyDetails}</td>
+                                </tr>
+                              )}
+                              {displayVerification.employmentData.reasonForLeaving && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reason(s) for Leaving</td>
+                                  <td className="p-2.5 font-normal text-slate-700">{displayVerification.employmentData.reasonForLeaving}</td>
+                                </tr>
+                              )}
+                              {displayVerification.employmentData.remarks && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Remarks If any</td>
+                                  <td className="p-2.5 italic font-normal text-slate-500">{displayVerification.employmentData.remarks}</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Log Attempt Section */}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5 flex-1">
+                          <span className="material-symbols-outlined text-sm">edit_note</span>
+                          Log Verification Attempt
+                        </h5>
+                        <button
+                          onClick={() => setShowLogAttemptForm(!showLogAttemptForm)}
+                          className="text-[10px] font-bold uppercase tracking-wider text-[#016e1c] bg-[#016e1c]/10 hover:bg-[#016e1c]/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">{showLogAttemptForm ? "expand_less" : "add"}</span>
+                          {showLogAttemptForm ? "Collapse" : "New Attempt"}
+                        </button>
+                      </div>
+
+                      {empAttemptSuccess && (
+                        <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                          <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                          {empAttemptSuccess}
+                        </div>
+                      )}
+                      {empAttemptError && (
+                        <div className="bg-red-50 text-red-800 border border-red-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                          <span className="material-symbols-outlined text-base text-red-600">error</span>
+                          {empAttemptError}
+                        </div>
+                      )}
+
+                      {showLogAttemptForm && (
+                        <div className="bg-slate-50/60 border border-slate-200/60 rounded-2xl p-5 flex flex-col gap-4 animate-fade-in">
+                          {/* Row 1: Mode + Result */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verification Mode</label>
+                              <select value={empAttemptMode} onChange={e => setEmpAttemptMode(e.target.value)}
+                                className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer">
+                                <option value="field">Field Verification</option>
+                                <option value="Manual">Manual</option>
+                                <option value="Email">Email</option>
+                                <option value="Phone">Phone</option>
+                                <option value="In-Person">In-Person</option>
+                                <option value="Database">Database Check</option>
+                                <option value="Document">Document Check</option>
+                              </select>
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Result</label>
+                              <select value={empAttemptResult} onChange={e => setEmpAttemptResult(e.target.value)}
+                                className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer">
+                                <option value="In Progress">In Progress</option>
+                                <option value="Verified">Verified / Completed</option>
+                                <option value="Discrepancy">Discrepancy</option>
+                                <option value="Unable to Verify">Unable to Verify</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Row 2: Comment */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Comment</label>
+                            <textarea value={empAttemptComment} onChange={e => setEmpAttemptComment(e.target.value)} rows={2}
+                              className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                              placeholder="Add attempt comment" />
+                          </div>
+
+                          {/* Row 3: Verifier Note */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verifier Note (Internal)</label>
+                            <textarea value={empAttemptVerifierNote} onChange={e => setEmpAttemptVerifierNote(e.target.value)} rows={2}
+                              className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                              placeholder="Internal note for verification method (not shown in report)" />
+                          </div>
+
+                          {/* Row 4: Respondent Info */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Name</label>
+                              <input type="text" value={empAttemptRespondentName} onChange={e => setEmpAttemptRespondentName(e.target.value)}
+                                className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
+                                placeholder="Enter respondent name" />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Email ID</label>
+                              <input type="email" value={empAttemptRespondentEmail} onChange={e => setEmpAttemptRespondentEmail(e.target.value)}
+                                className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
+                                placeholder="Enter respondent email" />
+                            </div>
+                          </div>
+
+                          {/* Row 5: Respondent Comment */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Comment</label>
+                            <textarea value={empAttemptRespondentComment} onChange={e => setEmpAttemptRespondentComment(e.target.value)} rows={2}
+                              className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                              placeholder="Add respondent comment" />
+                          </div>
+
+                          {/* Row 6: Toggles */}
+                          <div className="flex flex-wrap items-center gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <input type="checkbox" checked={empAttemptExtraPayment} onChange={e => setEmpAttemptExtraPayment(e.target.checked)}
+                                className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
+                              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Extra Payment</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <input type="checkbox" checked={empAttemptMarkAsPaid} onChange={e => setEmpAttemptMarkAsPaid(e.target.checked)}
+                                className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
+                              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Mark As Paid</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <input type="checkbox" checked={empAttemptAskApproval} onChange={e => setEmpAttemptAskApproval(e.target.checked)}
+                                className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
+                              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Ask Customer Approval</span>
+                            </label>
+                          </div>
+
+                          {/* Row 7: Screenshot Upload */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Screenshot / Receipt (Max 2MB)</label>
+                            <input type="file" accept="image/*,.pdf" onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > 2 * 1024 * 1024) {
+                                  setEmpAttemptError("File size exceeds 2MB limit");
+                                  return;
+                                }
+                                const reader = new FileReader();
+                                reader.onload = () => setEmpAttemptScreenshot(reader.result as string);
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                              className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-50 file:cursor-pointer file:transition-colors" />
+                            {empAttemptScreenshot && (
+                              <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                                File attached
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Row 8: Email checkbox + Submit */}
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-200/60">
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <input type="checkbox" checked={empAttemptSendEmail} onChange={e => setEmpAttemptSendEmail(e.target.checked)}
+                                className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
+                              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Email Customer</span>
+                            </label>
+                            <button
+                              onClick={async () => {
+                                if (!displayVerification?.id) return;
+                                setEmpAttemptSubmitting(true);
+                                setEmpAttemptError("");
+                                setEmpAttemptSuccess("");
+                                try {
+                                  await logEmploymentAttempt(displayVerification.id, {
+                                    verificationMode: empAttemptMode,
+                                    result: empAttemptResult,
+                                    comment: empAttemptComment,
+                                    verifierNote: empAttemptVerifierNote,
+                                    respondentName: empAttemptRespondentName,
+                                    respondentEmail: empAttemptRespondentEmail,
+                                    respondentComment: empAttemptRespondentComment,
+                                    extraPayment: empAttemptExtraPayment,
+                                    markAsPaid: empAttemptMarkAsPaid,
+                                    askCustomerApproval: empAttemptAskApproval,
+                                    screenshot: empAttemptScreenshot,
+                                    sendEmail: empAttemptSendEmail
+                                  });
+                                  setEmpAttemptSuccess("Attempt logged successfully!");
+                                  // Reset form
+                                  setEmpAttemptComment(""); setEmpAttemptVerifierNote("");
+                                  setEmpAttemptRespondentName(""); setEmpAttemptRespondentEmail("");
+                                  setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot("");
+                                  setEmpAttemptExtraPayment(false); setEmpAttemptMarkAsPaid(false);
+                                  setEmpAttemptAskApproval(false); setEmpAttemptSendEmail(false);
+                                  // Re-fetch detail
+                                  const detail = await fetchVerificationDetail(displayVerification.id);
+                                  setSelectedDetail(detail);
+                                } catch (err: any) {
+                                  setEmpAttemptError(err.message || "Failed to log attempt");
+                                } finally {
+                                  setEmpAttemptSubmitting(false);
+                                }
+                              }}
+                              disabled={empAttemptSubmitting}
+                              className="px-5 py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] text-white rounded-xl font-bold text-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-2 shadow-md shadow-sky-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {empAttemptSubmitting ? (
+                                <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /><span>Logging...</span></>
+                              ) : (
+                                <><span className="material-symbols-outlined text-[14px]">send</span><span>Log Attempt</span></>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Attempts Timeline */}
+                    {(() => {
+                      const attempts = displayVerification.employmentAttempts || [];
+                      if (attempts.length === 0) return null;
+                      return (
+                        <div className="flex flex-col gap-3">
+                          <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                            <span className="material-symbols-outlined text-sm">history</span>
+                            Attempts ({attempts.length})
+                          </h5>
+                          <div className="flex flex-col gap-3">
+                            {attempts.map((att: any, idx: number) => {
+                              const outcome = att.result || att.status || "In Progress";
+                              return (
+                                <div key={idx} className="bg-slate-50/40 border border-slate-200/60 rounded-xl p-4 flex flex-col gap-3 relative transition-all hover:bg-slate-50">
+                                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                                    <div className="flex flex-wrap items-center gap-3 font-semibold text-xs text-slate-700">
+                                      <span className="font-mono text-slate-500">{att.date}</span>
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
+                                        outcome === "Verified" || outcome === "Completed" ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                          : outcome === "In Progress" || outcome === "Processing" ? "bg-blue-50 text-blue-700 border-blue-200"
+                                          : "bg-rose-50 text-rose-700 border-rose-200"
+                                      }`}>{outcome}</span>
+                                      <span className="text-[10px] text-slate-500 font-bold uppercase">Mode: {att.verificationMode || "field"}</span>
+                                    </div>
+                                    <button
+                                      onClick={async () => {
+                                        if (!displayVerification?.id) return;
+                                        if (!confirm("Are you sure you want to delete this attempt log?")) return;
+                                        try {
+                                          if (displayVerification.type === "education") {
+                                            await deleteEducationAttempt(displayVerification.id, idx);
+                                          } else {
+                                            await deleteEmploymentAttempt(displayVerification.id, idx);
+                                          }
+                                          const detail = await fetchVerificationDetail(displayVerification.id);
+                                          setSelectedDetail(detail);
+                                        } catch (err: any) {
+                                          alert(err.message || "Failed to delete attempt");
+                                        }
+                                      }}
+                                      className="text-[10px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200 transition-colors flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <span className="material-symbols-outlined text-[13px]">delete</span>
+                                      Delete
+                                    </button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs leading-relaxed">
+                                    <div className="col-span-1 sm:col-span-1">
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Comment</span>
+                                      <span className="text-slate-800 font-bold">{att.comment || "-"}</span>
+                                    </div>
+                                    <div className="col-span-1 sm:col-span-1">
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Verifier Note</span>
+                                      <span className="text-slate-800 font-bold">{att.verifierNote || "-"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Respondent Name</span>
+                                      <span className="text-slate-800 font-bold">{att.respondentName || "-"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Respondent Email</span>
+                                      <span className="text-slate-800 font-bold">{att.respondentEmail || "-"}</span>
+                                    </div>
+                                    <div className="col-span-1 sm:col-span-1">
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Respondent Comment</span>
+                                      <span className="text-slate-800 font-bold">{att.respondentComment || "-"}</span>
+                                    </div>
+
+                                    <div>
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Extra Payment</span>
+                                      <span className="text-slate-800 font-bold">{att.extraPayment ? "Yes" : "No"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Extra Amount</span>
+                                      <span className="text-slate-800 font-bold">{att.extraAmount || "-"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Approval Status</span>
+                                      <span className="text-slate-800 font-bold">{att.askCustomerApproval ? "Pending" : "-"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Verifier</span>
+                                      <span className="text-[#00450e] font-bold">{att.loggedBy || displayVerification.verifier || "Prabir Kumar"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-slate-400 font-medium block text-[9px] uppercase">Manager</span>
+                                      <span className="text-slate-800 font-bold">{displayVerification.verifier || "Prabir Kumar"}</span>
+                                    </div>
+
+                                    <div className="col-span-1 sm:col-span-5 pt-1 border-t border-slate-100 flex items-center justify-between">
+                                      <div>
+                                        <span className="text-slate-400 font-medium inline-block text-[9px] uppercase mr-2">Screenshot:</span>
+                                        {att.screenshot ? (
+                                          <a href={att.screenshot} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-bold inline-flex items-center gap-0.5 text-xs">
+                                            <span className="material-symbols-outlined text-xs">attachment</span> View Screenshot / Receipt
+                                          </a>
+                                        ) : (
+                                          <span className="text-slate-800 font-semibold">-</span>
+                                        )}
+                                      </div>
+                                      <div className="flex gap-2">
+                                        {att.markAsPaid && <span className="text-[9px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase">Marked As Paid</span>}
+                                        {att.askCustomerApproval && <span className="text-[9px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold uppercase">Customer Approval</span>}
+                                        {att.sendEmail && <span className="text-[9px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-bold uppercase">Email Logged</span>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : displayVerification?.digilockerStatus === "Verified" ? (
                   <div className="flex flex-col gap-6 animate-fade-in">
                     {/* Verified Banner */}
                     <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-2xl p-4 flex items-center gap-3.5">
@@ -1175,11 +1916,16 @@ export default function VerificationRosterPage() {
                 >
                   Close
                 </button>
-                {displayVerification?.status === "Completed" && (
+                {(displayVerification?.status === "Completed" || (displayVerification?.status as string) === "Verified") && (
                   <button
                     onClick={() => {
+                      if (!displayVerification) return;
                       const reportPath = displayVerification.type === "court_record"
                         ? `/admin/court-record-report?id=${displayVerification.id}`
+                        : displayVerification.type === "employment"
+                        ? `/admin/employment-report?id=${displayVerification.id}`
+                        : displayVerification.type === "education"
+                        ? `/admin/education-report?id=${displayVerification.id}`
                         : `/admin/report?id=${displayVerification.id}`;
                       window.open(reportPath, "_blank");
                     }}
@@ -1187,6 +1933,35 @@ export default function VerificationRosterPage() {
                   >
                     <span className="material-symbols-outlined text-[16px]">print</span>
                     Print
+                  </button>
+                )}
+                {(displayVerification?.type === "employment" || displayVerification?.type === "education") && !displayVerification?.sendToCustomer && (
+                  <button
+                    onClick={async () => {
+                      if (!displayVerification) return;
+                      if (!confirm("Are you sure you want to complete this verification and send the report to the customer?")) return;
+                      try {
+                        await sendToCustomer(displayVerification.id);
+                        // Refresh details
+                        const detail = await fetchVerificationDetail(displayVerification.id);
+                        setSelectedDetail(detail);
+                      } catch (err: any) {
+                        alert(err.message || "Failed to send report to customer");
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:opacity-90 text-white font-bold rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">send</span>
+                    Send to Customer
+                  </button>
+                )}
+                {(displayVerification?.type === "employment" || displayVerification?.type === "education") && displayVerification?.sendToCustomer && (
+                  <button
+                    disabled
+                    className="flex-1 py-2.5 bg-slate-100 border border-slate-200 text-slate-400 font-bold rounded-xl text-sm flex items-center justify-center gap-1 cursor-not-allowed"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                    Sent to Customer
                   </button>
                 )}
                 {displayVerification?.courtRecordAdminReview && displayVerification?.courtRecordStatus === "admin_review" && (

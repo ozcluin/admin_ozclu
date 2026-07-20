@@ -344,6 +344,22 @@ export async function POST(req: NextRequest) {
         );
         break;
       }
+      case "sendToCustomer": {
+        const { verificationId } = payload;
+        if (!verificationId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          { 
+            $set: { 
+              sendToCustomer: true,
+              updatedAt: new Date()
+            }
+          }
+        );
+        return NextResponse.json({ success: true });
+      }
       case "updateVerificationStatus": {
         const { verificationId, status, notes, reportDetails } = payload;
         const updateDoc: any = { status };
@@ -1127,6 +1143,324 @@ export async function POST(req: NextRequest) {
           { id: verificationId },
           { $push: { attempts: retryAttempt } as any }
         );
+
+        return NextResponse.json({ success: true });
+      }
+      case "logEmploymentAttempt": {
+        const {
+          verificationId, verificationMode, result, comment, verifierNote,
+          respondentName, respondentEmail, respondentComment,
+          extraPayment, markAsPaid, askCustomerApproval, screenshot, sendEmail
+        } = payload;
+
+        if (!verificationId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+
+        const attemptEntry = {
+          date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase(),
+          verificationMode: verificationMode || "Manual",
+          result: result || "In Progress",
+          comment: comment || "",
+          verifierNote: verifierNote || "",
+          respondentName: respondentName || "",
+          respondentEmail: respondentEmail || "",
+          respondentComment: respondentComment || "",
+          extraPayment: !!extraPayment,
+          markAsPaid: !!markAsPaid,
+          askCustomerApproval: !!askCustomerApproval,
+          screenshot: screenshot || "",
+          sendEmail: !!sendEmail,
+          loggedBy: user.email
+        };
+
+        // Map result to verification status
+        let statusUpdate: string | undefined;
+        if (result === "Verified") statusUpdate = "Completed";
+        else if (result === "Discrepancy" || result === "Unable to Verify") statusUpdate = "Needs Attention";
+        else statusUpdate = "Processing";
+
+        const updateDoc: any = {
+          $push: { employmentAttempts: attemptEntry }
+        };
+        if (statusUpdate) {
+          updateDoc.$set = { status: statusUpdate };
+          if (statusUpdate === "Completed") {
+            updateDoc.$set.completedAt = new Date();
+          }
+        }
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          updateDoc
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "employment_attempt_logged",
+          targetType: "verification",
+          targetId: verificationId,
+          ip,
+          userAgent,
+          outcome: "success",
+          metadata: { verificationMode, result }
+        });
+
+        return NextResponse.json({ success: true });
+      }
+      case "logVerificationAttempt": {
+        const {
+          verificationId, verificationMode, status: attemptStatus, comment, verifierNote,
+          respondentName, respondentEmail, respondentComment,
+          extraPayment, markAsPaid, askCustomerApproval, screenshot
+        } = payload;
+
+        if (!verificationId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+
+        const attemptEntry = {
+          date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase(),
+          verificationMode: verificationMode || "Manual",
+          status: attemptStatus || "In Progress",
+          comment: comment || "",
+          verifierNote: verifierNote || "",
+          respondentName: respondentName || "",
+          respondentEmail: respondentEmail || "",
+          respondentComment: respondentComment || "",
+          extraPayment: !!extraPayment,
+          markAsPaid: !!markAsPaid,
+          askCustomerApproval: !!askCustomerApproval,
+          screenshot: screenshot || "",
+          loggedBy: user.email
+        };
+
+        // Map status to verification status
+        let vStatusUpdate: string | undefined;
+        if (attemptStatus === "Verified") vStatusUpdate = "Completed";
+        else if (attemptStatus === "Unverified" || attemptStatus === "Discrepancy") vStatusUpdate = "Needs Attention";
+        else vStatusUpdate = "Processing";
+
+        const vUpdateDoc: any = {
+          $push: { verificationAttempts: attemptEntry }
+        };
+        if (vStatusUpdate) {
+          vUpdateDoc.$set = { status: vStatusUpdate };
+          if (vStatusUpdate === "Completed") {
+            vUpdateDoc.$set.completedAt = new Date();
+          }
+        }
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          vUpdateDoc
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "verification_attempt_logged",
+          targetType: "verification",
+          targetId: verificationId,
+          ip,
+          userAgent,
+          outcome: "success",
+          metadata: { verificationMode, status: attemptStatus }
+        });
+
+        return NextResponse.json({ success: true });
+      }
+      case "deleteEmploymentAttempt": {
+        const { verificationId: delVId, attemptIndex } = payload;
+
+        if (!delVId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+        if (typeof attemptIndex !== "number" || attemptIndex < 0) {
+          return NextResponse.json({ error: "Valid attemptIndex is required" }, { status: 400 });
+        }
+
+        // Fetch the verification to get the current attempts array
+        const delVerification = await db.collection("verifications").findOne({ id: delVId });
+        if (!delVerification) {
+          return NextResponse.json({ error: "Verification not found" }, { status: 404 });
+        }
+
+        const currentAttempts = delVerification.employmentAttempts || [];
+        if (attemptIndex >= currentAttempts.length) {
+          return NextResponse.json({ error: "Attempt index out of range" }, { status: 400 });
+        }
+
+        // Remove the attempt at the specified index
+        currentAttempts.splice(attemptIndex, 1);
+
+        await db.collection("verifications").updateOne(
+          { id: delVId },
+          { $set: { employmentAttempts: currentAttempts } }
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "employment_attempt_deleted",
+          targetType: "verification",
+          targetId: delVId,
+          ip,
+          userAgent,
+          outcome: "success",
+          metadata: { attemptIndex }
+        });
+
+        return NextResponse.json({ success: true });
+      }
+      case "logEducationAttempt": {
+        const {
+          verificationId, verificationMode, result, comment, verifierNote,
+          respondentName, respondentEmail, respondentComment,
+          extraPayment, markAsPaid, askCustomerApproval, screenshot, sendEmail
+        } = payload;
+
+        if (!verificationId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+
+        const attemptEntry = {
+          date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase(),
+          verificationMode: verificationMode || "Manual",
+          result: result || "In Progress",
+          comment: comment || "",
+          verifierNote: verifierNote || "",
+          respondentName: respondentName || "",
+          respondentEmail: respondentEmail || "",
+          respondentComment: respondentComment || "",
+          extraPayment: !!extraPayment,
+          markAsPaid: !!markAsPaid,
+          askCustomerApproval: !!askCustomerApproval,
+          screenshot: screenshot || "",
+          sendEmail: !!sendEmail,
+          loggedBy: user.email
+        };
+
+        // Map result to verification status
+        let statusUpdate: string | undefined;
+        if (result === "Verified") statusUpdate = "Completed";
+        else if (result === "Discrepancy" || result === "Unable to Verify") statusUpdate = "Needs Attention";
+        else statusUpdate = "Processing";
+
+        const updateDoc: any = {
+          $push: { educationAttempts: attemptEntry }
+        };
+        if (statusUpdate) {
+          updateDoc.$set = { status: statusUpdate };
+          if (statusUpdate === "Completed") {
+            updateDoc.$set.completedAt = new Date();
+          }
+        }
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          updateDoc
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "education_attempt_logged",
+          targetType: "verification",
+          targetId: verificationId,
+          ip,
+          userAgent,
+          outcome: "success",
+          metadata: { verificationMode, result }
+        });
+
+        return NextResponse.json({ success: true });
+      }
+      case "deleteEducationAttempt": {
+        const { verificationId: delVId, attemptIndex } = payload;
+
+        if (!delVId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+        if (typeof attemptIndex !== "number" || attemptIndex < 0) {
+          return NextResponse.json({ error: "Valid attemptIndex is required" }, { status: 400 });
+        }
+
+        // Fetch the verification to get the current attempts array
+        const delVerification = await db.collection("verifications").findOne({ id: delVId });
+        if (!delVerification) {
+          return NextResponse.json({ error: "Verification not found" }, { status: 404 });
+        }
+
+        const currentAttempts = delVerification.educationAttempts || [];
+        if (attemptIndex >= currentAttempts.length) {
+          return NextResponse.json({ error: "Attempt index out of range" }, { status: 400 });
+        }
+
+        // Remove the attempt at the specified index
+        currentAttempts.splice(attemptIndex, 1);
+
+        await db.collection("verifications").updateOne(
+          { id: delVId },
+          { $set: { educationAttempts: currentAttempts } }
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "education_attempt_deleted",
+          targetType: "verification",
+          targetId: delVId,
+          ip,
+          userAgent,
+          outcome: "success",
+          metadata: { attemptIndex }
+        });
+
+        return NextResponse.json({ success: true });
+      }
+      case "saveReportData": {
+        const { verificationId: reportVId, reportData } = payload;
+
+        if (!reportVId) {
+          return NextResponse.json({ error: "verificationId is required" }, { status: 400 });
+        }
+
+        await db.collection("verifications").updateOne(
+          { id: reportVId },
+          {
+            $set: {
+              reportData,
+              reportGeneratedAt: new Date().toISOString(),
+              reportGeneratedBy: user.email
+            }
+          }
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "report_generated",
+          targetType: "verification",
+          targetId: reportVId,
+          ip,
+          userAgent,
+          outcome: "success",
+          metadata: {}
+        });
 
         return NextResponse.json({ success: true });
       }
