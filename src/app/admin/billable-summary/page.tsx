@@ -268,7 +268,15 @@ function BillableSummaryContent() {
                   } catch {}
 
                   const verType = v.type || "identity";
-                  const serviceName = verType === "court_record" ? "Court Record Check" : "Identity Verification";
+                  const serviceName = verType === "court_record"
+                    ? "Court Record Check"
+                    : verType === "employment"
+                    ? "Employment Check"
+                    : verType === "education"
+                    ? "Education Check"
+                    : verType === "interpol"
+                    ? "Interpol Check"
+                    : "Identity Verification";
                   const rate = verType === "court_record"
                     ? (organisation?.courtRecordRate !== undefined ? organisation.courtRecordRate : perVerificationRate)
                     : perVerificationRate;

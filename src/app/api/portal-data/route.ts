@@ -406,6 +406,8 @@ export async function POST(req: NextRequest) {
             const verType = verification.type || "identity";
             const rate = verType === "court_record"
               ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
+              : verType === "interpol"
+              ? (org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate)
               : org.monthlyRate;
 
             if (rate) {

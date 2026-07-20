@@ -60,8 +60,12 @@ export interface Verification {
   reportData?: Record<string, unknown> | null;
   reportGeneratedAt?: string;
   reportGeneratedBy?: string;
-  // Court Record Verification fields
-  type?: "identity" | "court_record" | "employment" | "education";
+  // Verification type & Interpol fields
+  type?: "identity" | "court_record" | "employment" | "education" | "interpol";
+  birthCity?: string;
+  interpolHasRecords?: boolean;
+  interpolMatches?: any[];
+  interpolCompletedAt?: string;
   candidateDob?: string;
   candidateFatherName?: string;
   candidateMotherName?: string;

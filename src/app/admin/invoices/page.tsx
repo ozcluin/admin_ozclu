@@ -702,6 +702,8 @@ export default function ManageInvoicesPage() {
                     const verType = v.type || "identity";
                     const rate = verType === "court_record"
                       ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
+                      : verType === "interpol"
+                      ? ((org as any).interpolRate !== undefined ? (org as any).interpolRate : org.monthlyRate)
                       : org.monthlyRate;
                     return sum + rate;
                   }, 0);
@@ -1119,6 +1121,8 @@ export default function ManageInvoicesPage() {
                     const verType = v.type || "identity";
                     const rate = verType === "court_record"
                       ? (selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate)
+                      : verType === "interpol"
+                      ? ((selectedOrg as any).interpolRate !== undefined ? (selectedOrg as any).interpolRate : selectedOrg.monthlyRate)
                       : selectedOrg.monthlyRate;
                     return sum + rate;
                   }, 0);
@@ -2643,6 +2647,8 @@ export default function ManageInvoicesPage() {
                               const verType = v.type || "identity";
                               const rowRate = verType === "court_record"
                                 ? (selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate)
+                                : verType === "interpol"
+                                ? ((selectedOrg as any).interpolRate !== undefined ? (selectedOrg as any).interpolRate : selectedOrg.monthlyRate)
                                 : selectedOrg.monthlyRate;
                               return (
                                 <tr key={v.id}>

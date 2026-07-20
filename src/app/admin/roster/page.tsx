@@ -70,6 +70,7 @@ export default function VerificationRosterPage() {
   // Filters state
   const [statusFilter, setStatusFilter] = useState("all");
   const [orgFilter, setOrgFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilterType, setDateFilterType] = useState("all");
   const [customDate, setCustomDate] = useState("");
@@ -148,6 +149,12 @@ export default function VerificationRosterPage() {
   const filteredVerifications = verifications.filter((v) => {
     const matchesStatus = statusFilter === "all" || v.status === statusFilter;
     const matchesOrg = orgFilter === "all" || v.orgName === orgFilter;
+    const matchesType = typeFilter === "all" ||
+      (typeFilter === "employment" && v.type === "employment") ||
+      (typeFilter === "education" && v.type === "education") ||
+      (typeFilter === "identity" && (!v.type || v.type === "identity")) ||
+      (typeFilter === "court_record" && v.type === "court_record") ||
+      (typeFilter === "interpol" && v.type === "interpol");
     const matchesSearch =
       v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       v.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -198,7 +205,7 @@ export default function VerificationRosterPage() {
       return true;
     })();
 
-    return matchesStatus && matchesOrg && matchesSearch && matchesDate;
+    return matchesStatus && matchesOrg && matchesType && matchesSearch && matchesDate;
   });
 
   // Sorted verifications
@@ -315,6 +322,21 @@ export default function VerificationRosterPage() {
             <option value="Completed">Completed</option>
             <option value="Processing">Processing</option>
             <option value="Needs Attention">Needs Attention</option>
+          </select>
+        </div>
+
+        <div className="w-full md:w-44 flex flex-col gap-1">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
+          >
+            <option value="all">All Service Types</option>
+            <option value="identity">Identity Verification</option>
+            <option value="court_record">Court Record</option>
+            <option value="employment">Employment Check</option>
+            <option value="education">Education Check</option>
+            <option value="interpol">Interpol Check</option>
           </select>
         </div>
 
@@ -462,9 +484,11 @@ export default function VerificationRosterPage() {
                           ? "bg-blue-500/10 text-blue-700 border-blue-500/15"
                           : v.type === "education"
                           ? "bg-purple-550/10 text-purple-700 border-purple-550/15"
+                          : v.type === "interpol"
+                          ? "bg-indigo-500/10 text-indigo-700 border-indigo-500/15"
                           : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                       }`}>
-                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : "Identity"}
+                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : "Identity"}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-slate-800">
@@ -477,6 +501,8 @@ export default function VerificationRosterPage() {
                             ? (v.employmentData?.companyName || v.email)
                             : v.type === "education"
                             ? ((v.educationData?.courseName && `${v.educationData.courseName} @ ${v.educationData.boardUniversity}`) || v.email)
+                            : v.type === "interpol"
+                            ? (v.interpolHasRecords ? `${v.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
                             : v.email}
                         </span>
                       </div>
@@ -599,9 +625,11 @@ export default function VerificationRosterPage() {
                         ? "bg-blue-500/10 text-blue-700 border-blue-500/15"
                         : v.type === "education"
                         ? "bg-purple-550/10 text-purple-700 border-purple-550/15"
+                        : v.type === "interpol"
+                        ? "bg-indigo-500/10 text-indigo-700 border-indigo-500/15"
                         : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                     }`}>
-                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : "Identity"}
+                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : "Identity"}
                     </span>
                     <h4 className="font-bold text-slate-900 text-sm">{v.name}</h4>
                   </div>
@@ -612,6 +640,8 @@ export default function VerificationRosterPage() {
                       ? (v.employmentData?.companyName || v.email)
                       : v.type === "education"
                       ? ((v.educationData?.courseName && `${v.educationData.courseName} @ ${v.educationData.boardUniversity}`) || v.email)
+                      : v.type === "interpol"
+                      ? (v.interpolHasRecords ? `${v.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
                       : v.email}
                   </p>
                 </div>
@@ -1858,6 +1888,94 @@ export default function VerificationRosterPage() {
                       </div>
                     )}
                   </div>
+                ) : displayVerification?.type === "interpol" ? (
+                  /* Interpol Verification Details */
+                  <div className="flex flex-col gap-6 animate-fade-in">
+                    {/* Interpol Search Summary Banner */}
+                    <div className={`border rounded-2xl p-4 flex items-center gap-3.5 ${
+                      displayVerification.interpolHasRecords
+                        ? "bg-rose-500/5 border-rose-500/15"
+                        : "bg-emerald-500/5 border-emerald-500/15"
+                    }`}>
+                      <span className={`material-symbols-outlined text-2xl font-bold ${
+                        displayVerification.interpolHasRecords ? "text-rose-500" : "text-emerald-500"
+                      }`}>
+                        {displayVerification.interpolHasRecords ? "policy" : "verified_user"}
+                      </span>
+                      <div className="flex flex-col">
+                        <span className={`font-body-sm font-bold ${
+                          displayVerification.interpolHasRecords ? "text-rose-800" : "text-emerald-800"
+                        }`}>
+                          {displayVerification.interpolHasRecords
+                            ? `${displayVerification.interpolMatches?.length || 0} Interpol Record Match(es) Found`
+                            : "Clean Record — No Interpol Matches"}
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                          Checked against Global Interpol Red and Yellow Notice Databases
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Search Input Details */}
+                    <div className="flex flex-col gap-3">
+                      <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                        <span className="material-symbols-outlined text-sm">person</span>
+                        Candidate & Search Query Details
+                      </h5>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {renderDetailField("Candidate Name", displayVerification.name, false, "badge")}
+                        {renderDetailField("Date of Birth", displayVerification.candidateDob, false, "cake")}
+                        {renderDetailField("Place / City of Birth", displayVerification.birthCity, false, "location_city")}
+                        {renderDetailField("Requesting Org", displayVerification.requestingOrgName || displayVerification.orgName, false, "business")}
+                      </div>
+                    </div>
+
+                    {/* Interpol Notice Matches */}
+                    {displayVerification.interpolHasRecords && displayVerification.interpolMatches && displayVerification.interpolMatches.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        <h5 className="font-label-caps text-rose-600 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-rose-100 pb-1.5">
+                          <span className="material-symbols-outlined text-sm">warning</span>
+                          Matched Interpol Notices ({displayVerification.interpolMatches.length})
+                        </h5>
+                        <div className="space-y-3">
+                          {displayVerification.interpolMatches.map((notice: any, idx: number) => (
+                            <div key={idx} className="bg-rose-50/40 border border-rose-200/60 rounded-xl p-4 flex flex-col md:flex-row gap-4">
+                              {notice.photo && (
+                                <img src={notice.photo} alt={notice.name} className="w-20 h-24 object-cover rounded-lg border border-slate-200 shrink-0" />
+                              )}
+                              <div className="flex flex-col flex-1 min-w-0">
+                                <div className="flex justify-between items-start">
+                                  <h6 className="font-bold text-slate-900 text-sm">{notice.name}</h6>
+                                  <span className="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                                    Notice #{notice.notice_id || notice.entity_id}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-600 font-semibold mt-1">
+                                  Nationalities: {
+                                    (Array.isArray(notice.nationalities) ? notice.nationalities.join(", ") : notice.nationalities) ||
+                                    (Array.isArray(notice.details?.nationalities) ? notice.details.nationalities.join(", ") : notice.details?.nationalities) ||
+                                    "N/A"
+                                  }
+                                </p>
+                                {notice.charge && (
+                                  <p className="text-xs text-slate-700 mt-2 bg-white/80 p-2.5 rounded-lg border border-rose-100">
+                                    <span className="font-bold text-rose-900 block mb-0.5">Charges / Warrant:</span>
+                                    {notice.charge}
+                                  </p>
+                                )}
+                                {notice.link && (
+                                  <a href={notice.link} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 font-bold hover:underline mt-2 inline-flex items-center gap-1">
+                                    <span>View Official Interpol Notice Page</span>
+                                    <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   /* Non-DigiLocker / Pending state (Identity Check) */
                   <div className="flex flex-col gap-4">
@@ -1916,7 +2034,7 @@ export default function VerificationRosterPage() {
                 >
                   Close
                 </button>
-                {(displayVerification?.status === "Completed" || (displayVerification?.status as string) === "Verified") && (
+                {(displayVerification?.status === "Completed" || (displayVerification?.status as string) === "Verified" || displayVerification?.type === "interpol") && (
                   <button
                     onClick={() => {
                       if (!displayVerification) return;
@@ -1926,13 +2044,15 @@ export default function VerificationRosterPage() {
                         ? `/admin/employment-report?id=${displayVerification.id}`
                         : displayVerification.type === "education"
                         ? `/admin/education-report?id=${displayVerification.id}`
+                        : displayVerification.type === "interpol"
+                        ? `/client/interpol-report?id=${displayVerification.id}`
                         : `/admin/report?id=${displayVerification.id}`;
                       window.open(reportPath, "_blank");
                     }}
                     className="flex-1 py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] hover:opacity-90 text-white font-bold rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[16px]">print</span>
-                    Print
+                    View Report
                   </button>
                 )}
                 {(displayVerification?.type === "employment" || displayVerification?.type === "education") && !displayVerification?.sendToCustomer && (

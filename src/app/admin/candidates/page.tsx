@@ -110,8 +110,10 @@ export default function CandidatesPage() {
 
     const matchesType = typeFilter === "all" ||
       (typeFilter === "employment" && v.type === "employment") ||
+      (typeFilter === "education" && v.type === "education") ||
       (typeFilter === "identity" && (!v.type || v.type === "identity")) ||
-      (typeFilter === "court_record" && v.type === "court_record");
+      (typeFilter === "court_record" && v.type === "court_record") ||
+      (typeFilter === "interpol" && v.type === "interpol");
 
     const matchesSearch =
       !searchQuery ||
@@ -274,6 +276,8 @@ export default function CandidatesPage() {
             <option value="identity">Identity</option>
             <option value="court_record">Court Record</option>
             <option value="employment">Employment</option>
+            <option value="education">Education</option>
+            <option value="interpol">Interpol Check</option>
           </select>
         </div>
 
@@ -352,6 +356,8 @@ export default function CandidatesPage() {
                                 ? (c.courtRecordSummary || "Court record search")
                                 : c.type === "education"
                                 ? ((c.educationData?.courseName && `${c.educationData.courseName} @ ${c.educationData.boardUniversity}`) || c.email)
+                                : c.type === "interpol"
+                                ? (c.interpolHasRecords ? `${c.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
                                 : c.email}
                             </span>
                           </div>
@@ -377,6 +383,10 @@ export default function CandidatesPage() {
                           ) : c.type === "education" ? (
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-purple-500/10 text-purple-700 border-purple-500/15">
                               Education
+                            </span>
+                          ) : c.type === "interpol" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-indigo-500/10 text-indigo-700 border-indigo-500/15">
+                              Interpol
                             </span>
                           ) : isVerified ? (
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-emerald-500/10 text-emerald-600 border-emerald-500/15">
@@ -510,6 +520,8 @@ export default function CandidatesPage() {
                     ? (c.courtRecordSummary || "Court record search")
                     : c.type === "education"
                     ? ((c.educationData?.courseName && `${c.educationData.courseName} @ ${c.educationData.boardUniversity}`) || c.email)
+                    : c.type === "interpol"
+                    ? (c.interpolHasRecords ? `${c.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
                     : c.email}
                 </div>
 
@@ -536,6 +548,10 @@ export default function CandidatesPage() {
                     ) : c.type === "education" ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-purple-500/10 text-purple-700 border-purple-500/15 mt-1">
                         Education
+                      </span>
+                    ) : c.type === "interpol" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-indigo-500/10 text-indigo-700 border-indigo-500/15 mt-1">
+                        Interpol
                       </span>
                     ) : isVerified ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-emerald-500/10 text-emerald-600 border-emerald-500/15 mt-1">
@@ -1576,7 +1592,7 @@ export default function CandidatesPage() {
                 >
                   Close Inspector
                 </button>
-                {(displayCandidate?.status === "Completed" || (displayCandidate?.status as string) === "Verified") && (
+                {(displayCandidate?.status === "Completed" || (displayCandidate?.status as string) === "Verified" || displayCandidate?.type === "interpol") && (
                   <button
                     onClick={() => {
                       if (!displayCandidate) return;
@@ -1584,13 +1600,17 @@ export default function CandidatesPage() {
                         ? `/admin/court-record-report?id=${displayCandidate.id}`
                         : displayCandidate.type === "employment"
                         ? `/admin/employment-report?id=${displayCandidate.id}`
+                        : displayCandidate.type === "education"
+                        ? `/admin/education-report?id=${displayCandidate.id}`
+                        : displayCandidate.type === "interpol"
+                        ? `/client/interpol-report?id=${displayCandidate.id}`
                         : `/admin/report?id=${displayCandidate.id}`;
                       window.open(reportPath, "_blank");
                     }}
                     className="w-full py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] hover:opacity-90 text-white font-button-text rounded-xl transition-all cursor-pointer text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-500/10"
                   >
                     <span className="material-symbols-outlined text-base">print</span>
-                    Print Report
+                    View Report
                   </button>
                 )}
               </div>
