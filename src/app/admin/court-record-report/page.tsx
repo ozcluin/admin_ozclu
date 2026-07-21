@@ -122,9 +122,94 @@ function AdminCourtRecordReportContent() {
     : "No Court Records Found";
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white print:p-0 p-4 sm:p-6 md:p-8 flex flex-col items-center print:block">
-      {/* Print border */}
-      <div className="hidden print:block fixed inset-0 border-[6px] border-double border-[#1B365D] pointer-events-none z-50" />
+    <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white print:p-0 p-4 sm:p-6 md:p-8 flex flex-col items-center justify-start font-sans">
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
+          html, body {
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .print-card {
+            border: none !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+          .print-page-block {
+            border: 5px double #1B365D !important;
+            padding: 22px 26px !important;
+            margin-bottom: 0 !important;
+            box-sizing: border-box !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            background: white !important;
+            min-height: 265mm !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+          }
+          .print-card h1 {
+            font-size: 16px !important;
+            margin-bottom: 5px !important;
+          }
+          .print-card h2 {
+            font-size: 17px !important;
+          }
+          .print-card h3 {
+            font-size: 11px !important;
+          }
+          .print-card .grid {
+            gap: 10px !important;
+          }
+          .print-card p, .print-card div, .print-card span {
+            line-height: 1.45 !important;
+          }
+          .print-card .mb-8 {
+            margin-bottom: 18px !important;
+          }
+          .print-card .mb-6 {
+            margin-bottom: 12px !important;
+          }
+          .print-card .p-8, .print-card .p-6, .print-card .p-5 {
+            padding: 12px !important;
+          }
+          .print-card .pb-6 {
+            padding-bottom: 10px !important;
+          }
+          .print-card .pt-6 {
+            padding-top: 10px !important;
+          }
+          .print-card .mt-8 {
+            margin-top: 16px !important;
+          }
+          .print-card .gap-6 {
+            gap: 11px !important;
+          }
+          .print-card .gap-4 {
+            gap: 8px !important;
+          }
+          .print-avoid-break {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .print-break-before {
+            break-before: page !important;
+            page-break-before: always !important;
+          }
+        }
+      `}</style>
 
       {/* Print Control Toolbar */}
       <div className="no-print print:hidden w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
@@ -156,131 +241,136 @@ function AdminCourtRecordReportContent() {
       </div>
 
       {/* Main Report Container */}
-      <div className="print-border w-full max-w-[800px] bg-white border-[6px] border-double border-[#1B365D] print:border-0 p-8 sm:p-10 shadow-lg relative print:shadow-none print:my-0 print:mx-auto print:p-8">
+      <div className="print-card w-full max-w-[800px] bg-white border-[6px] border-double border-[#1B365D] p-8 sm:p-10 shadow-lg relative my-0 mx-auto print:shadow-none print:p-8 print:max-w-full print:w-full">
 
-        {/* Header */}
-        <div className="grid grid-cols-3 items-center gap-4 mb-8">
-          <div className="flex justify-start">
-            <div className="flex items-center gap-2">
-              <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
-                <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+        {/* Page 1 Content Block */}
+        <div className="print-page-block">
+          {/* Header */}
+          <div className="grid grid-cols-3 items-center gap-4 mb-8">
+            <div className="flex justify-start">
+              <div className="flex items-center gap-2">
+                <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
+                  <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+                </div>
+                {settings && settings.logo && (
+                  <>
+                    <div className="h-8 w-[1px] bg-slate-300 self-center mx-1 shrink-0" />
+                    <div className="w-20 h-10 sm:w-24 sm:h-12 flex items-center justify-start shrink-0">
+                      <img src={settings.logo} alt="Client Logo" className="object-contain max-h-full max-w-full" />
+                    </div>
+                  </>
+                )}
               </div>
-              {settings && settings.logo && (
-                <>
-                  <div className="h-8 w-[1px] bg-slate-300 self-center mx-1 shrink-0" />
-                  <div className="w-20 h-10 sm:w-24 sm:h-12 flex items-center justify-start shrink-0">
-                    <img src={settings.logo} alt="Client Logo" className="object-contain max-h-full max-w-full" />
-                  </div>
-                </>
-              )}
+            </div>
+            <h1 className="text-center font-sans text-[#1B365D] text-xl sm:text-2xl font-extrabold tracking-widest uppercase mt-2">
+              COURT RECORD<br />REPORT
+            </h1>
+            <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">
+              <div>Report #: <span className="font-mono text-slate-900">{reportNo}</span></div>
+              <div>Date: <span className="text-slate-900">{formatDate(verification.courtRecordCompletedAt || verification.date)}</span></div>
             </div>
           </div>
-          <h1 className="text-center font-sans text-[#1B365D] text-xl sm:text-2xl font-extrabold tracking-widest uppercase mt-2">
-            COURT RECORD<br />REPORT
-          </h1>
-          <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">
-            <div>Report #: <span className="font-mono text-slate-900">{reportNo}</span></div>
-            <div>Date: <span className="text-slate-900">{formatDate(verification.courtRecordCompletedAt || verification.date)}</span></div>
-          </div>
-        </div>
 
-        {/* Metadata Card */}
-        <div className="border border-slate-200 rounded-xl p-5 bg-slate-50 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-700 mb-6">
-          <div className="space-y-1.5">
-            <div>Report Number: <span className="font-mono font-bold text-slate-900">{reportNo}</span></div>
-            <div>Request Created: <span className="text-slate-900 font-mono">{verification.date}</span></div>
-            <div>Search Status: <span className={`font-bold uppercase ${isSearchComplete ? "text-emerald-600" : "text-amber-500"}`}>
-              {isSearchComplete ? "Completed" : "In Progress"}
-            </span></div>
-            <div>Verification Year Span: <span className="text-slate-900 font-mono">{fromYear} — {toYear} ({toYear - fromYear + 1} Years)</span></div>
-          </div>
-          <div className="flex items-center justify-between sm:justify-end gap-4 text-left sm:text-right">
+          {/* Metadata Card */}
+          <div className="border border-slate-200 rounded-xl p-5 bg-slate-50 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-700 mb-6">
             <div className="space-y-1.5">
-              <div>Generated At: <span className="text-slate-900 font-mono">{generatedAtDate}</span></div>
-              <div>Verified By: <span className="text-slate-900">eCourts India (Automated)</span></div>
+              <div>Report Number: <span className="font-mono font-bold text-slate-900">{reportNo}</span></div>
+              <div>Request Created: <span className="text-slate-900 font-mono">{verification.date}</span></div>
+              <div>Search Status: <span className={`font-bold uppercase ${isSearchComplete ? "text-emerald-600" : "text-amber-500"}`}>
+                {isSearchComplete ? "Completed" : "In Progress"}
+              </span></div>
+              <div>Verification Year Span: <span className="text-slate-900 font-mono">{fromYear} — {toYear} ({toYear - fromYear + 1} Years)</span></div>
+            </div>
+            <div className="flex items-center justify-between sm:justify-end gap-4 text-left sm:text-right">
+              <div className="space-y-1.5">
+                <div>Generated At: <span className="text-slate-900 font-mono">{generatedAtDate}</span></div>
+                <div>Verified By: <span className="text-slate-900">eCourts India (Automated)</span></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Candidate & Company Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-          <div>
-            <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2">Candidate Details</h3>
-            <div className="space-y-1.5 text-xs">
-              <div><span className="text-slate-500 font-semibold">Full Name:</span> <span className="font-bold text-slate-800">{verification.name || "Not Given"}</span></div>
-              <div><span className="text-slate-500 font-semibold">Gender:</span> <span className="font-semibold text-slate-800">{verification.gender || "Not Given"}</span></div>
-              <div><span className="text-slate-500 font-semibold">Date of Birth:</span> <span className="font-semibold text-slate-800">{verification.candidateDob || "Not Given"}</span></div>
-              <div><span className="text-slate-500 font-semibold">ID Type:</span> <span className="font-semibold text-slate-800">{verification.idProofType || "Not Given"}</span></div>
-              <div><span className="text-slate-500 font-semibold">ID Number:</span> <span className="font-semibold text-slate-800">{verification.idProofNumber || "Not Given"}</span></div>
-              <div><span className="text-slate-500 font-semibold">Father&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateFatherName || "Not Given"}</span></div>
-              <div><span className="text-slate-500 font-semibold">Mother&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateMotherName || "Not Given"}</span></div>
-              <div><span className="text-slate-500 font-semibold">Husband&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateHusbandName || "Not Given"}</span></div>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2">Company Details</h3>
-            <div className="space-y-1.5 text-xs">
-              <div><span className="text-slate-500 font-semibold">Requesting Org:</span> <span className="font-bold text-slate-800">{verification.requestingOrgName || verification.orgName}</span></div>
-              <div><span className="text-slate-500 font-semibold">Client Org:</span> <span className="font-semibold text-slate-800">{verification.orgName}</span></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Addresses Searched */}
-        {verification.addresses && verification.addresses.length > 0 && (
-          <div className="mb-8 print-avoid-break">
-            <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-2">Addresses Provided</h3>
-            <div className="overflow-x-auto border border-slate-200 rounded-xl">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                    <th className="p-2.5 border-r border-slate-200 w-12">#</th>
-                    <th className="p-2.5 border-r border-slate-200">Address</th>
-                    <th className="p-2.5 border-r border-slate-200">City</th>
-                    <th className="p-2.5 border-r border-slate-200">State</th>
-                    <th className="p-2.5">Country</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
-                  {verification.addresses.map((addr: any, i: number) => (
-                    <tr key={i}>
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/50 text-center">{i + 1}</td>
-                      <td className="p-2.5 border-r border-slate-200">{addr.address || "-"}</td>
-                      <td className="p-2.5 border-r border-slate-200 font-bold">{addr.city}</td>
-                      <td className="p-2.5 border-r border-slate-200">{addr.state}</td>
-                      <td className="p-2">{addr.country || "India"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Overall Verdict */}
-        <div className={`mb-8 p-5 border-2 rounded-xl ${verdictBg} print-avoid-break`}>
-          <div className="flex items-center justify-between">
+          {/* Candidate & Company Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             <div>
-              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-1">Overall Verdict</h3>
-              <p className={`text-lg font-extrabold ${verdictColor}`}>{verdictText}</p>
-              <p className="text-xs text-slate-600 mt-1 font-semibold">
-                Searched {totalComplexes} court complex(es) across {results.length} district(s)
-              </p>
-              <p className="text-[10px] text-slate-500 mt-2 font-medium leading-relaxed max-w-[480px]">
-                This report is generated through a secure verification process using the information provided by the candidate against records available on the eCourts India system for the period {fromYear}–{toYear}. The search is conducted in accordance with applicable Indian laws, including the Information Technology Act, 2000, and the Code of Civil Procedure, 1908.
-              </p>
+              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2">Candidate Details</h3>
+              <div className="space-y-1.5 text-xs">
+                <div><span className="text-slate-500 font-semibold">Full Name:</span> <span className="font-bold text-slate-800">{verification.name || "Not Given"}</span></div>
+                <div><span className="text-slate-500 font-semibold">Gender:</span> <span className="font-semibold text-slate-800">{verification.gender || "Not Given"}</span></div>
+                <div><span className="text-slate-500 font-semibold">Date of Birth:</span> <span className="font-semibold text-slate-800">{verification.candidateDob || "Not Given"}</span></div>
+                <div><span className="text-slate-500 font-semibold">ID Type:</span> <span className="font-semibold text-slate-800">{verification.idProofType || "Not Given"}</span></div>
+                <div><span className="text-slate-500 font-semibold">ID Number:</span> <span className="font-semibold text-slate-800">{verification.idProofNumber || "Not Given"}</span></div>
+                <div><span className="text-slate-500 font-semibold">Father&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateFatherName || "Not Given"}</span></div>
+                <div><span className="text-slate-500 font-semibold">Mother&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateMotherName || "Not Given"}</span></div>
+                <div><span className="text-slate-500 font-semibold">Husband&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateHusbandName || "Not Given"}</span></div>
+              </div>
             </div>
-            <div className="flex-shrink-0 flex flex-col items-center gap-0.5 bg-white border border-slate-200/80 p-2 rounded-lg shadow-sm">
-              <img src="/ecourts-logo.png" alt="eCourts India" className="w-12 h-12 object-contain" />
-              <span className="text-[8px] font-extrabold uppercase text-[#1B365D] tracking-wider">Verified</span>
+            <div>
+              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2">Company Details</h3>
+              <div className="space-y-1.5 text-xs">
+                <div><span className="text-slate-500 font-semibold">Requesting Org:</span> <span className="font-bold text-slate-800">{verification.requestingOrgName || verification.orgName}</span></div>
+                <div><span className="text-slate-500 font-semibold">Client Org:</span> <span className="font-semibold text-slate-800">{verification.orgName}</span></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Addresses Searched */}
+          {verification.addresses && verification.addresses.length > 0 && (
+            <div className="mb-8 print-avoid-break">
+              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-2">Addresses Provided</h3>
+              <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                      <th className="p-2.5 border-r border-slate-200 w-12">#</th>
+                      <th className="p-2.5 border-r border-slate-200">Address</th>
+                      <th className="p-2.5 border-r border-slate-200">City</th>
+                      <th className="p-2.5 border-r border-slate-200">State</th>
+                      <th className="p-2.5">Country</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
+                    {verification.addresses.map((addr: any, i: number) => (
+                      <tr key={i}>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50 text-center">{i + 1}</td>
+                        <td className="p-2.5 border-r border-slate-200">{addr.address || "-"}</td>
+                        <td className="p-2.5 border-r border-slate-200 font-bold">{addr.city}</td>
+                        <td className="p-2.5 border-r border-slate-200">{addr.state}</td>
+                        <td className="p-2">{addr.country || "India"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Overall Verdict */}
+          <div className={`mb-8 p-5 border-2 rounded-xl ${verdictBg} print-avoid-break`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-1">Overall Verdict</h3>
+                <p className={`text-lg font-extrabold ${verdictColor}`}>{verdictText}</p>
+                <p className="text-xs text-slate-600 mt-1 font-semibold">
+                  Searched {totalComplexes} court complex(es) across {results.length} district(s)
+                </p>
+                <p className="text-[10px] text-slate-500 mt-2 font-medium leading-relaxed max-w-[480px]">
+                  This report is generated through a secure verification process using the information provided by the candidate against records available on the eCourts India system for the period {fromYear}–{toYear}. The search is conducted in accordance with applicable Indian laws, including the Information Technology Act, 2000, and the Code of Civil Procedure, 1908.
+                </p>
+              </div>
+              <div className="flex-shrink-0 flex flex-col items-center gap-0.5 bg-white border border-slate-200/80 p-2 rounded-lg shadow-sm">
+                <img src="/ecourts-logo.png" alt="eCourts India" className="w-12 h-12 object-contain" />
+                <span className="text-[8px] font-extrabold uppercase text-[#1B365D] tracking-wider">Verified</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Detailed Results Per District/Address */}
-        {results.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-4">Search Results by District</h3>
+        {/* Page 2 Content Block */}
+        <div className="print-page-block print-break-before mt-6 print:mt-0">
+          {/* Detailed Results Per District/Address */}
+          {results.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-4">Search Results by District</h3>
 
             {results.map((result: any, rIdx: number) => {
               const validComplexes = (result.complexSearches || []).filter((cs: any) => !cs.error);
@@ -479,7 +569,7 @@ function AdminCourtRecordReportContent() {
         )}
 
         {/* Disclaimer */}
-        <div className="border-t-2 border-slate-200 pt-5 mt-8 text-[10px] text-slate-500 leading-relaxed print-avoid-break">
+        <div className="border-t-2 border-slate-200 pt-5 mt-8 text-[10px] text-slate-500 leading-relaxed print-avoid-break print:mt-auto">
           <p className="font-bold text-slate-700 mb-1 uppercase tracking-wider text-[9px]">Disclaimer</p>
           <p>
             This report is generated based on records available on the eCourts India portal using the search parameters provided and may include records relating to individuals with identical or similar names. The information is provided for informational purposes only and does not constitute legal verification or legal opinion. The report provider disclaims all liability arising from the use of or reliance upon this report, and independent verification is recommended before making any decision.
@@ -495,6 +585,7 @@ function AdminCourtRecordReportContent() {
             </div>
             <span className="text-[9px] text-slate-400 font-mono">Generated: {generatedAtDate}</span>
           </div>
+        </div>
         </div>
       </div>
     </div>

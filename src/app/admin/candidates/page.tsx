@@ -13,6 +13,14 @@ export default function CandidatesPage() {
   const [digilockerFilter, setDigilockerFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, orgFilter, statusFilter, digilockerFilter, typeFilter]);
+
   // Selected candidate for details drawer
   const [selectedCandidate, setSelectedCandidate] = useState<Verification | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<Verification | null>(null);
@@ -126,6 +134,12 @@ export default function CandidatesPage() {
 
     return matchesOrg && matchesStatus && matchesDigilocker && matchesType && matchesSearch;
   });
+
+  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage) || 1;
+  const paginatedCandidates = filteredCandidates.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   // Stats calculations
   const totalCount = verifications.length;
@@ -319,7 +333,7 @@ export default function CandidatesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredCandidates.map((c) => {
+                paginatedCandidates.map((c) => {
                   const isVerified = c.digilockerStatus === "Verified";
                   const hasAadhaar = !!c.digilockerAadhaar;
                   const hasPan = !!c.digilockerPan;
@@ -469,11 +483,10 @@ export default function CandidatesPage() {
             No candidates found matching your filters.
           </div>
         ) : (
-          filteredCandidates.map((c) => {
+          paginatedCandidates.map((c) => {
             const isVerified = c.digilockerStatus === "Verified";
             const hasAadhaar = !!c.digilockerAadhaar;
             const hasPan = !!c.digilockerPan;
-            const documentCount = c.digilockerDocuments?.length || 0;
             return (
               <div
                 key={c.id}
@@ -493,7 +506,7 @@ export default function CandidatesPage() {
                       </div>
                     ) : (
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] text-[#016e1c] border border-[#bfcab9]/30 flex items-center justify-center font-black text-sm shrink-0">
-                        {c.name.charAt(0).toUpperCase()}
+                        {c.name ? c.name.charAt(0).toUpperCase() : "C"}
                       </div>
                     )}
                     <div className="flex flex-col min-w-0">
@@ -515,7 +528,7 @@ export default function CandidatesPage() {
                 </div>
 
                 {/* Sub-label text description */}
-                 <div className="text-xs text-slate-500 leading-relaxed font-semibold">
+                <div className="text-xs text-slate-500 leading-relaxed font-semibold">
                   {c.type === "court_record"
                     ? (c.courtRecordSummary || "Court record search")
                     : c.type === "education"
@@ -528,20 +541,16 @@ export default function CandidatesPage() {
                 {/* Metadata Details Grid */}
                 <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 text-xs">
                   <div>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider">Client Org</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider font-semibold">Client Org</span>
                     <span className="font-semibold text-slate-700">{c.orgName}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider">Registration Date</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider font-semibold">Registration Date</span>
                     <span className="font-semibold text-slate-700">{c.date}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider">Identity Flow</span>
-                    {c.type === "employment" ? (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-blue-500/10 text-blue-700 border-blue-500/15 mt-1">
-                        Employment
-                      </span>
-                    ) : c.type === "court_record" ? (
+                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider font-semibold">Flow Type</span>
+                    {c.type === "court_record" ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-amber-500/10 text-amber-700 border-amber-500/15 mt-1">
                         Court Record
                       </span>
@@ -552,6 +561,10 @@ export default function CandidatesPage() {
                     ) : c.type === "interpol" ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-indigo-500/10 text-indigo-700 border-indigo-500/15 mt-1">
                         Interpol
+                      </span>
+                    ) : c.type === "employment" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-blue-500/10 text-blue-700 border-blue-500/15 mt-1">
+                        Employment
                       </span>
                     ) : isVerified ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-emerald-500/10 text-emerald-600 border-emerald-500/15 mt-1">
@@ -604,6 +617,58 @@ export default function CandidatesPage() {
           })
         )}
       </div>
+
+      {/* Pagination Controls Bar */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-[#016e1c]/12 rounded-2xl p-4 shadow-sm mt-4">
+          <div className="text-xs font-semibold text-slate-500">
+            Showing <span className="font-bold text-slate-900">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
+            <span className="font-bold text-slate-900">{Math.min(currentPage * itemsPerPage, filteredCandidates.length)}</span> of{" "}
+            <span className="font-bold text-slate-900">{filteredCandidates.length}</span> reports / candidates
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center gap-1"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+              <span>Previous</span>
+            </button>
+            <div className="flex items-center gap-1 px-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                .map((page, i, arr) => {
+                  const prevPage = arr[i - 1];
+                  const showDots = prevPage && page - prevPage > 1;
+                  return (
+                    <React.Fragment key={page}>
+                      {showDots && <span className="text-xs text-slate-400 font-bold px-1">...</span>}
+                      <button
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          currentPage === page
+                            ? "bg-[#016e1c] text-white shadow-xs"
+                            : "text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+            </div>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center gap-1"
+            >
+              <span>Next</span>
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Candidate Inspector Fullscreen Popup */}
       {selectedCandidate && (
@@ -925,12 +990,16 @@ export default function CandidatesPage() {
                         <span className={`font-body-sm font-bold ${
                           (displayCandidate.type === "employment" ? displayCandidate.employmentDataSubmitted : displayCandidate.educationDataSubmitted) ? "text-emerald-800" : "text-blue-800"
                         }`}>
-                          {displayCandidate.type === "employment"
+                          {displayCandidate.skipCandidateLogin
+                            ? "Direct Client Submission (No Candidate Login)"
+                            : displayCandidate.type === "employment"
                             ? (displayCandidate.employmentDataSubmitted ? "Employment Data Submitted by Candidate" : "Awaiting Candidate Submission")
                             : (displayCandidate.educationDataSubmitted ? "Education Data Submitted by Candidate" : "Awaiting Candidate Submission")}
                         </span>
                         <span className="text-[11px] text-slate-500 font-semibold mt-0.5">
-                          {displayCandidate.type === "employment"
+                          {displayCandidate.skipCandidateLogin
+                            ? "Candidate login creation was skipped by client during request initiation"
+                            : displayCandidate.type === "employment"
                             ? (displayCandidate.employmentDataSubmittedAt
                               ? `Submitted on ${new Date(displayCandidate.employmentDataSubmittedAt).toLocaleString("en-US", { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}`
                               : "Candidate has not yet filled the employment form")
@@ -1603,7 +1672,7 @@ export default function CandidatesPage() {
                         : displayCandidate.type === "education"
                         ? `/admin/education-report?id=${displayCandidate.id}`
                         : displayCandidate.type === "interpol"
-                        ? `/client/interpol-report?id=${displayCandidate.id}`
+                        ? `/admin/interpol-report?id=${displayCandidate.id}`
                         : `/admin/report?id=${displayCandidate.id}`;
                       window.open(reportPath, "_blank");
                     }}

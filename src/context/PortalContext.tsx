@@ -40,6 +40,7 @@ export interface Verification {
     notes?: string;
   }>;
   setupUrl?: string;
+  skipCandidateLogin?: boolean;
   // Generic verification attempts (works for all types)
   verificationAttempts?: Array<{
     date: string;

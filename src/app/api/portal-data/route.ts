@@ -354,6 +354,8 @@ export async function POST(req: NextRequest) {
           { 
             $set: { 
               sendToCustomer: true,
+              status: "Completed",
+              completedAt: new Date(),
               updatedAt: new Date()
             }
           }
@@ -1465,6 +1467,128 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ success: true });
+      }
+      case "delete_interpol_match":
+      case "deleteInterpolMatch": {
+        const { verificationId, matchIndex, noticeId, reason, deleteFromDatabase } = payload || {};
+        
+        if (!verificationId) {
+          return NextResponse.json({ error: "Verification ID is required" }, { status: 400 });
+        }
+
+        const verification = await db.collection("verifications").findOne({ id: verificationId });
+
+        if (!verification) {
+          return NextResponse.json({ error: "Verification record not found" }, { status: 404 });
+        }
+
+        let matches: any[] = Array.isArray(verification.interpolMatches) ? [...verification.interpolMatches] : [];
+
+        if (typeof matchIndex === "number" && matchIndex >= 0 && matchIndex < matches.length) {
+          matches.splice(matchIndex, 1);
+        } else if (noticeId) {
+          matches = matches.filter((m: any) => (m.noticeId || m.details?.entity_id) !== noticeId);
+        } else {
+          return NextResponse.json({ error: "Valid matchIndex or noticeId is required" }, { status: 400 });
+        }
+
+        const hasRecords = matches.length > 0;
+        const status = hasRecords ? "Needs Attention" : "Completed";
+        const reevalNote = reason?.trim() || "Reevaluated: Potential match cleared after manual admin review.";
+        const updatedNotes = hasRecords
+          ? `Potential match removed after reevaluation (${reevalNote}). ${matches.length} record(s) remaining.`
+          : `Reevaluated: All potential database match(es) cleared as false positive(s) (${reevalNote}).`;
+
+        const newAttempt = {
+          date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+          verifier: user?.email || "Admin",
+          status: status,
+          notes: `Match deleted after re-evaluation: ${reevalNote}`
+        };
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          {
+            $set: {
+              interpolMatches: matches,
+              interpolHasRecords: hasRecords,
+              status: status,
+              notes: updatedNotes,
+              updatedAt: new Date().toISOString()
+            },
+            $push: { attempts: newAttempt } as any
+          }
+        );
+
+        if (deleteFromDatabase && noticeId) {
+          try {
+            await db.collection("interpol_notices").deleteMany({
+              $or: [
+                { noticeId: noticeId },
+                { notice_id: noticeId },
+                { entity_id: noticeId },
+                { "details.entity_id": noticeId },
+                { "details.notice_id": noticeId }
+              ]
+            });
+
+            const fs = await import("fs");
+            const path = await import("path");
+            const dbPath = path.resolve(process.cwd(), "..", "database.json");
+            const altDbPath = path.resolve(process.cwd(), "database.json");
+            const targetDbPath = fs.existsSync(dbPath) ? dbPath : fs.existsSync(altDbPath) ? altDbPath : null;
+
+            if (targetDbPath) {
+              const raw = fs.readFileSync(targetDbPath, "utf-8");
+              const dbObj = JSON.parse(raw);
+              let modified = false;
+
+              if (Array.isArray(dbObj.red_notices)) {
+                const initLen = dbObj.red_notices.length;
+                dbObj.red_notices = dbObj.red_notices.filter((item: any) => item.notice_id !== noticeId && item.details?.entity_id !== noticeId);
+                if (dbObj.red_notices.length !== initLen) {
+                  dbObj.red_notices_count = dbObj.red_notices.length;
+                  modified = true;
+                }
+              }
+
+              if (Array.isArray(dbObj.yellow_notices)) {
+                const initLen = dbObj.yellow_notices.length;
+                dbObj.yellow_notices = dbObj.yellow_notices.filter((item: any) => item.notice_id !== noticeId && item.details?.entity_id !== noticeId);
+                if (dbObj.yellow_notices.length !== initLen) {
+                  dbObj.yellow_notices_count = dbObj.yellow_notices.length;
+                  modified = true;
+                }
+              }
+
+              if (modified) {
+                fs.writeFileSync(targetDbPath, JSON.stringify(dbObj, null, 4), "utf-8");
+              }
+            }
+          } catch (dbErr) {
+            console.error("[DATA] Error deleting notice from DB/file:", dbErr);
+          }
+        }
+
+        await logAuditEvent(db, {
+          actorUserId: user?.id || "admin",
+          actorEmail: user?.email || "admin",
+          actorRole: user?.role || "admin",
+          portal: "admin",
+          action: "delete_interpol_match",
+          targetType: "verification",
+          targetId: verificationId,
+          ip,
+          userAgent,
+          outcome: "success"
+        });
+
+        return NextResponse.json({ 
+          success: true, 
+          interpolMatches: matches, 
+          interpolHasRecords: hasRecords, 
+          status 
+        });
       }
       default:
         return NextResponse.json({ error: `Unsupported action: ${action}` }, { status: 400 });
