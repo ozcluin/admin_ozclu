@@ -295,6 +295,8 @@ function EducationReportContent() {
             <div className="space-y-1.5 text-xs">
               <div><span className="text-slate-500 font-semibold">Client Company:</span> <span className="font-bold text-slate-800">{verification.requestingOrgName || verification.orgName}</span></div>
               <div><span className="text-slate-500 font-semibold">Email:</span> <span className="font-semibold text-slate-800">{settings?.contactEmail || "contact@company.com"}</span></div>
+              <div><span className="text-slate-500 font-semibold">Checks Requested:</span> <span className="font-bold text-slate-800">{verification.itemCount || (verification.educationList?.length || 1)} Check(s)</span></div>
+              <div><span className="text-slate-500 font-semibold">Service Charge:</span> <span className="font-bold text-purple-800">${(verification.serviceCharge || (verification.itemCount || (verification.educationList?.length || 1)) * 5).toFixed(2)}</span></div>
             </div>
           </div>
         </div>

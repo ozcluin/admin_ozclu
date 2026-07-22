@@ -406,10 +406,16 @@ export async function POST(req: NextRequest) {
 
           if (org) {
             const verType = verification.type || "identity";
-            const rate = verType === "court_record"
+            const rate = verification.serviceCharge
+              ? verification.serviceCharge
+              : verType === "court_record"
               ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
               : verType === "interpol"
               ? (org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate)
+              : verType === "employment"
+              ? (verification.itemCount ? verification.itemCount * 5 : 5)
+              : verType === "education"
+              ? (verification.itemCount ? verification.itemCount * 5 : 5)
               : org.monthlyRate;
 
             if (rate) {
@@ -613,6 +619,136 @@ export async function POST(req: NextRequest) {
           });
         }
         break;
+      }
+      case "updateOrganisationServiceRates": {
+        const { orgId, updates } = payload;
+        await db.collection("organisations").updateOne(
+          { id: orgId },
+          { $set: updates }
+        );
+        return NextResponse.json({ success: true });
+      }
+
+      case "addEmploymentVerification": {
+        const { name, mobile, email, orgName, requestingOrgName, skipCandidateLogin, employments, country } = payload;
+        const selectedCountry = country || "India";
+        const validEmployments = Array.isArray(employments) ? employments.filter((e: any) => e.companyName && e.companyName.trim() !== "") : [];
+        const itemCount = validEmployments.length > 0 ? validEmployments.length : 1;
+
+        const defaultCountryRates: Record<string, number> = { Singapore: 15, Malaysia: 12, Philippines: 10, UAE: 20, India: 5 };
+        const orgDoc = await db.collection("organisations").findOne({
+          name: { $regex: new RegExp("^" + (orgName || "").replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") }
+        });
+        const perCheckRate = orgDoc?.employmentRates?.[selectedCountry] ?? (defaultCountryRates[selectedCountry] || 5);
+        const serviceCharge = itemCount * perCheckRate;
+
+        const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+
+        const maxDoc = await db.collection("verifications").find({ id: /^EMP-/ }).sort({ id: -1 }).limit(1).toArray();
+        let nextSeq = 1;
+        if (maxDoc.length > 0 && maxDoc[0].id) {
+          const match = maxDoc[0].id.match(/^EMP-(\d+)$/);
+          if (match) nextSeq = parseInt(match[1], 10) + 1;
+        }
+        const empId = `EMP-${String(nextSeq).padStart(4, "0")}`;
+
+        const newVerification: any = {
+          id: empId,
+          type: "employment",
+          name,
+          email,
+          candidateMobile: mobile,
+          orgName,
+          requestingOrgName: requestingOrgName || orgName,
+          date: dateStr,
+          status: "Processing",
+          assignedVerifier: null,
+          skipCandidateLogin: !!skipCandidateLogin,
+          country: selectedCountry,
+          perCheckRate,
+          itemCount,
+          serviceCharge,
+          employments: validEmployments,
+          createdAt: new Date().toISOString()
+        };
+
+        const insertRes = await db.collection("verifications").insertOne(newVerification);
+
+        if (requestingOrgName) {
+          const existingSettings = await db.collection("settings").findOne({ orgName });
+          const recentOrgs: string[] = existingSettings?.recentRequestingOrgs || [];
+          if (!recentOrgs.includes(requestingOrgName)) {
+            const updatedOrgs = [requestingOrgName, ...recentOrgs].slice(0, 10);
+            await db.collection("settings").updateOne(
+              { orgName },
+              { $set: { recentRequestingOrgs: updatedOrgs } },
+              { upsert: true }
+            );
+          }
+        }
+
+        return NextResponse.json({ success: true, verificationId: empId, dbId: insertRes.insertedId.toString() });
+      }
+
+      case "addEducationVerification": {
+        const { name, mobile, email, orgName, requestingOrgName, skipCandidateLogin, educationList, country } = payload;
+        const selectedCountry = country || "India";
+        const validEducation = Array.isArray(educationList) ? educationList.filter((e: any) => e.boardUniversity && e.boardUniversity.trim() !== "") : [];
+        const itemCount = validEducation.length > 0 ? validEducation.length : 1;
+
+        const defaultCountryRates: Record<string, number> = { Singapore: 15, Malaysia: 12, Philippines: 10, UAE: 20, India: 5 };
+        const orgDoc = await db.collection("organisations").findOne({
+          name: { $regex: new RegExp("^" + (orgName || "").replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") }
+        });
+        const perCheckRate = orgDoc?.educationRates?.[selectedCountry] ?? (defaultCountryRates[selectedCountry] || 5);
+        const serviceCharge = itemCount * perCheckRate;
+
+        const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+
+        const maxDoc = await db.collection("verifications").find({ id: /^EDU-/ }).sort({ id: -1 }).limit(1).toArray();
+        let nextSeq = 1;
+        if (maxDoc.length > 0 && maxDoc[0].id) {
+          const match = maxDoc[0].id.match(/^EDU-(\d+)$/);
+          if (match) nextSeq = parseInt(match[1], 10) + 1;
+        }
+        const eduId = `EDU-${String(nextSeq).padStart(4, "0")}`;
+
+        const newVerification: any = {
+          id: eduId,
+          type: "education",
+          name,
+          email,
+          candidateMobile: mobile,
+          orgName,
+          requestingOrgName: requestingOrgName || orgName,
+          date: dateStr,
+          status: "Processing",
+          assignedVerifier: null,
+          skipCandidateLogin: !!skipCandidateLogin,
+          country: selectedCountry,
+          perCheckRate,
+          itemCount,
+          serviceCharge,
+          educationList: validEducation,
+          createdAt: new Date().toISOString()
+        };
+
+        const insertRes = await db.collection("verifications").insertOne(newVerification);
+
+        if (requestingOrgName) {
+          const existingSettings = await db.collection("settings").findOne({ orgName });
+          const recentOrgs: string[] = existingSettings?.recentRequestingOrgs || [];
+          if (!recentOrgs.includes(requestingOrgName)) {
+            const updatedOrgs = [requestingOrgName, ...recentOrgs].slice(0, 10);
+            await db.collection("settings").updateOne(
+              { orgName },
+              { $set: { recentRequestingOrgs: updatedOrgs } },
+              { upsert: true }
+            );
+          }
+        }
+
+        return NextResponse.json({ success: true, verificationId: eduId, dbId: insertRes.insertedId.toString() });
       }
       case "setOrganisationOwner": {
         const { orgId, ownerName, ownerEmail, ownerPassword, maxVerifiers } = payload;

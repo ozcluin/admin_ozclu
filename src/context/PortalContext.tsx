@@ -62,7 +62,12 @@ export interface Verification {
   reportGeneratedAt?: string;
   reportGeneratedBy?: string;
   // Verification type & Interpol fields
-  type?: "identity" | "court_record" | "employment" | "education" | "interpol";
+  type?: "identity" | "court_record" | "employment" | "education" | "interpol" | "passport";
+  createdAt?: string;
+  itemCount?: number;
+  serviceCharge?: number;
+  employments?: Array<{ companyName: string; position: string; joiningYear?: string; leavingYear?: string; employeeCode?: string }>;
+  educationList?: Array<{ boardUniversity: string; courseName: string; passingYear?: string; rollNumber?: string }>;
   birthCity?: string;
   interpolHasRecords?: boolean;
   interpolMatches?: any[];
@@ -143,6 +148,7 @@ export interface Verification {
   };
   employmentDataSubmitted?: boolean;
   employmentDataSubmittedAt?: string;
+  pastOrganisations?: Array<Record<string, any>>;
   employmentAttempts?: Array<{
     date: string;
     verificationMode: string;
@@ -255,7 +261,18 @@ export interface Organisation {
   maxVerifiers?: number;
   identityEnabled?: boolean;
   courtRecordEnabled?: boolean;
+  employmentEnabled?: boolean;
+  educationEnabled?: boolean;
+  interpolEnabled?: boolean;
+  passportEnabled?: boolean;
+  identityRate?: number;
   courtRecordRate?: number;
+  employmentRate?: number;
+  educationRate?: number;
+  interpolRate?: number;
+  passportRate?: number;
+  employmentRates?: Record<string, number>;
+  educationRates?: Record<string, number>;
 }
 
 export interface CompanySettings {
@@ -287,6 +304,8 @@ interface PortalContextType {
   settings: CompanySettings;
   allSettings: CompanySettings[];
   addVerification: (name: string, email: string, orgName: string) => Promise<any>;
+  addEmploymentVerification: (name: string, mobile: string, email: string, orgName: string, requestingOrgName?: string, skipCandidateLogin?: boolean, employments?: Array<{ companyName: string; position: string; joiningYear?: string; leavingYear?: string; employeeCode?: string }>) => Promise<any>;
+  addEducationVerification: (name: string, mobile: string, email: string, orgName: string, requestingOrgName?: string, skipCandidateLogin?: boolean, educationList?: Array<{ boardUniversity: string; courseName: string; passingYear?: string; rollNumber?: string }>) => Promise<any>;
   updateSettings: (newSettings: CompanySettings) => Promise<void>;
   inviteVerifier: (name: string, email: string, org: string, password?: string, ratePerVerification?: number, organisationId?: string, designation?: string) => Promise<void>;
   updateVerifierRate: (verifierId: string, rate: number) => Promise<void>;
@@ -299,6 +318,7 @@ interface PortalContextType {
   updateVerificationStatus: (verificationId: string, status: "Completed" | "Processing" | "Needs Attention", notes?: string) => Promise<void>;
   addOrganisation: (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number, courtRecordRate?: number, identityEnabled?: boolean, courtRecordEnabled?: boolean) => Promise<void>;
   updateOrganisation: (id: string, updates: Partial<Organisation>) => Promise<void>;
+  updateOrganisationServiceRates: (orgId: string, updates: Partial<Organisation>) => Promise<void>;
   deleteOrganisation: (id: string) => Promise<void>;
   deactivateOrganisation: (id: string, invoiceOption: "keep" | "default") => Promise<void>;
   activateOrganisation: (id: string) => Promise<void>;
@@ -505,6 +525,64 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     fetchAllData();
     return null;
+  };
+
+  const addEmploymentVerification = async (
+    name: string,
+    mobile: string,
+    email: string,
+    orgName: string,
+    requestingOrgName?: string,
+    skipCandidateLogin?: boolean,
+    employments?: Array<any>,
+    country?: string
+  ) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "addEmploymentVerification",
+          payload: { name, mobile, email, orgName, requestingOrgName, skipCandidateLogin, employments, country: country || "India" }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit employment verification");
+      await fetchAllData();
+      return data;
+    } catch (err: any) {
+      console.error("Error in addEmploymentVerification:", err);
+      throw err;
+    }
+  };
+
+  const addEducationVerification = async (
+    name: string,
+    mobile: string,
+    email: string,
+    orgName: string,
+    requestingOrgName?: string,
+    skipCandidateLogin?: boolean,
+    educationList?: Array<any>,
+    country?: string
+  ) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "addEducationVerification",
+          payload: { name, mobile, email, orgName, requestingOrgName, skipCandidateLogin, educationList, country: country || "India" }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit education verification");
+      await fetchAllData();
+      return data;
+    } catch (err: any) {
+      console.error("Error in addEducationVerification:", err);
+      throw err;
+    }
   };
 
   const updateSettings = async (newSettings: CompanySettings) => {
@@ -785,6 +863,19 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error("Failed updating organisation:", err);
     }
     fetchAllData();
+  };
+
+  const updateOrganisationServiceRates = async (orgId: string, updates: Partial<Organisation>) => {
+    try {
+      await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateOrganisationServiceRates", payload: { orgId, updates } })
+      });
+    } catch (err) {
+      console.error("Failed updating organisation service rates:", err);
+    }
+    await fetchAllData();
   };
 
   const setOrganisationOwner = async (orgId: string, ownerName: string, ownerEmail: string, ownerPassword?: string, maxVerifiers?: number) => {
@@ -1185,6 +1276,8 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         settings,
         allSettings,
         addVerification,
+        addEmploymentVerification,
+        addEducationVerification,
         updateSettings,
         inviteVerifier,
         updateVerifierRate,
@@ -1197,6 +1290,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         updateVerificationStatus,
         addOrganisation,
         updateOrganisation,
+        updateOrganisationServiceRates,
         deleteOrganisation,
         deactivateOrganisation,
         activateOrganisation,

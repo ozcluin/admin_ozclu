@@ -68,8 +68,18 @@ export default function ManageInvoicesPage() {
   const [editingPlan, setEditingPlan] = useState(false);
   const [planRate, setPlanRate] = useState("");
   const [planCourtRate, setPlanCourtRate] = useState("");
+  const [planEmploymentRate, setPlanEmploymentRate] = useState("");
+  const [planEducationRate, setPlanEducationRate] = useState("");
+  const [planInterpolRate, setPlanInterpolRate] = useState("");
+  const [planPassportRate, setPlanPassportRate] = useState("");
+
   const [planIdentityEnabled, setPlanIdentityEnabled] = useState(true);
   const [planCourtEnabled, setPlanCourtEnabled] = useState(true);
+  const [planEmploymentEnabled, setPlanEmploymentEnabled] = useState(true);
+  const [planEducationEnabled, setPlanEducationEnabled] = useState(true);
+  const [planInterpolEnabled, setPlanInterpolEnabled] = useState(true);
+  const [planPassportEnabled, setPlanPassportEnabled] = useState(true);
+
   const [planSaving, setPlanSaving] = useState(false);
 
   // ── Verifier creation under org ──
@@ -396,11 +406,18 @@ export default function ManageInvoicesPage() {
 
   const openPlanEdit = (org: Organisation) => {
     setPlanRate(String(org.monthlyRate || 0));
-    // Check if courtRecordRate is custom, else default to monthlyRate
-    const customCourtRate = org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate;
-    setPlanCourtRate(String(customCourtRate || 0));
+    setPlanCourtRate(String(org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate));
+    setPlanEmploymentRate(String(org.employmentRate !== undefined ? org.employmentRate : 5));
+    setPlanEducationRate(String(org.educationRate !== undefined ? org.educationRate : 5));
+    setPlanInterpolRate(String(org.interpolRate !== undefined ? org.interpolRate : 10));
+    setPlanPassportRate(String(org.passportRate !== undefined ? org.passportRate : 8));
+
     setPlanIdentityEnabled(org.identityEnabled !== false);
     setPlanCourtEnabled(org.courtRecordEnabled !== false);
+    setPlanEmploymentEnabled(org.employmentEnabled !== false);
+    setPlanEducationEnabled(org.educationEnabled !== false);
+    setPlanInterpolEnabled(org.interpolEnabled !== false);
+    setPlanPassportEnabled(org.passportEnabled !== false);
     setEditingPlan(true);
   };
 
@@ -410,8 +427,17 @@ export default function ManageInvoicesPage() {
     await updateOrganisation(selectedOrgId, {
       monthlyRate: parseFloat(planRate) || 0,
       courtRecordRate: parseFloat(planCourtRate) || 0,
+      employmentRate: parseFloat(planEmploymentRate) || 0,
+      educationRate: parseFloat(planEducationRate) || 0,
+      interpolRate: parseFloat(planInterpolRate) || 0,
+      passportRate: parseFloat(planPassportRate) || 0,
+
       identityEnabled: planIdentityEnabled,
       courtRecordEnabled: planCourtEnabled,
+      employmentEnabled: planEmploymentEnabled,
+      educationEnabled: planEducationEnabled,
+      interpolEnabled: planInterpolEnabled,
+      passportEnabled: planPassportEnabled,
     });
     setEditingPlan(false);
     setPlanSaving(false);
@@ -703,7 +729,13 @@ export default function ManageInvoicesPage() {
                     const rate = verType === "court_record"
                       ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
                       : verType === "interpol"
-                      ? ((org as any).interpolRate !== undefined ? (org as any).interpolRate : org.monthlyRate)
+                      ? (org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate)
+                      : verType === "employment"
+                      ? (org.employmentRate !== undefined ? org.employmentRate : org.monthlyRate)
+                      : verType === "education"
+                      ? (org.educationRate !== undefined ? org.educationRate : org.monthlyRate)
+                      : verType === "passport"
+                      ? (org.passportRate !== undefined ? org.passportRate : org.monthlyRate)
                       : org.monthlyRate;
                     return sum + rate;
                   }, 0);
@@ -1122,7 +1154,13 @@ export default function ManageInvoicesPage() {
                     const rate = verType === "court_record"
                       ? (selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate)
                       : verType === "interpol"
-                      ? ((selectedOrg as any).interpolRate !== undefined ? (selectedOrg as any).interpolRate : selectedOrg.monthlyRate)
+                      ? (selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : selectedOrg.monthlyRate)
+                      : verType === "employment"
+                      ? (selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : selectedOrg.monthlyRate)
+                      : verType === "education"
+                      ? (selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : selectedOrg.monthlyRate)
+                      : verType === "passport"
+                      ? (selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : selectedOrg.monthlyRate)
                       : selectedOrg.monthlyRate;
                     return sum + rate;
                   }, 0);
@@ -1153,23 +1191,59 @@ export default function ManageInvoicesPage() {
                                   <span className="material-symbols-outlined text-[14px]">edit</span>
                                 </button>
                               </div>
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                              <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
                                     <span className={`w-2 h-2 rounded-full ${selectedOrg.identityEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                     Identity Check
                                   </span>
-                                  <span className="text-xs font-extrabold text-slate-900">
+                                  <span className="font-extrabold text-slate-900">
                                     {selectedOrg.identityEnabled !== false ? `$${selectedOrg.monthlyRate.toLocaleString("en-US")}` : "Disabled"}
                                   </span>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
                                     <span className={`w-2 h-2 rounded-full ${selectedOrg.courtRecordEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                     Court Check
                                   </span>
-                                  <span className="text-xs font-extrabold text-slate-900">
+                                  <span className="font-extrabold text-slate-900">
                                     {selectedOrg.courtRecordEnabled !== false ? `$${(selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate).toLocaleString("en-US")}` : "Disabled"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.employmentEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Employment Check
+                                  </span>
+                                  <span className="font-extrabold text-slate-900">
+                                    {selectedOrg.employmentEnabled !== false ? `$${(selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5).toLocaleString("en-US")}` : "Disabled"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.educationEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Education Check
+                                  </span>
+                                  <span className="font-extrabold text-slate-900">
+                                    {selectedOrg.educationEnabled !== false ? `$${(selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5).toLocaleString("en-US")}` : "Disabled"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.interpolEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Interpol Check
+                                  </span>
+                                  <span className="font-extrabold text-slate-900">
+                                    {selectedOrg.interpolEnabled !== false ? `$${(selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : 10).toLocaleString("en-US")}` : "Disabled"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.passportEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Passport Check
+                                  </span>
+                                  <span className="font-extrabold text-slate-900">
+                                    {selectedOrg.passportEnabled !== false ? `$${(selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8).toLocaleString("en-US")}` : "Disabled"}
                                   </span>
                                 </div>
                               </div>
@@ -1185,58 +1259,164 @@ export default function ManageInvoicesPage() {
                           <div className="flex flex-col gap-2.5 text-left flex-1 justify-between">
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className="material-symbols-outlined text-[16px] text-emerald-600 font-bold">payments</span>
-                              <span className="font-label-caps text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold">Configure Services</span>
+                              <span className="font-label-caps text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold">Configure 6 Services</span>
                             </div>
                             
-                            {/* Identity Check Toggle */}
-                            <div className="flex items-center justify-between">
-                              <label className="relative inline-flex items-center cursor-pointer select-none">
-                                <input
-                                  type="checkbox"
-                                  checked={planIdentityEnabled}
-                                  onChange={(e) => setPlanIdentityEnabled(e.target.checked)}
-                                  className="sr-only peer"
-                                />
-                                <div className="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
-                                <span className="ms-2 text-xs font-bold text-slate-700">Identity Check</span>
-                              </label>
-                              <div className="flex items-center gap-0.5">
-                                <span className="text-xs font-extrabold text-slate-400">$</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={planRate}
-                                  onChange={(e) => setPlanRate(e.target.value)}
-                                  disabled={!planIdentityEnabled}
-                                  className="w-14 border border-slate-200 rounded-lg p-1 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-xs text-center font-bold disabled:opacity-40"
-                                />
+                            <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                              {/* Identity Check Toggle */}
+                              <div className="flex items-center justify-between">
+                                <label className="relative inline-flex items-center cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={planIdentityEnabled}
+                                    onChange={(e) => setPlanIdentityEnabled(e.target.checked)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Identity Check</span>
+                                </label>
+                                <div className="flex items-center gap-0.5">
+                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={planRate}
+                                    onChange={(e) => setPlanRate(e.target.value)}
+                                    disabled={!planIdentityEnabled}
+                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                  />
+                                </div>
                               </div>
-                            </div>
 
-                            {/* Court Check Toggle */}
-                            <div className="flex items-center justify-between">
-                              <label className="relative inline-flex items-center cursor-pointer select-none">
-                                <input
-                                  type="checkbox"
-                                  checked={planCourtEnabled}
-                                  onChange={(e) => setPlanCourtEnabled(e.target.checked)}
-                                  className="sr-only peer"
-                                />
-                                <div className="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
-                                <span className="ms-2 text-xs font-bold text-slate-700">Court Check</span>
-                              </label>
-                              <div className="flex items-center gap-0.5">
-                                <span className="text-xs font-extrabold text-slate-400">$</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={planCourtRate}
-                                  onChange={(e) => setPlanCourtRate(e.target.value)}
-                                  disabled={!planCourtEnabled}
-                                  className="w-14 border border-slate-200 rounded-lg p-1 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-xs text-center font-bold disabled:opacity-40"
-                                />
+                              {/* Court Check Toggle */}
+                              <div className="flex items-center justify-between">
+                                <label className="relative inline-flex items-center cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={planCourtEnabled}
+                                    onChange={(e) => setPlanCourtEnabled(e.target.checked)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Court Check</span>
+                                </label>
+                                <div className="flex items-center gap-0.5">
+                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={planCourtRate}
+                                    onChange={(e) => setPlanCourtRate(e.target.value)}
+                                    disabled={!planCourtEnabled}
+                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Employment Check Toggle */}
+                              <div className="flex items-center justify-between">
+                                <label className="relative inline-flex items-center cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={planEmploymentEnabled}
+                                    onChange={(e) => setPlanEmploymentEnabled(e.target.checked)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Employment Check</span>
+                                </label>
+                                <div className="flex items-center gap-0.5">
+                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={planEmploymentRate}
+                                    onChange={(e) => setPlanEmploymentRate(e.target.value)}
+                                    disabled={!planEmploymentEnabled}
+                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Education Check Toggle */}
+                              <div className="flex items-center justify-between">
+                                <label className="relative inline-flex items-center cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={planEducationEnabled}
+                                    onChange={(e) => setPlanEducationEnabled(e.target.checked)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Education Check</span>
+                                </label>
+                                <div className="flex items-center gap-0.5">
+                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={planEducationRate}
+                                    onChange={(e) => setPlanEducationRate(e.target.value)}
+                                    disabled={!planEducationEnabled}
+                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Interpol Check Toggle */}
+                              <div className="flex items-center justify-between">
+                                <label className="relative inline-flex items-center cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={planInterpolEnabled}
+                                    onChange={(e) => setPlanInterpolEnabled(e.target.checked)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Interpol Check</span>
+                                </label>
+                                <div className="flex items-center gap-0.5">
+                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={planInterpolRate}
+                                    onChange={(e) => setPlanInterpolRate(e.target.value)}
+                                    disabled={!planInterpolEnabled}
+                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Passport Check Toggle */}
+                              <div className="flex items-center justify-between">
+                                <label className="relative inline-flex items-center cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={planPassportEnabled}
+                                    onChange={(e) => setPlanPassportEnabled(e.target.checked)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Passport Check</span>
+                                </label>
+                                <div className="flex items-center gap-0.5">
+                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={planPassportRate}
+                                    onChange={(e) => setPlanPassportRate(e.target.value)}
+                                    disabled={!planPassportEnabled}
+                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                  />
+                                </div>
                               </div>
                             </div>
 
@@ -2648,7 +2828,13 @@ export default function ManageInvoicesPage() {
                               const rowRate = verType === "court_record"
                                 ? (selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate)
                                 : verType === "interpol"
-                                ? ((selectedOrg as any).interpolRate !== undefined ? (selectedOrg as any).interpolRate : selectedOrg.monthlyRate)
+                                ? (selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : selectedOrg.monthlyRate)
+                                : verType === "employment"
+                                ? (selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : selectedOrg.monthlyRate)
+                                : verType === "education"
+                                ? (selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : selectedOrg.monthlyRate)
+                                : verType === "passport"
+                                ? (selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : selectedOrg.monthlyRate)
                                 : selectedOrg.monthlyRate;
                               return (
                                 <tr key={v.id}>

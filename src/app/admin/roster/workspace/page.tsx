@@ -667,6 +667,44 @@ function WorkspaceContent() {
               </div>
             )}
 
+            {/* Past Organisations (additional employment history) */}
+            {displayVerification.pastOrganisations && displayVerification.pastOrganisations.length > 1 && (
+              <div className="flex flex-col gap-2 mt-2">
+                <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5 select-none">
+                  <span className="material-symbols-outlined text-sm">domain_add</span>
+                  Additional Employment History ({displayVerification.pastOrganisations.length - 1} past organisation{displayVerification.pastOrganisations.length - 1 > 1 ? "s" : ""})
+                </h5>
+                {displayVerification.pastOrganisations.slice(1).map((org: any, idx: number) => (
+                  <div key={idx} className="border border-slate-100 rounded-xl overflow-hidden">
+                    <div className="bg-slate-50/50 p-2.5 flex items-center gap-2 border-b border-slate-100">
+                      <span className="material-symbols-outlined text-sm text-slate-400">business</span>
+                      <span className="font-bold text-xs text-slate-700">{org.companyName || `Organisation #${idx + 2}`}</span>
+                      {org.country && <span className="text-[10px] text-slate-400 ml-auto">{org.country}</span>}
+                    </div>
+                    <table className="w-full text-xs">
+                      <tbody>
+                        {org.companyName && (
+                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600 w-[40%]">Company</td><td className="p-2 font-bold">{org.companyName}</td></tr>
+                        )}
+                        {org.position && (
+                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600">Position</td><td className="p-2">{org.position}</td></tr>
+                        )}
+                        {org.department && (
+                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department</td><td className="p-2">{org.department}</td></tr>
+                        )}
+                        {(org.employmentPeriodFrom || org.employmentPeriodTo) && (
+                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600">Period</td><td className="p-2 font-mono">{org.employmentPeriodFrom || "-"} → {org.employmentPeriodTo || "Present"}</td></tr>
+                        )}
+                        {org.reasonForLeaving && (
+                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reason for Leaving</td><td className="p-2">{org.reasonForLeaving}</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Log Attempt Section */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">

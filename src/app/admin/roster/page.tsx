@@ -258,6 +258,7 @@ export default function VerificationRosterPage() {
             <option value="employment">Employment Check</option>
             <option value="education">Education Check</option>
             <option value="interpol">Interpol Check</option>
+            <option value="passport">Passport Check</option>
           </select>
         </div>
 
@@ -407,9 +408,11 @@ export default function VerificationRosterPage() {
                           ? "bg-purple-550/10 text-purple-700 border-purple-550/15"
                           : v.type === "interpol"
                           ? "bg-indigo-500/10 text-indigo-700 border-indigo-500/15"
+                          : (v.type as string) === "passport"
+                          ? "bg-sky-500/10 text-sky-700 border-sky-500/15"
                           : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                       }`}>
-                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : "Identity"}
+                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "passport" ? "Passport" : "Identity"}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-slate-800">
@@ -424,6 +427,8 @@ export default function VerificationRosterPage() {
                             ? ((v.educationData?.courseName && `${v.educationData.courseName} @ ${v.educationData.boardUniversity}`) || v.email)
                             : v.type === "interpol"
                             ? (v.interpolHasRecords ? `${v.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
+                            : (v.type as string) === "passport"
+                            ? `File No: ${(v as any).passportData?.fileNumber || "—"}`
                             : v.email}
                         </span>
                       </div>
