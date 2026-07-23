@@ -77,6 +77,7 @@ export default function ManageInvoicesPage() {
   const [planEducationRate, setPlanEducationRate] = useState("");
   const [planInterpolRate, setPlanInterpolRate] = useState("");
   const [planPassportRate, setPlanPassportRate] = useState("");
+  const [planDigitalAddressRate, setPlanDigitalAddressRate] = useState("");
 
   const [planEmploymentRates, setPlanEmploymentRates] = useState<Record<string, string>>({});
   const [planEducationRates, setPlanEducationRates] = useState<Record<string, string>>({});
@@ -94,6 +95,7 @@ export default function ManageInvoicesPage() {
   const [planEducationEnabled, setPlanEducationEnabled] = useState(true);
   const [planInterpolEnabled, setPlanInterpolEnabled] = useState(true);
   const [planPassportEnabled, setPlanPassportEnabled] = useState(true);
+  const [planDigitalAddressEnabled, setPlanDigitalAddressEnabled] = useState(true);
 
   const [planSaving, setPlanSaving] = useState(false);
 
@@ -430,6 +432,7 @@ export default function ManageInvoicesPage() {
     setPlanEducationRate(String(org.educationRate !== undefined ? org.educationRate : 5));
     setPlanInterpolRate(String(org.interpolRate !== undefined ? org.interpolRate : 10));
     setPlanPassportRate(String(org.passportRate !== undefined ? org.passportRate : 8));
+    setPlanDigitalAddressRate(String(org.digitalAddressRate !== undefined ? org.digitalAddressRate : 5));
 
     const defaultEmpRates: Record<string, string> = {
       Singapore: String(org.employmentRates?.["Singapore"] ?? 15),
@@ -460,6 +463,7 @@ export default function ManageInvoicesPage() {
     setPlanEducationEnabled(org.educationEnabled !== false);
     setPlanInterpolEnabled(org.interpolEnabled !== false);
     setPlanPassportEnabled(org.passportEnabled !== false);
+    setPlanDigitalAddressEnabled(org.digitalAddressEnabled !== false);
     setEditingPlan(true);
   };
 
@@ -486,6 +490,7 @@ export default function ManageInvoicesPage() {
       educationRate: parseFloat(planEducationRate) || 5,
       interpolRate: parseFloat(planInterpolRate) || 10,
       passportRate: parseFloat(planPassportRate) || 8,
+      digitalAddressRate: parseFloat(planDigitalAddressRate) || 5,
 
       employmentRates: parsedEmpRates,
       educationRates: parsedEduRates,
@@ -496,6 +501,7 @@ export default function ManageInvoicesPage() {
       educationEnabled: planEducationEnabled,
       interpolEnabled: planInterpolEnabled,
       passportEnabled: planPassportEnabled,
+      digitalAddressEnabled: planDigitalAddressEnabled,
     });
     setEditingPlan(false);
     setPlanSaving(false);
@@ -1446,6 +1452,15 @@ export default function ManageInvoicesPage() {
                                     {selectedOrg.passportEnabled !== false ? `$${(selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8).toLocaleString("en-US")}` : "Disabled"}
                                   </span>
                                 </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.digitalAddressEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Digital Address Check
+                                  </span>
+                                  <span className="font-extrabold text-slate-900">
+                                    {selectedOrg.digitalAddressEnabled !== false ? `$${(selectedOrg.digitalAddressRate !== undefined ? selectedOrg.digitalAddressRate : 5).toLocaleString("en-US")}` : "Disabled"}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
@@ -1459,7 +1474,7 @@ export default function ManageInvoicesPage() {
                           <div className="flex flex-col gap-2.5 text-left flex-1 justify-between">
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className="material-symbols-outlined text-[16px] text-emerald-600 font-bold">payments</span>
-                              <span className="font-label-caps text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold">Configure 6 Services</span>
+                              <span className="font-label-caps text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold">Configure 7 Services</span>
                             </div>
                             
                             <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
@@ -1684,6 +1699,32 @@ export default function ManageInvoicesPage() {
                                     value={planPassportRate}
                                     onChange={(e) => setPlanPassportRate(e.target.value)}
                                     disabled={!planPassportEnabled}
+                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Digital Address Check Toggle */}
+                              <div className="flex items-center justify-between">
+                                <label className="relative inline-flex items-center cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={planDigitalAddressEnabled}
+                                    onChange={(e) => setPlanDigitalAddressEnabled(e.target.checked)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Digital Address Check</span>
+                                </label>
+                                <div className="flex items-center gap-0.5">
+                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={planDigitalAddressRate}
+                                    onChange={(e) => setPlanDigitalAddressRate(e.target.value)}
+                                    disabled={!planDigitalAddressEnabled}
                                     className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
                                   />
                                 </div>

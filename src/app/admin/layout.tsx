@@ -94,6 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     pathname.includes("/admin/report") ||
     pathname.includes("/admin/passport-report") ||
     pathname.includes("/admin/court-record-report") ||
+    pathname.includes("/admin/digital-address-report") ||
     pathname.includes("/admin/employment-report") ||
     pathname.includes("/admin/education-report") ||
     pathname.includes("/admin/interpol-report")

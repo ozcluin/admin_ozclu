@@ -102,9 +102,11 @@ export default function VerificationRosterPage() {
     const matchesType = typeFilter === "all" ||
       (typeFilter === "employment" && v.type === "employment") ||
       (typeFilter === "education" && v.type === "education") ||
+      (typeFilter === "digital_address" && (v.type as string) === "digital_address") ||
       (typeFilter === "identity" && (!v.type || v.type === "identity")) ||
       (typeFilter === "court_record" && v.type === "court_record") ||
-      (typeFilter === "interpol" && v.type === "interpol");
+      (typeFilter === "interpol" && v.type === "interpol") ||
+      (typeFilter === "passport" && (v.type as string) === "passport");
     const matchesSearch =
       v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       v.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -253,6 +255,7 @@ export default function VerificationRosterPage() {
             className="w-full p-2.5 border border-slate-200/80 rounded-xl font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all cursor-pointer"
           >
             <option value="all">All Service Types</option>
+            <option value="digital_address">Digital Address Check</option>
             <option value="identity">Identity Verification</option>
             <option value="court_record">Court Record</option>
             <option value="employment">Employment Check</option>
@@ -410,9 +413,11 @@ export default function VerificationRosterPage() {
                           ? "bg-indigo-500/10 text-indigo-700 border-indigo-500/15"
                           : (v.type as string) === "passport"
                           ? "bg-sky-500/10 text-sky-700 border-sky-500/15"
+                          : (v.type as string) === "digital_address"
+                          ? "bg-cyan-500/10 text-cyan-700 border-cyan-500/15"
                           : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                       }`}>
-                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "passport" ? "Passport" : "Identity"}
+                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : "Identity"}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-slate-800">
@@ -429,6 +434,8 @@ export default function VerificationRosterPage() {
                             ? (v.interpolHasRecords ? `${v.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
                             : (v.type as string) === "passport"
                             ? `File No: ${(v as any).passportData?.fileNumber || "—"}`
+                            : (v.type as string) === "digital_address"
+                            ? `${(v as any).candidateAddress ? `${(v as any).candidateAddress} | ` : ""}${v.email}`
                             : v.email}
                         </span>
                       </div>
@@ -553,9 +560,13 @@ export default function VerificationRosterPage() {
                         ? "bg-purple-550/10 text-purple-700 border-purple-550/15"
                         : v.type === "interpol"
                         ? "bg-indigo-500/10 text-indigo-700 border-indigo-500/15"
+                        : (v.type as string) === "passport"
+                        ? "bg-sky-500/10 text-sky-700 border-sky-500/15"
+                        : (v.type as string) === "digital_address"
+                        ? "bg-cyan-500/10 text-cyan-700 border-cyan-500/15"
                         : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                     }`}>
-                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : "Identity"}
+                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : "Identity"}
                     </span>
                     <h4 className="font-bold text-slate-900 text-sm">{v.name}</h4>
                   </div>
@@ -568,6 +579,10 @@ export default function VerificationRosterPage() {
                       ? ((v.educationData?.courseName && `${v.educationData.courseName} @ ${v.educationData.boardUniversity}`) || v.email)
                       : v.type === "interpol"
                       ? (v.interpolHasRecords ? `${v.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
+                      : (v.type as string) === "passport"
+                      ? `File No: ${(v as any).passportData?.fileNumber || "—"}`
+                      : (v.type as string) === "digital_address"
+                      ? `${(v as any).candidateAddress ? `${(v as any).candidateAddress} | ` : ""}${v.email}`
                       : v.email}
                   </p>
                 </div>

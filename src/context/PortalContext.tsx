@@ -268,12 +268,14 @@ export interface Organisation {
   educationEnabled?: boolean;
   interpolEnabled?: boolean;
   passportEnabled?: boolean;
+  digitalAddressEnabled?: boolean;
   identityRate?: number;
   courtRecordRate?: number;
   employmentRate?: number;
   educationRate?: number;
   interpolRate?: number;
   passportRate?: number;
+  digitalAddressRate?: number;
   employmentRates?: Record<string, number>;
   educationRates?: Record<string, number>;
 }

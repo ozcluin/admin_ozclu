@@ -147,6 +147,8 @@ function WorkspaceContent() {
       ? `/admin/education-report?id=${displayVerification.id}`
       : displayVerification.type === "interpol"
       ? `/admin/interpol-report?id=${displayVerification.id}`
+      : (displayVerification.type as string) === "digital_address"
+      ? `/admin/digital-address-report?id=${displayVerification.id}`
       : `/admin/report?id=${displayVerification.id}`;
 
     // SAFARI COMPATIBILITY FIX:
