@@ -64,6 +64,8 @@ export interface Verification {
   // Verification type & Interpol fields
   type?: "identity" | "court_record" | "employment" | "education" | "interpol" | "passport";
   createdAt?: string;
+  country?: string;
+  perCheckRate?: number;
   itemCount?: number;
   serviceCharge?: number;
   employments?: Array<{ companyName: string; position: string; joiningYear?: string; leavingYear?: string; employeeCode?: string }>;
@@ -167,6 +169,7 @@ export interface Verification {
   }>;
   // Education Verification fields
   educationData?: {
+    country?: string;
     degreeType?: string;
     courseName?: string;
     boardUniversity?: string;
@@ -962,9 +965,40 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     let amount = 0;
     for (const v of matchingVerifications) {
       const verType = v.type || "identity";
-      const rate = verType === "court_record"
-        ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
-        : org.monthlyRate;
+      let rate: number;
+
+      if (v.serviceCharge !== undefined && v.serviceCharge !== null) {
+        // Use pre-computed serviceCharge from verification creation (already includes country rate × item count)
+        rate = v.serviceCharge;
+      } else if (verType === "court_record") {
+        rate = org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate;
+      } else if (verType === "employment") {
+        const c = v.country || v.employmentData?.country || "";
+        if (c && org.employmentRates && org.employmentRates[c] !== undefined) {
+          rate = org.employmentRates[c];
+        } else if (org.employmentRates?.["Default"] !== undefined) {
+          rate = org.employmentRates["Default"];
+        } else {
+          rate = org.employmentRate !== undefined ? org.employmentRate : 5;
+        }
+        rate = rate * (v.itemCount || 1);
+      } else if (verType === "education") {
+        const c = v.country || v.educationData?.country || "";
+        if (c && org.educationRates && org.educationRates[c] !== undefined) {
+          rate = org.educationRates[c];
+        } else if (org.educationRates?.["Default"] !== undefined) {
+          rate = org.educationRates["Default"];
+        } else {
+          rate = org.educationRate !== undefined ? org.educationRate : 5;
+        }
+        rate = rate * (v.itemCount || 1);
+      } else if (verType === "interpol") {
+        rate = org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate;
+      } else if (verType === "passport") {
+        rate = org.passportRate !== undefined ? org.passportRate : 8;
+      } else {
+        rate = org.monthlyRate;
+      }
       amount += rate;
     }
 

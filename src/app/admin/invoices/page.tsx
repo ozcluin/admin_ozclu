@@ -11,6 +11,11 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
+const STANDARD_RATE_COUNTRIES = [
+  "Singapore", "Malaysia", "Philippines", "UAE", "Saudi Arabia", "Qatar", "Kuwait", "Oman", "Bahrain", "India", "Default"
+];
+
+
 export default function ManageInvoicesPage() {
   const { user, profile } = useAuth();
   const {
@@ -72,6 +77,16 @@ export default function ManageInvoicesPage() {
   const [planEducationRate, setPlanEducationRate] = useState("");
   const [planInterpolRate, setPlanInterpolRate] = useState("");
   const [planPassportRate, setPlanPassportRate] = useState("");
+
+  const [planEmploymentRates, setPlanEmploymentRates] = useState<Record<string, string>>({});
+  const [planEducationRates, setPlanEducationRates] = useState<Record<string, string>>({});
+  const [showEmpCountryRatesView, setShowEmpCountryRatesView] = useState(false);
+  const [showEduCountryRatesView, setShowEduCountryRatesView] = useState(false);
+  const [showEmpCountryRatesEdit, setShowEmpCountryRatesEdit] = useState(false);
+  const [showEduCountryRatesEdit, setShowEduCountryRatesEdit] = useState(false);
+  const [inlineEditEmpRates, setInlineEditEmpRates] = useState<Record<string, string>>({});
+  const [inlineEditEduRates, setInlineEditEduRates] = useState<Record<string, string>>({});
+  const [inlineRateSaving, setInlineRateSaving] = useState<"emp" | "edu" | null>(null);
 
   const [planIdentityEnabled, setPlanIdentityEnabled] = useState(true);
   const [planCourtEnabled, setPlanCourtEnabled] = useState(true);
@@ -396,6 +411,10 @@ export default function ManageInvoicesPage() {
     setEditingPlan(false);
     setEditingEnterprise(false);
     setEditingOwner(false);
+    setShowEmpCountryRatesView(false);
+    setShowEduCountryRatesView(false);
+    setShowEmpCountryRatesEdit(false);
+    setShowEduCountryRatesEdit(false);
     // Preload payment fields
     setPayBankName(org.bankName || "");
     setPayAccountNumber(org.accountNumber || "");
@@ -412,6 +431,29 @@ export default function ManageInvoicesPage() {
     setPlanInterpolRate(String(org.interpolRate !== undefined ? org.interpolRate : 10));
     setPlanPassportRate(String(org.passportRate !== undefined ? org.passportRate : 8));
 
+    const defaultEmpRates: Record<string, string> = {
+      Singapore: String(org.employmentRates?.["Singapore"] ?? 15),
+      Malaysia: String(org.employmentRates?.["Malaysia"] ?? 12),
+      Philippines: String(org.employmentRates?.["Philippines"] ?? 10),
+      UAE: String(org.employmentRates?.["UAE"] ?? 20),
+      India: String(org.employmentRates?.["India"] ?? org.employmentRate ?? 5),
+      Default: String(org.employmentRates?.["Default"] ?? org.employmentRate ?? 5),
+      ...Object.fromEntries(Object.entries(org.employmentRates || {}).map(([k, v]) => [k, String(v)]))
+    };
+
+    const defaultEduRates: Record<string, string> = {
+      Singapore: String(org.educationRates?.["Singapore"] ?? 15),
+      Malaysia: String(org.educationRates?.["Malaysia"] ?? 12),
+      Philippines: String(org.educationRates?.["Philippines"] ?? 10),
+      UAE: String(org.educationRates?.["UAE"] ?? 20),
+      India: String(org.educationRates?.["India"] ?? org.educationRate ?? 5),
+      Default: String(org.educationRates?.["Default"] ?? org.educationRate ?? 5),
+      ...Object.fromEntries(Object.entries(org.educationRates || {}).map(([k, v]) => [k, String(v)]))
+    };
+
+    setPlanEmploymentRates(defaultEmpRates);
+    setPlanEducationRates(defaultEduRates);
+
     setPlanIdentityEnabled(org.identityEnabled !== false);
     setPlanCourtEnabled(org.courtRecordEnabled !== false);
     setPlanEmploymentEnabled(org.employmentEnabled !== false);
@@ -424,13 +466,29 @@ export default function ManageInvoicesPage() {
   const handleSavePlan = async () => {
     if (!selectedOrgId) return;
     setPlanSaving(true);
+
+    const parsedEmpRates: Record<string, number> = {};
+    Object.entries(planEmploymentRates).forEach(([k, v]) => {
+      const num = parseFloat(v);
+      if (!isNaN(num)) parsedEmpRates[k] = num;
+    });
+
+    const parsedEduRates: Record<string, number> = {};
+    Object.entries(planEducationRates).forEach(([k, v]) => {
+      const num = parseFloat(v);
+      if (!isNaN(num)) parsedEduRates[k] = num;
+    });
+
     await updateOrganisation(selectedOrgId, {
       monthlyRate: parseFloat(planRate) || 0,
       courtRecordRate: parseFloat(planCourtRate) || 0,
-      employmentRate: parseFloat(planEmploymentRate) || 0,
-      educationRate: parseFloat(planEducationRate) || 0,
-      interpolRate: parseFloat(planInterpolRate) || 0,
-      passportRate: parseFloat(planPassportRate) || 0,
+      employmentRate: parseFloat(planEmploymentRate) || 5,
+      educationRate: parseFloat(planEducationRate) || 5,
+      interpolRate: parseFloat(planInterpolRate) || 10,
+      passportRate: parseFloat(planPassportRate) || 8,
+
+      employmentRates: parsedEmpRates,
+      educationRates: parsedEduRates,
 
       identityEnabled: planIdentityEnabled,
       courtRecordEnabled: planCourtEnabled,
@@ -441,6 +499,23 @@ export default function ManageInvoicesPage() {
     });
     setEditingPlan(false);
     setPlanSaving(false);
+  };
+
+  // Quick inline save for country rates from view mode
+  const handleSaveInlineRates = async (type: "emp" | "edu") => {
+    if (!selectedOrgId) return;
+    setInlineRateSaving(type);
+    const rateMap = type === "emp" ? inlineEditEmpRates : inlineEditEduRates;
+    const parsedRates: Record<string, number> = {};
+    Object.entries(rateMap).forEach(([k, v]) => {
+      const num = parseFloat(v);
+      if (!isNaN(num)) parsedRates[k] = num;
+    });
+    const updates: Record<string, any> = type === "emp"
+      ? { employmentRates: parsedRates }
+      : { educationRates: parsedRates };
+    await updateOrganisation(selectedOrgId, updates);
+    setInlineRateSaving(null);
   };
 
   const openEnterpriseEdit = (orgSettings: any) => {
@@ -1020,7 +1095,7 @@ export default function ManageInvoicesPage() {
           onClick={() => setSelectedOrgId(null)}
         >
           <div
-            className="bg-white border border-[#016e1c]/12 rounded-3xl shadow-3xl w-full max-w-6xl h-[85vh] max-h-[85vh] overflow-hidden flex flex-col"
+            className="bg-white border border-[#016e1c]/12 rounded-3xl shadow-3xl w-full max-w-[92vw] lg:max-w-[1400px] h-[90vh] max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Detail Header */}
@@ -1156,11 +1231,21 @@ export default function ManageInvoicesPage() {
                       : verType === "interpol"
                       ? (selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : selectedOrg.monthlyRate)
                       : verType === "employment"
-                      ? (selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : selectedOrg.monthlyRate)
+                      ? (() => {
+                          const c = v.country || v.employmentData?.country || v.addresses?.[0]?.country || "";
+                          if (c && selectedOrg.employmentRates && selectedOrg.employmentRates[c] !== undefined) return selectedOrg.employmentRates[c];
+                          if (selectedOrg.employmentRates?.["Default"] !== undefined) return selectedOrg.employmentRates["Default"];
+                          return selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5;
+                        })()
                       : verType === "education"
-                      ? (selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : selectedOrg.monthlyRate)
+                      ? (() => {
+                          const c = v.country || v.educationData?.country || v.addresses?.[0]?.country || "";
+                          if (c && selectedOrg.educationRates && selectedOrg.educationRates[c] !== undefined) return selectedOrg.educationRates[c];
+                          if (selectedOrg.educationRates?.["Default"] !== undefined) return selectedOrg.educationRates["Default"];
+                          return selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5;
+                        })()
                       : verType === "passport"
-                      ? (selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : selectedOrg.monthlyRate)
+                      ? (selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8)
                       : selectedOrg.monthlyRate;
                     return sum + rate;
                   }, 0);
@@ -1191,7 +1276,7 @@ export default function ManageInvoicesPage() {
                                   <span className="material-symbols-outlined text-[14px]">edit</span>
                                 </button>
                               </div>
-                              <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                              <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="font-bold text-slate-700 flex items-center gap-1.5">
                                     <span className={`w-2 h-2 rounded-full ${selectedOrg.identityEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
@@ -1201,6 +1286,7 @@ export default function ManageInvoicesPage() {
                                     {selectedOrg.identityEnabled !== false ? `$${selectedOrg.monthlyRate.toLocaleString("en-US")}` : "Disabled"}
                                   </span>
                                 </div>
+
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="font-bold text-slate-700 flex items-center gap-1.5">
                                     <span className={`w-2 h-2 rounded-full ${selectedOrg.courtRecordEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
@@ -1210,24 +1296,138 @@ export default function ManageInvoicesPage() {
                                     {selectedOrg.courtRecordEnabled !== false ? `$${(selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate).toLocaleString("en-US")}` : "Disabled"}
                                   </span>
                                 </div>
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.employmentEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
-                                    Employment Check
-                                  </span>
-                                  <span className="font-extrabold text-slate-900">
-                                    {selectedOrg.employmentEnabled !== false ? `$${(selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5).toLocaleString("en-US")}` : "Disabled"}
-                                  </span>
+
+                                {/* Employment Check in View Mode */}
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                                      <span className={`w-2 h-2 rounded-full ${selectedOrg.employmentEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                      Employment Check
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      {selectedOrg.employmentEnabled !== false && (
+                                        <button
+                                          onClick={() => {
+                                            const opening = !showEmpCountryRatesView;
+                                            setShowEmpCountryRatesView(opening);
+                                            if (opening) {
+                                              // Initialize inline edit values from current org data
+                                              const defaultMap: Record<string, number> = { Singapore: 15, Malaysia: 12, Philippines: 10, UAE: 20, India: selectedOrg.employmentRate ?? 5, Default: selectedOrg.employmentRate ?? 5 };
+                                              const initRates: Record<string, string> = {};
+                                              STANDARD_RATE_COUNTRIES.forEach(c => {
+                                                initRates[c] = String(selectedOrg.employmentRates?.[c] ?? defaultMap[c] ?? 5);
+                                              });
+                                              setInlineEditEmpRates(initRates);
+                                            }
+                                          }}
+                                          className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border border-emerald-200/60 flex items-center gap-0.5"
+                                        >
+                                          <span>Country Rates</span>
+                                          <span className="material-symbols-outlined text-[10px] font-bold">{showEmpCountryRatesView ? "expand_less" : "expand_more"}</span>
+                                        </button>
+                                      )}
+                                      <span className="font-extrabold text-slate-900">
+                                        {selectedOrg.employmentEnabled !== false ? `$${(selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5).toLocaleString("en-US")}` : "Disabled"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {showEmpCountryRatesView && selectedOrg.employmentEnabled !== false && (
+                                    <div className="bg-slate-100/70 rounded-xl p-2.5 border border-slate-200/50 my-1 animate-fade-in text-[10px]">
+                                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                                        {STANDARD_RATE_COUNTRIES.map((cntry) => (
+                                          <div key={cntry} className="flex items-center justify-between text-slate-600 font-medium">
+                                            <span>{cntry}:</span>
+                                            <div className="flex items-center gap-0.5">
+                                              <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                              <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={inlineEditEmpRates[cntry] ?? ""}
+                                                onChange={(e) => setInlineEditEmpRates(prev => ({ ...prev, [cntry]: e.target.value }))}
+                                                className="w-11 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+                                              />
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <button
+                                        onClick={() => handleSaveInlineRates("emp")}
+                                        disabled={inlineRateSaving === "emp"}
+                                        className="mt-2 w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[9px] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm"
+                                      >
+                                        <span className="material-symbols-outlined text-[12px]">save</span>
+                                        {inlineRateSaving === "emp" ? "Saving..." : "Save Employment Rates"}
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.educationEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
-                                    Education Check
-                                  </span>
-                                  <span className="font-extrabold text-slate-900">
-                                    {selectedOrg.educationEnabled !== false ? `$${(selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5).toLocaleString("en-US")}` : "Disabled"}
-                                  </span>
+
+                                {/* Education Check in View Mode */}
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                                      <span className={`w-2 h-2 rounded-full ${selectedOrg.educationEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                      Education Check
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      {selectedOrg.educationEnabled !== false && (
+                                        <button
+                                          onClick={() => {
+                                            const opening = !showEduCountryRatesView;
+                                            setShowEduCountryRatesView(opening);
+                                            if (opening) {
+                                              const defaultMap: Record<string, number> = { Singapore: 15, Malaysia: 12, Philippines: 10, UAE: 20, India: selectedOrg.educationRate ?? 5, Default: selectedOrg.educationRate ?? 5 };
+                                              const initRates: Record<string, string> = {};
+                                              STANDARD_RATE_COUNTRIES.forEach(c => {
+                                                initRates[c] = String(selectedOrg.educationRates?.[c] ?? defaultMap[c] ?? 5);
+                                              });
+                                              setInlineEditEduRates(initRates);
+                                            }
+                                          }}
+                                          className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border border-emerald-200/60 flex items-center gap-0.5"
+                                        >
+                                          <span>Country Rates</span>
+                                          <span className="material-symbols-outlined text-[10px] font-bold">{showEduCountryRatesView ? "expand_less" : "expand_more"}</span>
+                                        </button>
+                                      )}
+                                      <span className="font-extrabold text-slate-900">
+                                        {selectedOrg.educationEnabled !== false ? `$${(selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5).toLocaleString("en-US")}` : "Disabled"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {showEduCountryRatesView && selectedOrg.educationEnabled !== false && (
+                                    <div className="bg-slate-100/70 rounded-xl p-2.5 border border-slate-200/50 my-1 animate-fade-in text-[10px]">
+                                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                                        {STANDARD_RATE_COUNTRIES.map((cntry) => (
+                                          <div key={cntry} className="flex items-center justify-between text-slate-600 font-medium">
+                                            <span>{cntry}:</span>
+                                            <div className="flex items-center gap-0.5">
+                                              <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                              <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={inlineEditEduRates[cntry] ?? ""}
+                                                onChange={(e) => setInlineEditEduRates(prev => ({ ...prev, [cntry]: e.target.value }))}
+                                                className="w-11 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+                                              />
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <button
+                                        onClick={() => handleSaveInlineRates("edu")}
+                                        disabled={inlineRateSaving === "edu"}
+                                        className="mt-2 w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[9px] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm"
+                                      >
+                                        <span className="material-symbols-outlined text-[12px]">save</span>
+                                        {inlineRateSaving === "edu" ? "Saving..." : "Save Education Rates"}
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
+
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="font-bold text-slate-700 flex items-center gap-1.5">
                                     <span className={`w-2 h-2 rounded-full ${selectedOrg.interpolEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
@@ -1262,7 +1462,7 @@ export default function ManageInvoicesPage() {
                               <span className="font-label-caps text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold">Configure 6 Services</span>
                             </div>
                             
-                            <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                            <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
                               {/* Identity Check Toggle */}
                               <div className="flex items-center justify-between">
                                 <label className="relative inline-flex items-center cursor-pointer select-none">
@@ -1315,56 +1515,126 @@ export default function ManageInvoicesPage() {
                                 </div>
                               </div>
 
-                              {/* Employment Check Toggle */}
-                              <div className="flex items-center justify-between">
-                                <label className="relative inline-flex items-center cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={planEmploymentEnabled}
-                                    onChange={(e) => setPlanEmploymentEnabled(e.target.checked)}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Employment Check</span>
-                                </label>
-                                <div className="flex items-center gap-0.5">
-                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={planEmploymentRate}
-                                    onChange={(e) => setPlanEmploymentRate(e.target.value)}
-                                    disabled={!planEmploymentEnabled}
-                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                  />
+                              {/* Employment Check Toggle in Edit Mode */}
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center justify-between">
+                                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                                    <input
+                                      type="checkbox"
+                                      checked={planEmploymentEnabled}
+                                      onChange={(e) => setPlanEmploymentEnabled(e.target.checked)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    <span className="ms-1.5 text-[11px] font-bold text-slate-700">Employment Check</span>
+                                  </label>
+                                  <div className="flex items-center gap-1">
+                                    {planEmploymentEnabled && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setShowEmpCountryRatesEdit(!showEmpCountryRatesEdit)}
+                                        className="text-[9px] text-emerald-700 hover:bg-emerald-50 px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border border-emerald-200/60 flex items-center gap-0.5"
+                                      >
+                                        <span>Country Rates</span>
+                                        <span className="material-symbols-outlined text-[10px] font-bold">{showEmpCountryRatesEdit ? "expand_less" : "expand_more"}</span>
+                                      </button>
+                                    )}
+                                    <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={planEmploymentRate}
+                                      onChange={(e) => setPlanEmploymentRate(e.target.value)}
+                                      disabled={!planEmploymentEnabled}
+                                      className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                    />
+                                  </div>
                                 </div>
+                                {showEmpCountryRatesEdit && planEmploymentEnabled && (
+                                  <div className="bg-slate-100/80 p-2.5 rounded-xl border border-slate-200/70 my-1 animate-fade-in">
+                                    <p className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">Employment Rates per Country ($ USD)</p>
+                                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                                      {STANDARD_RATE_COUNTRIES.map((cntry) => (
+                                        <div key={cntry} className="flex items-center justify-between text-[10px]">
+                                          <span className="font-semibold text-slate-700">{cntry}:</span>
+                                          <div className="flex items-center gap-0.5">
+                                            <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={planEmploymentRates[cntry] ?? ""}
+                                              onChange={(e) => setPlanEmploymentRates(prev => ({ ...prev, [cntry]: e.target.value }))}
+                                              className="w-11 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold"
+                                            />
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
 
-                              {/* Education Check Toggle */}
-                              <div className="flex items-center justify-between">
-                                <label className="relative inline-flex items-center cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={planEducationEnabled}
-                                    onChange={(e) => setPlanEducationEnabled(e.target.checked)}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Education Check</span>
-                                </label>
-                                <div className="flex items-center gap-0.5">
-                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={planEducationRate}
-                                    onChange={(e) => setPlanEducationRate(e.target.value)}
-                                    disabled={!planEducationEnabled}
-                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                  />
+                              {/* Education Check Toggle in Edit Mode */}
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center justify-between">
+                                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                                    <input
+                                      type="checkbox"
+                                      checked={planEducationEnabled}
+                                      onChange={(e) => setPlanEducationEnabled(e.target.checked)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    <span className="ms-1.5 text-[11px] font-bold text-slate-700">Education Check</span>
+                                  </label>
+                                  <div className="flex items-center gap-1">
+                                    {planEducationEnabled && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setShowEduCountryRatesEdit(!showEduCountryRatesEdit)}
+                                        className="text-[9px] text-emerald-700 hover:bg-emerald-50 px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border border-emerald-200/60 flex items-center gap-0.5"
+                                      >
+                                        <span>Country Rates</span>
+                                        <span className="material-symbols-outlined text-[10px] font-bold">{showEduCountryRatesEdit ? "expand_less" : "expand_more"}</span>
+                                      </button>
+                                    )}
+                                    <span className="text-[11px] font-extrabold text-slate-400">$</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={planEducationRate}
+                                      onChange={(e) => setPlanEducationRate(e.target.value)}
+                                      disabled={!planEducationEnabled}
+                                      className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                    />
+                                  </div>
                                 </div>
+                                {showEduCountryRatesEdit && planEducationEnabled && (
+                                  <div className="bg-slate-100/80 p-2.5 rounded-xl border border-slate-200/70 my-1 animate-fade-in">
+                                    <p className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">Education Rates per Country ($ USD)</p>
+                                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                                      {STANDARD_RATE_COUNTRIES.map((cntry) => (
+                                        <div key={cntry} className="flex items-center justify-between text-[10px]">
+                                          <span className="font-semibold text-slate-700">{cntry}:</span>
+                                          <div className="flex items-center gap-0.5">
+                                            <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={planEducationRates[cntry] ?? ""}
+                                              onChange={(e) => setPlanEducationRates(prev => ({ ...prev, [cntry]: e.target.value }))}
+                                              className="w-11 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold"
+                                            />
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Interpol Check Toggle */}

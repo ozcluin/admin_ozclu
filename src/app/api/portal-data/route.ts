@@ -406,17 +406,38 @@ export async function POST(req: NextRequest) {
 
           if (org) {
             const verType = verification.type || "identity";
-            const rate = verification.serviceCharge
-              ? verification.serviceCharge
-              : verType === "court_record"
-              ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
-              : verType === "interpol"
-              ? (org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate)
-              : verType === "employment"
-              ? (verification.itemCount ? verification.itemCount * 5 : 5)
-              : verType === "education"
-              ? (verification.itemCount ? verification.itemCount * 5 : 5)
-              : org.monthlyRate;
+            let rate = 0;
+            if (verification.serviceCharge) {
+              rate = verification.serviceCharge;
+            } else if (verType === "court_record") {
+              rate = org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate;
+            } else if (verType === "interpol") {
+              rate = org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate;
+            } else if (verType === "passport") {
+              rate = org.passportRate !== undefined ? org.passportRate : 8;
+            } else if (verType === "employment") {
+              const c = verification.country || verification.employmentData?.country || "";
+              if (c && org.employmentRates && org.employmentRates[c] !== undefined) {
+                rate = org.employmentRates[c];
+              } else if (org.employmentRates?.["Default"] !== undefined) {
+                rate = org.employmentRates["Default"];
+              } else {
+                rate = org.employmentRate !== undefined ? org.employmentRate : 5;
+              }
+              rate = rate * (verification.itemCount || 1);
+            } else if (verType === "education") {
+              const c = verification.country || verification.educationData?.country || "";
+              if (c && org.educationRates && org.educationRates[c] !== undefined) {
+                rate = org.educationRates[c];
+              } else if (org.educationRates?.["Default"] !== undefined) {
+                rate = org.educationRates["Default"];
+              } else {
+                rate = org.educationRate !== undefined ? org.educationRate : 5;
+              }
+              rate = rate * (verification.itemCount || 1);
+            } else {
+              rate = org.monthlyRate;
+            }
 
             if (rate) {
               const now = new Date();
