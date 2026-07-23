@@ -786,28 +786,46 @@ export default function ManageInvoicesPage() {
                 const nowVal = new Date();
                 const currentMonthName = nowVal.toLocaleDateString("en-US", { month: "long" });
                 const currentYear = nowVal.getFullYear();
-                const hasCurrentMonthInvoice = orgInvs.some(
-                  (inv) => inv.month?.toLowerCase() === currentMonthName.toLowerCase() && inv.year === currentYear
+                const orgVers = verifications.filter(
+                  (v) => v.orgName.toLowerCase() === org.name.toLowerCase()
                 );
+                const currentMonthCompleted = orgVers.filter((v) => {
+                  const isCompleted = v.status === "Completed" || v.courtRecordStatus === "completed" || (v as any).sendToCustomer;
+                  if (!isCompleted) return false;
+                  if ((v as any).invoiced === true || (v as any).invoiceId) return false;
 
-                let liveTotal = 0;
-                if (!hasCurrentMonthInvoice) {
-                  const orgVers = verifications.filter(
-                    (v) => v.orgName.toLowerCase() === org.name.toLowerCase()
-                  );
-                  const currentMonthCompleted = orgVers.filter((v) => {
-                    if (v.status !== "Completed" && v.courtRecordStatus !== "completed" && !(v as any).sendToCustomer) return false;
-                    try {
-                      const rawDate = v.completedAt || v.date || v.createdAt;
-                      if (!rawDate) return false;
-                      const d = new Date(rawDate);
-                      if (isNaN(d.getTime())) return false;
-                      return d.getMonth() === nowVal.getMonth() && d.getFullYear() === currentYear;
-                    } catch {
-                      return false;
+                  try {
+                    const rawDate = v.completedAt || v.date || v.createdAt;
+                    if (!rawDate) return true;
+                    const vDate = new Date(rawDate);
+                    if (isNaN(vDate.getTime())) return true;
+
+                    const mName = vDate.toLocaleDateString("en-US", { month: "long" }).toLowerCase();
+                    const yVal = vDate.getFullYear();
+
+                    const matchingInvoice = orgInvs.find(
+                      (inv) => {
+                        const invMonth = inv.month?.toLowerCase();
+                        return invMonth === mName && inv.year === yVal && (inv as any).isDeleted !== true;
+                      }
+                    );
+
+                    if (!matchingInvoice) return true;
+
+                    const invRawDate = (matchingInvoice as any).createdAt || matchingInvoice.date;
+                    if (invRawDate) {
+                      const invDate = new Date(invRawDate);
+                      if (!isNaN(invDate.getTime())) {
+                        return vDate.getTime() > invDate.getTime();
+                      }
                     }
-                  });
-                  liveTotal = currentMonthCompleted.reduce((sum, v) => {
+                    return false;
+                  } catch {
+                    return true;
+                  }
+                });
+
+                const liveTotal = currentMonthCompleted.reduce((sum, v) => {
                     if ((v as any).price !== undefined && (v as any).price !== null) {
                       return sum + Number((v as any).price);
                     }
@@ -844,7 +862,6 @@ export default function ManageInvoicesPage() {
                     }
                     return sum + rate;
                   }, 0);
-                }
                 const totalDues = unpaid + liveTotal;
 
                 return (
@@ -1233,30 +1250,47 @@ export default function ManageInvoicesPage() {
                 const currentYear = nowVal.getFullYear();
 
                 // Only count live verifications if NO invoice exists for the current month
-                const hasCurrentMonthInvoice = orgInvoices.some(
-                  (inv) => inv.month?.toLowerCase() === currentMonthName.toLowerCase() && inv.year === currentYear
+                const orgVers = verifications.filter(
+                  (v) => v.orgName.toLowerCase() === selectedOrg.name.toLowerCase()
                 );
+                const currentMonthCompleted = orgVers.filter((v) => {
+                  const isCompleted = v.status === "Completed" || v.courtRecordStatus === "completed" || (v as any).sendToCustomer;
+                  if (!isCompleted) return false;
+                  if ((v as any).invoiced === true || (v as any).invoiceId) return false;
 
-                let completedCount = 0;
-                let liveTotal = 0;
-                if (!hasCurrentMonthInvoice) {
-                  const orgVers = verifications.filter(
-                    (v) => v.orgName.toLowerCase() === selectedOrg.name.toLowerCase()
-                  );
-                  const currentMonthCompleted = orgVers.filter((v) => {
-                    if (v.status !== "Completed" && v.courtRecordStatus !== "completed" && !(v as any).sendToCustomer) return false;
-                    try {
-                      const rawDate = v.completedAt || v.date || v.createdAt;
-                      if (!rawDate) return false;
-                      const d = new Date(rawDate);
-                      if (isNaN(d.getTime())) return false;
-                      return d.getMonth() === nowVal.getMonth() && d.getFullYear() === currentYear;
-                    } catch {
-                      return false;
+                  try {
+                    const rawDate = v.completedAt || v.date || v.createdAt;
+                    if (!rawDate) return true;
+                    const vDate = new Date(rawDate);
+                    if (isNaN(vDate.getTime())) return true;
+
+                    const mName = vDate.toLocaleDateString("en-US", { month: "long" }).toLowerCase();
+                    const yVal = vDate.getFullYear();
+
+                    const matchingInvoice = orgInvoices.find(
+                      (inv) => {
+                        const invMonth = inv.month?.toLowerCase();
+                        return invMonth === mName && inv.year === yVal && (inv as any).isDeleted !== true;
+                      }
+                    );
+
+                    if (!matchingInvoice) return true;
+
+                    const invRawDate = (matchingInvoice as any).createdAt || matchingInvoice.date;
+                    if (invRawDate) {
+                      const invDate = new Date(invRawDate);
+                      if (!isNaN(invDate.getTime())) {
+                        return vDate.getTime() > invDate.getTime();
+                      }
                     }
-                  });
-                  completedCount = currentMonthCompleted.length;
-                  liveTotal = currentMonthCompleted.reduce((sum, v) => {
+                    return false;
+                  } catch {
+                    return true;
+                  }
+                });
+
+                const completedCount = currentMonthCompleted.length;
+                const liveTotal = currentMonthCompleted.reduce((sum, v) => {
                     if ((v as any).price !== undefined && (v as any).price !== null) {
                       return sum + Number((v as any).price);
                     }
@@ -1293,7 +1327,6 @@ export default function ManageInvoicesPage() {
                     }
                     return sum + rate;
                   }, 0);
-                }
                 const totalDues = orgUnpaidBalance + liveTotal;
 
                 const orgSettings = allSettings.find(
