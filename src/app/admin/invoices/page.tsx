@@ -796,28 +796,52 @@ export default function ManageInvoicesPage() {
                     (v) => v.orgName.toLowerCase() === org.name.toLowerCase()
                   );
                   const currentMonthCompleted = orgVers.filter((v) => {
-                    if (v.status !== "Completed") return false;
+                    if (v.status !== "Completed" && v.courtRecordStatus !== "completed" && !(v as any).sendToCustomer) return false;
                     try {
-                      const d = new Date(v.completedAt || v.date);
+                      const rawDate = v.completedAt || v.date || v.createdAt;
+                      if (!rawDate) return false;
+                      const d = new Date(rawDate);
                       if (isNaN(d.getTime())) return false;
-                      return d.getMonth() === nowVal.getMonth() && d.getFullYear() === nowVal.getFullYear();
+                      return d.getMonth() === nowVal.getMonth() && d.getFullYear() === currentYear;
                     } catch {
                       return false;
                     }
                   });
                   liveTotal = currentMonthCompleted.reduce((sum, v) => {
-                    const verType = v.type || "identity";
-                    const rate = verType === "court_record"
-                      ? (org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate)
-                      : verType === "interpol"
-                      ? (org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate)
-                      : verType === "employment"
-                      ? (org.employmentRate !== undefined ? org.employmentRate : org.monthlyRate)
-                      : verType === "education"
-                      ? (org.educationRate !== undefined ? org.educationRate : org.monthlyRate)
-                      : verType === "passport"
-                      ? (org.passportRate !== undefined ? org.passportRate : org.monthlyRate)
-                      : org.monthlyRate;
+                    if ((v as any).price !== undefined && (v as any).price !== null) {
+                      return sum + Number((v as any).price);
+                    }
+                    const verType = (v.type as string) || "identity";
+                    let rate = 1;
+                    if (verType === "court_record") {
+                      rate = org.courtRecordRate !== undefined ? org.courtRecordRate : 12;
+                    } else if (verType === "interpol") {
+                      rate = org.interpolRate !== undefined ? org.interpolRate : 10;
+                    } else if (verType === "passport") {
+                      rate = org.passportRate !== undefined ? org.passportRate : 8;
+                    } else if (verType === "digital_address") {
+                      rate = org.digitalAddressRate !== undefined ? org.digitalAddressRate : 5;
+                    } else if (verType === "employment") {
+                      const c = v.country || (v as any).employmentData?.country || (v as any).addresses?.[0]?.country || "";
+                      if (c && org.employmentRates && org.employmentRates[c] !== undefined) {
+                        rate = org.employmentRates[c];
+                      } else if (org.employmentRates?.["Default"] !== undefined) {
+                        rate = org.employmentRates["Default"];
+                      } else {
+                        rate = org.employmentRate !== undefined ? org.employmentRate : 5;
+                      }
+                    } else if (verType === "education") {
+                      const c = v.country || (v as any).educationData?.country || (v as any).addresses?.[0]?.country || "";
+                      if (c && org.educationRates && org.educationRates[c] !== undefined) {
+                        rate = org.educationRates[c];
+                      } else if (org.educationRates?.["Default"] !== undefined) {
+                        rate = org.educationRates["Default"];
+                      } else {
+                        rate = org.educationRate !== undefined ? org.educationRate : 5;
+                      }
+                    } else {
+                      rate = org.identityRate !== undefined ? org.identityRate : 1;
+                    }
                     return sum + rate;
                   }, 0);
                 }
@@ -1220,9 +1244,11 @@ export default function ManageInvoicesPage() {
                     (v) => v.orgName.toLowerCase() === selectedOrg.name.toLowerCase()
                   );
                   const currentMonthCompleted = orgVers.filter((v) => {
-                    if (v.status !== "Completed") return false;
+                    if (v.status !== "Completed" && v.courtRecordStatus !== "completed" && !(v as any).sendToCustomer) return false;
                     try {
-                      const d = new Date(v.completedAt || v.date);
+                      const rawDate = v.completedAt || v.date || v.createdAt;
+                      if (!rawDate) return false;
+                      const d = new Date(rawDate);
                       if (isNaN(d.getTime())) return false;
                       return d.getMonth() === nowVal.getMonth() && d.getFullYear() === currentYear;
                     } catch {
@@ -1231,28 +1257,40 @@ export default function ManageInvoicesPage() {
                   });
                   completedCount = currentMonthCompleted.length;
                   liveTotal = currentMonthCompleted.reduce((sum, v) => {
-                    const verType = v.type || "identity";
-                    const rate = verType === "court_record"
-                      ? (selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate)
-                      : verType === "interpol"
-                      ? (selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : selectedOrg.monthlyRate)
-                      : verType === "employment"
-                      ? (() => {
-                          const c = v.country || v.employmentData?.country || v.addresses?.[0]?.country || "";
-                          if (c && selectedOrg.employmentRates && selectedOrg.employmentRates[c] !== undefined) return selectedOrg.employmentRates[c];
-                          if (selectedOrg.employmentRates?.["Default"] !== undefined) return selectedOrg.employmentRates["Default"];
-                          return selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5;
-                        })()
-                      : verType === "education"
-                      ? (() => {
-                          const c = v.country || v.educationData?.country || v.addresses?.[0]?.country || "";
-                          if (c && selectedOrg.educationRates && selectedOrg.educationRates[c] !== undefined) return selectedOrg.educationRates[c];
-                          if (selectedOrg.educationRates?.["Default"] !== undefined) return selectedOrg.educationRates["Default"];
-                          return selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5;
-                        })()
-                      : verType === "passport"
-                      ? (selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8)
-                      : selectedOrg.monthlyRate;
+                    if ((v as any).price !== undefined && (v as any).price !== null) {
+                      return sum + Number((v as any).price);
+                    }
+                    const verType = (v.type as string) || "identity";
+                    let rate = 1;
+                    if (verType === "court_record") {
+                      rate = selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : 12;
+                    } else if (verType === "interpol") {
+                      rate = selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : 10;
+                    } else if (verType === "passport") {
+                      rate = selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8;
+                    } else if (verType === "digital_address") {
+                      rate = selectedOrg.digitalAddressRate !== undefined ? selectedOrg.digitalAddressRate : 5;
+                    } else if (verType === "employment") {
+                      const c = v.country || (v as any).employmentData?.country || (v as any).addresses?.[0]?.country || "";
+                      if (c && selectedOrg.employmentRates && selectedOrg.employmentRates[c] !== undefined) {
+                        rate = selectedOrg.employmentRates[c];
+                      } else if (selectedOrg.employmentRates?.["Default"] !== undefined) {
+                        rate = selectedOrg.employmentRates["Default"];
+                      } else {
+                        rate = selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5;
+                      }
+                    } else if (verType === "education") {
+                      const c = v.country || (v as any).educationData?.country || (v as any).addresses?.[0]?.country || "";
+                      if (c && selectedOrg.educationRates && selectedOrg.educationRates[c] !== undefined) {
+                        rate = selectedOrg.educationRates[c];
+                      } else if (selectedOrg.educationRates?.["Default"] !== undefined) {
+                        rate = selectedOrg.educationRates["Default"];
+                      } else {
+                        rate = selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5;
+                      }
+                    } else {
+                      rate = selectedOrg.identityRate !== undefined ? selectedOrg.identityRate : 1;
+                    }
                     return sum + rate;
                   }, 0);
                 }
