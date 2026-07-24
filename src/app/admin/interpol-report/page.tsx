@@ -403,10 +403,6 @@ function AdminInterpolReportContent() {
               <div className="text-emerald-700">STATUS: <span className="text-emerald-700 font-extrabold">PASSED</span></div>
               <div className="text-slate-700">ISSUED BY: <span className="text-[#1e3a8a] font-extrabold">OZCLU VERIFY</span></div>
             </div>
-
-            <div className="absolute -bottom-6 -right-6 opacity-15 pointer-events-none">
-              <img src="/Notice-removebg-preview.png" alt="Notice Authority Seal" className="h-32 object-contain" />
-            </div>
           </div>
         )}
 

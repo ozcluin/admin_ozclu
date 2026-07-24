@@ -652,7 +652,6 @@ export async function POST(req: NextRequest) {
 
       case "addEmploymentVerification": {
         const { name, mobile, email, orgName, requestingOrgName, skipCandidateLogin, employments, country } = payload;
-        const selectedCountry = country || "India";
         const validEmployments = Array.isArray(employments) ? employments.filter((e: any) => e.companyName && e.companyName.trim() !== "") : [];
         const itemCount = validEmployments.length > 0 ? validEmployments.length : 1;
 
@@ -660,8 +659,22 @@ export async function POST(req: NextRequest) {
         const orgDoc = await db.collection("organisations").findOne({
           name: { $regex: new RegExp("^" + (orgName || "").replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") }
         });
-        const perCheckRate = orgDoc?.employmentRates?.[selectedCountry] ?? (defaultCountryRates[selectedCountry] || 5);
-        const serviceCharge = itemCount * perCheckRate;
+
+        const employmentsWithCountry = validEmployments.map((e: any) => ({
+          ...e,
+          country: e.country || country || "India"
+        }));
+
+        const serviceCharge = employmentsWithCountry.length > 0
+          ? employmentsWithCountry.reduce((sum: number, e: any) => {
+              const itemCountry = e.country || "India";
+              const rate = orgDoc?.employmentRates?.[itemCountry] ?? (defaultCountryRates[itemCountry] || 5);
+              return sum + rate;
+            }, 0)
+          : (orgDoc?.employmentRates?.[country || "India"] ?? (defaultCountryRates[country || "India"] || 5));
+
+        const countriesList = [...new Set(employmentsWithCountry.map((e: any) => e.country))];
+        const selectedCountry = countriesList.join(", ") || country || "India";
 
         const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 
@@ -686,10 +699,9 @@ export async function POST(req: NextRequest) {
           assignedVerifier: null,
           skipCandidateLogin: !!skipCandidateLogin,
           country: selectedCountry,
-          perCheckRate,
           itemCount,
           serviceCharge,
-          employments: validEmployments,
+          employments: employmentsWithCountry,
           createdAt: new Date().toISOString()
         };
 
@@ -713,7 +725,6 @@ export async function POST(req: NextRequest) {
 
       case "addEducationVerification": {
         const { name, mobile, email, orgName, requestingOrgName, skipCandidateLogin, educationList, country } = payload;
-        const selectedCountry = country || "India";
         const validEducation = Array.isArray(educationList) ? educationList.filter((e: any) => e.boardUniversity && e.boardUniversity.trim() !== "") : [];
         const itemCount = validEducation.length > 0 ? validEducation.length : 1;
 
@@ -721,8 +732,22 @@ export async function POST(req: NextRequest) {
         const orgDoc = await db.collection("organisations").findOne({
           name: { $regex: new RegExp("^" + (orgName || "").replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") }
         });
-        const perCheckRate = orgDoc?.educationRates?.[selectedCountry] ?? (defaultCountryRates[selectedCountry] || 5);
-        const serviceCharge = itemCount * perCheckRate;
+
+        const educationWithCountry = validEducation.map((e: any) => ({
+          ...e,
+          country: e.country || country || "India"
+        }));
+
+        const serviceCharge = educationWithCountry.length > 0
+          ? educationWithCountry.reduce((sum: number, e: any) => {
+              const itemCountry = e.country || "India";
+              const rate = orgDoc?.educationRates?.[itemCountry] ?? (defaultCountryRates[itemCountry] || 5);
+              return sum + rate;
+            }, 0)
+          : (orgDoc?.educationRates?.[country || "India"] ?? (defaultCountryRates[country || "India"] || 5));
+
+        const countriesList = [...new Set(educationWithCountry.map((e: any) => e.country))];
+        const selectedCountry = countriesList.join(", ") || country || "India";
 
         const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 
@@ -747,10 +772,9 @@ export async function POST(req: NextRequest) {
           assignedVerifier: null,
           skipCandidateLogin: !!skipCandidateLogin,
           country: selectedCountry,
-          perCheckRate,
           itemCount,
           serviceCharge,
-          educationList: validEducation,
+          educationList: educationWithCountry,
           createdAt: new Date().toISOString()
         };
 
