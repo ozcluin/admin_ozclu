@@ -795,6 +795,131 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, verificationId: eduId, dbId: insertRes.insertedId.toString() });
       }
+      case "submitEmploymentData": {
+        const { verificationId, employmentData } = payload;
+        if (!verificationId || !employmentData) {
+          return NextResponse.json({ error: "Verification ID and employment data are required" }, { status: 400 });
+        }
+
+        const existingVer = await db.collection("verifications").findOne({ id: verificationId });
+        if (!existingVer) {
+          return NextResponse.json({ error: "Verification request not found" }, { status: 404 });
+        }
+
+        const submittedEmployments = Array.isArray(employmentData.employments) && employmentData.employments.length > 0
+          ? employmentData.employments
+          : (Array.isArray(employmentData.pastOrganisations) && employmentData.pastOrganisations.length > 0
+              ? employmentData.pastOrganisations
+              : [employmentData]);
+
+        const validEmps = submittedEmployments.filter((e: any) => e?.companyName?.trim() || e?.position?.trim());
+        const itemCount = validEmps.length > 0 ? validEmps.length : 1;
+
+        const defaultCountryRates: Record<string, number> = { Singapore: 15, Malaysia: 12, Philippines: 10, UAE: 20, India: 5 };
+        const safeOrgName = existingVer.orgName;
+        const orgDoc = await db.collection("organisations").findOne({
+          name: { $regex: new RegExp("^" + (safeOrgName || "").replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") }
+        });
+
+        const serviceCharge = (validEmps.length > 0 ? validEmps : [employmentData]).reduce((sum: number, e: any) => {
+          const itemCountry = e.country || "India";
+          const rate = orgDoc?.employmentRates?.[itemCountry] ?? (defaultCountryRates[itemCountry] || 5);
+          return sum + rate;
+        }, 0);
+
+        const countriesList = [...new Set((validEmps.length > 0 ? validEmps : [employmentData]).map((e: any) => e.country || "India"))];
+        const country = countriesList.join(", ");
+
+        const result = await db.collection("verifications").updateOne(
+          { id: verificationId },
+          {
+            $set: {
+              employmentData: {
+                country: employmentData.country || "",
+                state: employmentData.state || "",
+                city: employmentData.city || "",
+                companyName: employmentData.companyName || "",
+                addressLine1: employmentData.addressLine1 || "",
+                addressLine2: employmentData.addressLine2 || "",
+                companyTelephoneCode: employmentData.companyTelephoneCode || "+91",
+                companyTelephone: employmentData.companyTelephone || "",
+                department: employmentData.department || "",
+                position: employmentData.position || "",
+                employmentPeriodFrom: employmentData.employmentPeriodFrom || "",
+                employmentPeriodTo: employmentData.employmentPeriodTo || "",
+                employeeCode: employmentData.employeeCode || "",
+                reportingManagerName: employmentData.reportingManagerName || "",
+                reportingManagerDepartment: employmentData.reportingManagerDepartment || "",
+                reportingManagerContactCode: employmentData.reportingManagerContactCode || "+91",
+                reportingManagerContact: employmentData.reportingManagerContact || "",
+                reportingManagerEmail: employmentData.reportingManagerEmail || "",
+                annualCTC: employmentData.annualCTC || "",
+                employmentType: employmentData.employmentType || "",
+                agencyDetails: employmentData.agencyDetails || "",
+                reasonForLeaving: employmentData.reasonForLeaving || "",
+                remarks: employmentData.remarks || "",
+                experienceLetterFile: employmentData.experienceLetterFile || "",
+                experienceLetterFileName: employmentData.experienceLetterFileName || "",
+              },
+              ...(Array.isArray(employmentData.pastOrganisations) ? { pastOrganisations: employmentData.pastOrganisations } : {}),
+              ...(Array.isArray(employmentData.employments) ? { employments: employmentData.employments } : {}),
+              itemCount,
+              serviceCharge,
+              country,
+              employmentDataSubmitted: true,
+              employmentDataSubmittedAt: new Date().toISOString(),
+              updatedAt: new Date()
+            }
+          }
+        );
+        return NextResponse.json({ success: true });
+      }
+      case "submitEducationData": {
+        const { verificationId, educationData } = payload;
+        if (!verificationId || !educationData) {
+          return NextResponse.json({ error: "Verification ID and education data are required" }, { status: 400 });
+        }
+
+        const existingVer = await db.collection("verifications").findOne({ id: verificationId });
+        if (!existingVer) {
+          return NextResponse.json({ error: "Verification request not found" }, { status: 404 });
+        }
+
+        const defaultCountryRates: Record<string, number> = { Singapore: 15, Malaysia: 12, Philippines: 10, UAE: 20, India: 5 };
+        const safeOrgName = existingVer.orgName;
+        const orgDoc = await db.collection("organisations").findOne({
+          name: { $regex: new RegExp("^" + (safeOrgName || "").replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") }
+        });
+
+        const itemCountry = educationData.country || "India";
+        const serviceCharge = orgDoc?.educationRates?.[itemCountry] ?? (defaultCountryRates[itemCountry] || 5);
+        const country = itemCountry;
+
+        const result = await db.collection("verifications").updateOne(
+          { id: verificationId },
+          {
+            $set: {
+              educationData: {
+                country: educationData.country || "",
+                degreeType: educationData.degreeType || "",
+                courseName: educationData.courseName || "",
+                boardUniversity: educationData.boardUniversity || "",
+                institutionName: educationData.institutionName || "",
+                rollNumber: educationData.rollNumber || "",
+                passingYear: educationData.passingYear || "",
+                certificateFile: educationData.certificateFile || "",
+                certificateFileName: educationData.certificateFileName || "",
+              },
+              serviceCharge,
+              country,
+              educationDataSubmitted: true,
+              educationDataSubmittedAt: new Date().toISOString(),
+              updatedAt: new Date()
+            }
+          }
+        );
+        return NextResponse.json({ success: true });
+      }
       case "setOrganisationOwner": {
         const { orgId, ownerName, ownerEmail, ownerPassword, maxVerifiers } = payload;
         
