@@ -496,6 +496,55 @@ function EducationReportContent() {
             </div>
           );
         })()}
+        {/* Appendix: Degree / Marksheet / Certificate Attachment */}
+        {(() => {
+          const certs: Array<{ file: string; name: string; course: string }> = [];
+          if (verification?.educationData?.certificateFile) {
+            certs.push({
+              file: verification.educationData.certificateFile,
+              name: verification.educationData.certificateFileName || "Degree / Marksheet / Certificate",
+              course: verification.educationData.courseName || verification.educationData.boardUniversity || "Declared Academic Credential"
+            });
+          }
+          if (Array.isArray(verification?.educationList)) {
+            verification.educationList.forEach((edu: any, idx: number) => {
+              if (edu.certificateFile && !certs.some(c => c.file === edu.certificateFile)) {
+                certs.push({
+                  file: edu.certificateFile,
+                  name: edu.certificateFileName || `Degree Certificate #${idx + 1}`,
+                  course: edu.courseName || edu.boardUniversity || `Credential #${idx + 1}`
+                });
+              }
+            });
+          }
+          if (certs.length === 0) return null;
+          return (
+            <div className="print-page-block print-break-before mt-6 print:mt-0 border-t border-slate-200 pt-6">
+              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#5b21b6] mb-4">
+                Appendix: Degree / Marksheet / Certificate Attachment
+              </h3>
+              <div className="space-y-6">
+                {certs.map((certItem, idx) => (
+                  <div key={idx} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 print-avoid-break">
+                    <div className="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
+                      <span className="text-[10px] font-bold text-[#5b21b6] uppercase tracking-wider">
+                        Attachment #{idx + 1}: {certItem.name}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-500">{certItem.course}</span>
+                    </div>
+                    <div className="flex justify-center bg-white border border-slate-200 rounded-lg p-2 overflow-hidden">
+                      {certItem.file.startsWith("data:application/pdf") ? (
+                        <iframe src={certItem.file} className="w-full h-[600px] border-0 rounded" title={certItem.name} />
+                      ) : (
+                        <img src={certItem.file} alt={certItem.name} className="object-contain max-h-[600px] w-full" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
