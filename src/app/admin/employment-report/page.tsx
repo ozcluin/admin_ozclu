@@ -524,6 +524,67 @@ function EmploymentReportContent() {
             </div>
           );
         })()}
+
+        {/* Appendix: Relieving / Experience Letter */}
+        {(() => {
+          const letters: Array<{ file: string; name: string; org: string }> = [];
+          if (verification?.employmentData?.experienceLetterFile) {
+            letters.push({
+              file: verification.employmentData.experienceLetterFile,
+              name: verification.employmentData.experienceLetterFileName || "Relieving / Experience Letter",
+              org: verification.employmentData.companyName || "Declared Employer"
+            });
+          }
+          if (Array.isArray(verification?.employments)) {
+            verification.employments.forEach((emp: any, idx: number) => {
+              if (emp.experienceLetterFile && !letters.some(l => l.file === emp.experienceLetterFile)) {
+                letters.push({
+                  file: emp.experienceLetterFile,
+                  name: emp.experienceLetterFileName || `Relieving Letter #${idx + 1}`,
+                  org: emp.companyName || `Organisation #${idx + 1}`
+                });
+              }
+            });
+          }
+          if (Array.isArray(verification?.pastOrganisations)) {
+            verification.pastOrganisations.forEach((emp: any, idx: number) => {
+              if (emp.experienceLetterFile && !letters.some(l => l.file === emp.experienceLetterFile)) {
+                letters.push({
+                  file: emp.experienceLetterFile,
+                  name: emp.experienceLetterFileName || `Relieving Letter #${idx + 1}`,
+                  org: emp.companyName || `Organisation #${idx + 1}`
+                });
+              }
+            });
+          }
+          if (letters.length === 0) return null;
+          return (
+            <div className="print-page-block print-break-before mt-6 print:mt-0 border-t border-slate-200 pt-6">
+              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#00450e] mb-4">
+                Appendix: Relieving / Experience Letter
+              </h3>
+              <div className="space-y-6">
+                {letters.map((letItem, idx) => (
+                  <div key={idx} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 print-avoid-break">
+                    <div className="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
+                      <span className="text-[10px] font-bold text-[#00450e] uppercase tracking-wider">
+                        Attachment #{idx + 1}: {letItem.name}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-500">{letItem.org}</span>
+                    </div>
+                    <div className="flex justify-center bg-white border border-slate-200 rounded-lg p-2 overflow-hidden">
+                      {letItem.file.startsWith("data:application/pdf") ? (
+                        <iframe src={letItem.file} className="w-full h-[600px] border-0 rounded" title={letItem.name} />
+                      ) : (
+                        <img src={letItem.file} alt={letItem.name} className="object-contain max-h-[600px] w-full" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
