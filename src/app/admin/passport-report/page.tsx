@@ -312,6 +312,35 @@ function AdminPassportReportContent() {
           </div>
 
         </div>
+
+        {/* Appendix: ID Proof Attachment */}
+        {(() => {
+          const file = verification?.idProofFile || verification?.passportData?.idProofFile;
+          const fileName = verification?.idProofFileName || verification?.passportData?.idProofFileName || "Passport ID Proof";
+          if (!file) return null;
+          return (
+            <div className="print-page-block print-break-before mt-8 border-t border-slate-200 pt-6">
+              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-4">
+                Appendix: ID Proof Attachment
+              </h3>
+              <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 print-avoid-break">
+                <div className="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
+                  <span className="text-[10px] font-bold text-[#1B365D] uppercase tracking-wider">
+                    Attachment: {fileName}
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-500">Candidate Submitted ID Proof</span>
+                </div>
+                <div className="flex justify-center bg-white border border-slate-200 rounded-lg p-2 overflow-hidden">
+                  {file.startsWith("data:application/pdf") ? (
+                    <iframe src={file} className="w-full h-[600px] border-0 rounded" title={fileName} />
+                  ) : (
+                    <img src={file} alt={fileName} className="object-contain max-h-[600px] w-full" />
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
