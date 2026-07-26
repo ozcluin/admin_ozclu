@@ -11,7 +11,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isLoading, logout, profile, user } = useAuth();
-  const { verifications } = usePortal();
+  const { verifications, suggestions } = usePortal();
+  const pendingSuggestionsCount = (suggestions || []).filter(s => s.status === "Pending").length;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissedNotifs, setDismissedNotifs] = useState<Set<string>>(new Set());
@@ -67,6 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Verification Roster", path: "/admin/roster", icon: "assignment" },
     { name: "Candidate Database", path: "/admin/candidates", icon: "folder_shared" },
     { name: "Manage Invoices", path: "/admin/invoices", icon: "account_balance_wallet" },
+    { name: "Rates & Grievances", path: "/admin/suggestions", icon: "rate_review" },
     { name: "Admin Profile", path: "/admin/profile", icon: "settings" },
   ];
 
@@ -137,6 +139,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {item.path === "/admin/roster" && pendingReviewCount > 0 && (
                   <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-rose-500 text-white text-[10px] font-black rounded-full animate-pulse shadow-sm">
                     {pendingReviewCount}
+                  </span>
+                )}
+                {item.path === "/admin/suggestions" && pendingSuggestionsCount > 0 && (
+                  <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-amber-500 text-white text-[10px] font-black rounded-full animate-pulse shadow-sm">
+                    {pendingSuggestionsCount}
                   </span>
                 )}
               </Link>
@@ -221,6 +228,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {item.path === "/admin/roster" && pendingReviewCount > 0 && (
                       <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-rose-500 text-white text-[10px] font-black rounded-full animate-pulse shadow-sm">
                         {pendingReviewCount}
+                      </span>
+                    )}
+                    {item.path === "/admin/suggestions" && pendingSuggestionsCount > 0 && (
+                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-amber-500 text-white text-[10px] font-black rounded-full animate-pulse shadow-sm">
+                        {pendingSuggestionsCount}
                       </span>
                     )}
                   </Link>

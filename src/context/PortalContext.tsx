@@ -301,6 +301,21 @@ export interface CompanySettings {
   recentRequestingOrgs?: string[];
 }
 
+export interface ClientSuggestion {
+  _id?: string;
+  id: string;
+  orgName: string;
+  clientEmail: string;
+  type: "enable_service" | "rate_query" | "suggestion" | "grievance";
+  title: string;
+  message: string;
+  targetService?: string;
+  status: "Pending" | "Under Review" | "Resolved" | "Service Enabled" | "Closed";
+  adminReply?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 interface PortalContextType {
   verifications: Verification[];
   invoices: Invoice[];
@@ -308,6 +323,9 @@ interface PortalContextType {
   organisations: Organisation[];
   settings: CompanySettings;
   allSettings: CompanySettings[];
+  suggestions: ClientSuggestion[];
+  updateSuggestion: (params: { id: string; status?: string; adminReply?: string }) => Promise<void>;
+  updateOrganisationRates: (params: { orgId?: string; orgName?: string; rates?: Record<string, number>; enabledServices?: Record<string, boolean> }) => Promise<void>;
   addVerification: (name: string, email: string, orgName: string) => Promise<any>;
   addEmploymentVerification: (name: string, mobile: string, email: string, orgName: string, requestingOrgName?: string, skipCandidateLogin?: boolean, employments?: Array<{ companyName: string; position: string; joiningYear?: string; leavingYear?: string; employeeCode?: string }>) => Promise<any>;
   addEducationVerification: (name: string, mobile: string, email: string, orgName: string, requestingOrgName?: string, skipCandidateLogin?: boolean, educationList?: Array<{ boardUniversity: string; courseName: string; passingYear?: string; rollNumber?: string }>) => Promise<any>;
@@ -413,6 +431,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [settings, setSettings] = useState<CompanySettings>(defaultSettings);
   const [allSettings, setAllSettings] = useState<CompanySettings[]>([]);
+  const [suggestions, setSuggestions] = useState<ClientSuggestion[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   // Sync / Fetch function from MongoDB API route
@@ -472,6 +491,9 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       if (data.allSettings) {
         setAllSettings(data.allSettings);
+      }
+      if (data.suggestions) {
+        setSuggestions(data.suggestions);
       }
     } catch (err) {
       console.error("Error reading tables from API:", err);
@@ -1302,6 +1324,42 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const updateSuggestion = async (params: { id: string; status?: string; adminReply?: string }) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateSuggestion", payload: params })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to update suggestion");
+      }
+      await fetchAllData();
+    } catch (err: any) {
+      console.error("Failed updating suggestion:", err);
+      throw err;
+    }
+  };
+
+  const updateOrganisationRates = async (params: { orgId?: string; orgName?: string; rates?: Record<string, number>; enabledServices?: Record<string, boolean> }) => {
+    try {
+      const res = await fetch("/api/portal-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateOrganisationRates", payload: params })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to update organisation rates");
+      }
+      await fetchAllData();
+    } catch (err: any) {
+      console.error("Failed updating organisation rates:", err);
+      throw err;
+    }
+  };
+
   return (
     <PortalContext.Provider
       value={{
@@ -1311,6 +1369,9 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         organisations,
         settings,
         allSettings,
+        suggestions,
+        updateSuggestion,
+        updateOrganisationRates,
         addVerification,
         addEmploymentVerification,
         addEducationVerification,

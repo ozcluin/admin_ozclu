@@ -60,6 +60,9 @@ export async function GET(req: NextRequest) {
         );
       }
     }
+    const suggestions = await db.collection("suggestions").find(
+      { isDeleted: { $ne: true } }
+    ).sort({ createdAt: -1 }).toArray();
 
     // Sanitize _id fields
     const cleanSettings = settings ? { ...settings, _id: settings._id.toString() } : null;
@@ -75,6 +78,7 @@ export async function GET(req: NextRequest) {
       };
     });
     const cleanOrganisations = organisations.map(o => ({ ...o, _id: o._id.toString() }));
+    const cleanSuggestions = suggestions.map(s => ({ ...s, _id: s._id.toString() }));
 
     return NextResponse.json({
       settings: cleanSettings,
@@ -82,7 +86,8 @@ export async function GET(req: NextRequest) {
       verifications: cleanVerifications,
       invoices: cleanInvoices,
       verifiers: cleanVerifiers,
-      organisations: cleanOrganisations
+      organisations: cleanOrganisations,
+      suggestions: cleanSuggestions
     });
   } catch (error: any) {
     console.error("[DATA] Admin portal GET error:", error.message);
@@ -115,6 +120,56 @@ export async function POST(req: NextRequest) {
     const userAgent = getUserAgent(req);
 
     switch (action) {
+      case "updateSuggestion": {
+        const { id, status, adminReply } = payload || {};
+        if (!id) {
+          return NextResponse.json({ error: "Suggestion ID is required" }, { status: 400 });
+        }
+        const updateData: any = { updatedAt: new Date().toISOString() };
+        if (status) updateData.status = status;
+        if (adminReply !== undefined) updateData.adminReply = adminReply;
+
+        await db.collection("suggestions").updateOne(
+          { id },
+          { $set: updateData }
+        );
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "UPDATE_SUGGESTION",
+          targetType: "suggestion",
+          targetId: id,
+          ip,
+          userAgent,
+          outcome: "success"
+        });
+        return NextResponse.json({ success: true });
+      }
+      case "updateOrganisationRates": {
+        const { orgId, orgName, rates, enabledServices } = payload || {};
+        if (!orgId && !orgName) {
+          return NextResponse.json({ error: "Organisation ID or Name required" }, { status: 400 });
+        }
+        const query = orgId ? { id: orgId } : { name: orgName };
+        const updatePayload: any = { ...(rates || {}), ...(enabledServices || {}), updatedAt: new Date().toISOString() };
+
+        await db.collection("organisations").updateOne(query, { $set: updatePayload });
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "UPDATE_ORG_RATES",
+          targetType: "organisation",
+          targetId: orgName || orgId,
+          ip,
+          userAgent,
+          outcome: "success"
+        });
+        return NextResponse.json({ success: true });
+      }
       case "addVerification": {
         const { name, email, orgName, requestingOrgName, date, status, verifier, notes } = payload;
         
