@@ -1025,40 +1025,52 @@ export default function CandidatesPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Full name (as per government ID)</td>
-                              <td className="p-2.5 font-bold text-slate-900">{displayCandidate.digilockerName || displayCandidate.name || "-"}</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Date of birth</td>
-                              <td className="p-2.5">{displayCandidate.digilockerDob || displayCandidate.candidateDob || "-"}</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Mobile number</td>
-                              <td className="p-2.5">{displayCandidate.digilockerMobile || displayCandidate.candidateMobile || "-"}</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Current residential address</td>
-                              <td className="p-2.5">{displayCandidate.addresses && displayCandidate.addresses.length > 0
-                                ? [displayCandidate.addresses[0].address, displayCandidate.addresses[0].city, displayCandidate.addresses[0].state, displayCandidate.addresses[0].country].filter(Boolean).join(", ")
-                                : "-"}</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Primary government ID number</td>
-                              <td className="p-2.5 font-mono">{displayCandidate.digilockerAadhaar || displayCandidate.digilockerPan || displayCandidate.idProofNumber || "-"}</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email address</td>
-                              <td className="p-2.5">{displayCandidate.digilockerEmail || displayCandidate.email || "-"}</td>
-                            </tr>
+                            {Boolean(displayCandidate.digilockerName || displayCandidate.name) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Full name (as per government ID)</td>
+                                <td className="p-2.5 font-bold text-slate-900">{displayCandidate.digilockerName || displayCandidate.name || "-"}</td>
+                              </tr>
+                            )}
+                            {Boolean(displayCandidate.digilockerDob || displayCandidate.candidateDob) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Date of birth</td>
+                                <td className="p-2.5">{displayCandidate.digilockerDob || displayCandidate.candidateDob || "-"}</td>
+                              </tr>
+                            )}
+                            {Boolean(displayCandidate.digilockerMobile || displayCandidate.candidateMobile) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Mobile number</td>
+                                <td className="p-2.5">{displayCandidate.digilockerMobile || displayCandidate.candidateMobile || "-"}</td>
+                              </tr>
+                            )}
+                            {Boolean(displayCandidate.addresses && displayCandidate.addresses.length > 0 && [(displayCandidate.addresses as any)?.[0]?.address, (displayCandidate.addresses as any)?.[0]?.city, (displayCandidate.addresses as any)?.[0]?.state, (displayCandidate.addresses as any)?.[0]?.country].filter(Boolean).join(", ")) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Current residential address</td>
+                                <td className="p-2.5">{[(displayCandidate.addresses as any)?.[0]?.address, (displayCandidate.addresses as any)?.[0]?.city, (displayCandidate.addresses as any)?.[0]?.state, (displayCandidate.addresses as any)?.[0]?.country].filter(Boolean).join(", ")}</td>
+                              </tr>
+                            )}
+                            {Boolean(displayCandidate.digilockerAadhaar || displayCandidate.digilockerPan || displayCandidate.idProofNumber) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Primary government ID number</td>
+                                <td className="p-2.5 font-mono">{displayCandidate.digilockerAadhaar || displayCandidate.digilockerPan || displayCandidate.idProofNumber || "-"}</td>
+                              </tr>
+                            )}
+                            {Boolean(displayCandidate.digilockerEmail || displayCandidate.email) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email address</td>
+                                <td className="p-2.5">{displayCandidate.digilockerEmail || displayCandidate.email || "-"}</td>
+                              </tr>
+                            )}
                             <tr className="hover:bg-slate-50/50 transition-colors">
                               <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Nationality</td>
                               <td className="p-2.5">{"Indian"}</td>
                             </tr>
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Gender</td>
-                              <td className="p-2.5">{displayCandidate.digilockerGender || displayCandidate.gender || "-"}</td>
-                            </tr>
+                            {Boolean(displayCandidate.digilockerGender || displayCandidate.gender) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Gender</td>
+                                <td className="p-2.5">{displayCandidate.digilockerGender || displayCandidate.gender || "-"}</td>
+                              </tr>
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -1080,30 +1092,42 @@ export default function CandidatesPage() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree Category</td>
-                                <td className="p-2.5">{displayCandidate.educationData.degreeType || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Course / Degree Name</td>
-                                <td className="p-2.5 font-bold text-slate-900">{displayCandidate.educationData.courseName || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Board / University</td>
-                                <td className="p-2.5">{displayCandidate.educationData.boardUniversity || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">School / College Name</td>
-                                <td className="p-2.5">{displayCandidate.educationData.institutionName || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Roll / Registration No.</td>
-                                <td className="p-2.5 font-mono">{displayCandidate.educationData.rollNumber || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Passing Year</td>
-                                <td className="p-2.5 font-mono">{displayCandidate.educationData.passingYear || "-"}</td>
-                              </tr>
+                              {Boolean(displayCandidate.educationData.degreeType) && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree Category</td>
+                                  <td className="p-2.5">{displayCandidate.educationData.degreeType || "-"}</td>
+                                </tr>
+                              )}
+                              {Boolean(displayCandidate.educationData.courseName) && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Course / Degree Name</td>
+                                  <td className="p-2.5 font-bold text-slate-900">{displayCandidate.educationData.courseName || "-"}</td>
+                                </tr>
+                              )}
+                              {Boolean(displayCandidate.educationData.boardUniversity) && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Board / University</td>
+                                  <td className="p-2.5">{displayCandidate.educationData.boardUniversity || "-"}</td>
+                                </tr>
+                              )}
+                              {Boolean(displayCandidate.educationData.institutionName) && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">School / College Name</td>
+                                  <td className="p-2.5">{displayCandidate.educationData.institutionName || "-"}</td>
+                                </tr>
+                              )}
+                              {Boolean(displayCandidate.educationData.rollNumber) && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Roll / Registration No.</td>
+                                  <td className="p-2.5 font-mono">{displayCandidate.educationData.rollNumber || "-"}</td>
+                                </tr>
+                              )}
+                              {Boolean(displayCandidate.educationData.passingYear) && (
+                                <tr className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Passing Year</td>
+                                  <td className="p-2.5 font-mono">{displayCandidate.educationData.passingYear || "-"}</td>
+                                </tr>
+                              )}
                               {displayCandidate.educationData.certificateFile && (
                                 <tr className="hover:bg-slate-50/50 transition-colors">
                                   <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree / Marksheet Proof</td>
@@ -1126,116 +1150,176 @@ export default function CandidatesPage() {
                     )}
 
                     {/* ═══ EMPLOYMENT CHECK TABLE ═══ */}
-                    {displayCandidate.employmentData && (
-                      <div className="flex flex-col gap-2">
-                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                          <span className="material-symbols-outlined text-sm">work</span>
-                          Employment Check
-                        </h5>
-                        <div className="overflow-x-auto border border-slate-200/60 rounded-xl">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-                                <th className="p-2.5 border-r border-slate-200 w-2/5">Information Required</th>
-                                <th className="p-2.5">Provided Response</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Country</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.country || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">State</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.state || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">City</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.city || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Name</td>
-                                <td className="p-2.5 font-bold text-slate-900">{displayCandidate.employmentData.companyName || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Address - Line 1</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.addressLine1 || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Address - Line 2</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.addressLine2 || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Telephone</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.companyTelephone ? `${displayCandidate.employmentData.companyTelephoneCode || ""} ${displayCandidate.employmentData.companyTelephone}` : "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.department || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Position</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.position || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - From</td>
-                                <td className="p-2.5 font-mono">{displayCandidate.employmentData.employmentPeriodFrom || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - To</td>
-                                <td className="p-2.5 font-mono">{displayCandidate.employmentData.employmentPeriodTo || "Present"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employee Code</td>
-                                <td className="p-2.5 font-mono">{displayCandidate.employmentData.employeeCode || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reporting Manager Name</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.reportingManagerName || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department of Reporting Manager</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.reportingManagerDepartment || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Contact No of Reporting Manager</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.reportingManagerContact ? `${displayCandidate.employmentData.reportingManagerContactCode || ""} ${displayCandidate.employmentData.reportingManagerContact}` : "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email ID of Reporting Manager</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.reportingManagerEmail || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Annual CTC</td>
-                                <td className="p-2.5 font-mono">{displayCandidate.employmentData.annualCTC || "-"}</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment is Permanent or Temporary</td>
-                                <td className="p-2.5">{displayCandidate.employmentData.employmentType || "-"}</td>
-                              </tr>
-                              {displayCandidate.employmentData.agencyDetails && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Agency Details (if temporary or contractual)</td>
-                                  <td className="p-2.5">{displayCandidate.employmentData.agencyDetails}</td>
-                                </tr>
-                              )}
-                              {displayCandidate.employmentData.reasonForLeaving && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reason(s) for Leaving</td>
-                                  <td className="p-2.5 font-normal text-slate-700">{displayCandidate.employmentData.reasonForLeaving}</td>
-                                </tr>
-                              )}
-                              {displayCandidate.employmentData.remarks && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Remarks If any</td>
-                                  <td className="p-2.5 italic font-normal text-slate-500">{displayCandidate.employmentData.remarks}</td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
+                    {(() => {
+                      const cand = displayCandidate as any;
+                      const allEmpsList: any[] = Array.isArray(cand.employments) && cand.employments.length > 0
+                        ? cand.employments
+                        : (Array.isArray(cand.pastOrganisations) && cand.pastOrganisations.length > 0
+                            ? cand.pastOrganisations
+                            : (Array.isArray(cand.employmentData?.employments) && cand.employmentData.employments.length > 0
+                                ? cand.employmentData.employments
+                                : (Array.isArray(cand.employmentData?.pastOrganisations) && cand.employmentData.pastOrganisations.length > 0
+                                    ? cand.employmentData.pastOrganisations
+                                    : (cand.employmentData ? [cand.employmentData] : []))));
+
+                      if (allEmpsList.length === 0) return null;
+
+                      return (
+                        <div className="flex flex-col gap-4">
+                          <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                            <span className="material-symbols-outlined text-sm">work</span>
+                            Employment Check ({allEmpsList.length} Organisation{allEmpsList.length > 1 ? "s" : ""})
+                          </h5>
+                          {allEmpsList.map((empObj: any, idx: number) => (
+                            <div key={idx} className="flex flex-col gap-1 border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
+                              <div className="bg-slate-100/80 px-3 py-2 border-b border-slate-200/80 flex items-center justify-between">
+                                <span className="font-bold text-xs text-[#016e1c] uppercase tracking-wide">
+                                  {idx + 1}. {empObj.companyName || `Organisation #${idx + 1}`}
+                                  {idx === 0 ? " (Current / Most Recent)" : " (Past Employment Record)"}
+                                </span>
+                                {[empObj.city, empObj.state, empObj.country].filter(Boolean).length > 0 && (
+                                  <span className="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                    {[empObj.city, empObj.state, empObj.country].filter(Boolean).join(", ")}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs border-collapse">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                                      <th className="p-2.5 border-r border-slate-200 w-2/5">Information Required</th>
+                                      <th className="p-2.5">Provided Response</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
+                                    {Boolean(empObj.country) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Country</td>
+                                        <td className="p-2.5">{empObj.country || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.state) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">State</td>
+                                        <td className="p-2.5">{empObj.state || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.city) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">City</td>
+                                        <td className="p-2.5">{empObj.city || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.companyName) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Name</td>
+                                        <td className="p-2.5 font-bold text-slate-900">{empObj.companyName || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean([empObj.addressLine1, empObj.addressLine2].filter(Boolean).join(", ")) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Address</td>
+                                        <td className="p-2.5">{[empObj.addressLine1, empObj.addressLine2].filter(Boolean).join(", ")}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.companyTelephone) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Telephone</td>
+                                        <td className="p-2.5">{empObj.companyTelephoneCode || ""} {empObj.companyTelephone}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.department) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department</td>
+                                        <td className="p-2.5">{empObj.department || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.position) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Position</td>
+                                        <td className="p-2.5">{empObj.position || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.employmentPeriodFrom) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - From</td>
+                                        <td className="p-2.5 font-mono">{empObj.employmentPeriodFrom || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.employmentPeriodTo) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - To</td>
+                                        <td className="p-2.5 font-mono">{empObj.employmentPeriodTo || "Present"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.employeeCode) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employee Code</td>
+                                        <td className="p-2.5 font-mono">{empObj.employeeCode || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.reportingManagerName) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reporting Manager Name</td>
+                                        <td className="p-2.5">{empObj.reportingManagerName || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.reportingManagerDepartment) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department of Reporting Manager</td>
+                                        <td className="p-2.5">{empObj.reportingManagerDepartment || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.reportingManagerContact) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Contact No of Reporting Manager</td>
+                                        <td className="p-2.5">{empObj.reportingManagerContact ? `${empObj.reportingManagerContactCode || ""} ${empObj.reportingManagerContact}` : "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.reportingManagerEmail) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email ID of Reporting Manager</td>
+                                        <td className="p-2.5">{empObj.reportingManagerEmail || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.annualCTC) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Annual CTC</td>
+                                        <td className="p-2.5 font-mono">{empObj.annualCTC || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.employmentType) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment is Permanent or Temporary</td>
+                                        <td className="p-2.5">{empObj.employmentType || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.agencyDetails) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Agency Details (if temporary or contractual)</td>
+                                        <td className="p-2.5">{empObj.agencyDetails}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.reasonForLeaving) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reason(s) for Leaving</td>
+                                        <td className="p-2.5 font-normal text-slate-700">{empObj.reasonForLeaving}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(empObj.remarks) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Remarks If any</td>
+                                        <td className="p-2.5 italic font-normal text-slate-500">{empObj.remarks}</td>
+                                      </tr>
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -1292,7 +1376,6 @@ export default function CandidatesPage() {
                             <option value="In Progress">In Progress</option>
                             <option value="Verified">Verified / Completed</option>
                             <option value="Discrepancy">Discrepancy</option>
-                            <option value="Unable to Verify">Unable to Verify</option>
                           </select>
                         </div>
                       </div>
@@ -1380,13 +1463,8 @@ export default function CandidatesPage() {
                         )}
                       </div>
 
-                      {/* Row 8: Email checkbox + Submit */}
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-200/60">
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
-                          <input type="checkbox" checked={empAttemptSendEmail} onChange={e => setEmpAttemptSendEmail(e.target.checked)}
-                            className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
-                          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Email Customer</span>
-                        </label>
+                      {/* Row 8: Submit Button */}
+                      <div className="flex items-center justify-end pt-2 border-t border-slate-200/60">
                         <button
                           onClick={async () => {
                             if (!displayCandidate?.id) return;

@@ -76,11 +76,28 @@ function EmploymentReportContent() {
     }
   };
 
+  const formatVerifierName = (val?: string): string => {
+    if (!val) return "India Ops";
+    const trimmed = String(val).trim();
+    if (!trimmed) return "India Ops";
+    if (!trimmed.includes("@")) return trimmed;
+    const emailLower = trimmed.toLowerCase();
+    if (emailLower.startsWith("indiaops")) return "India Ops";
+    if (emailLower.startsWith("pkumar") || emailLower.startsWith("prabirkumar")) return "P Kumar";
+    const handle = trimmed.split("@")[0];
+    return handle
+      .replace(/[._-]/g, " ")
+      .split(" ")
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   const generatedAtDate = verification.completedAt 
     ? new Date(verification.completedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase()
     : new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase();
 
-  const generatedBy = verification.verifier || "indiaops@ozclu.com";
+  const generatedBy = formatVerifierName(verification.verifier);
 
   const isVerified = verification.status === "Completed" || verification.status === "Verified";
   const isDiscrepancy = verification.status === "Needs Attention" || verification.status === "Discrepancy";
@@ -109,7 +126,14 @@ function EmploymentReportContent() {
     ? "DISCREPANCY DETECTED"
     : "IN PROGRESS";
 
-  const emp = verification.employmentData || {};
+  const employmentsList: any[] = (() => {
+    if (Array.isArray(verification.employments) && verification.employments.length > 0) return verification.employments;
+    if (Array.isArray(verification.pastOrganisations) && verification.pastOrganisations.length > 0) return verification.pastOrganisations;
+    if (Array.isArray(verification.employmentData?.employments) && verification.employmentData.employments.length > 0) return verification.employmentData.employments;
+    if (Array.isArray(verification.employmentData?.pastOrganisations) && verification.employmentData.pastOrganisations.length > 0) return verification.employmentData.pastOrganisations;
+    return [verification.employmentData || {}];
+  })();
+  const emp = employmentsList[0] || {};
   const attempts = verification.employmentAttempts || [];
 
   return (
@@ -199,6 +223,40 @@ function EmploymentReportContent() {
             break-before: page !important;
             page-break-before: always !important;
           }
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
+          .print-page-border {
+            display: block !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px double #00450e;
+            pointer-events: none;
+            z-index: 9999;
+          }
+          .report-page-card {
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 8px 4px !important;
+            margin: 0 !important;
+          }
+          .print-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 8px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 100vh !important;
+          }
+          .report-sign-off {
+            margin-top: auto !important;
+            padding-top: 20px !important;
+          }
         }
       `}</style>
 
@@ -206,19 +264,15 @@ function EmploymentReportContent() {
       <div className="no-print print:hidden w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-800">Employment Verification Report</span>
-          <span className="text-xs text-slate-500">Ready to save or print on standard A4 paper size.</span>
+          <span className="text-xs text-slate-500">Ready to save or export as official A4 PDF document.</span>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => window.print()}
             className="flex items-center gap-1.5 px-4 py-2 bg-[#00450e] text-white rounded-lg font-bold text-xs hover:bg-[#00300a] cursor-pointer shadow-sm transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <polyline points="6 9 6 2 18 2 18 9"></polyline>
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-              <rect x="6" y="14" width="12" height="8"></rect>
-            </svg>
-            <span>Print Report</span>
+            <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+            <span>Generate PDF</span>
           </button>
           <button
             onClick={() => window.close()}
@@ -233,25 +287,26 @@ function EmploymentReportContent() {
         </div>
       </div>
 
+      {/* Per-page border frame (repeats on every printed page via position:fixed) */}
+      <div className="print-page-border hidden print:block" aria-hidden="true" />
+
       {/* Main Report Container */}
-      <div className="print-card w-full max-w-[800px] bg-white border-[6px] border-double border-[#00450e] p-8 sm:p-10 shadow-lg relative my-0 mx-auto print:shadow-none print:p-8 print:max-w-full print:w-full">
+      <div className="print-card w-full max-w-[800px] bg-white border-[4px] border-double border-[#00450e] p-6 sm:p-8 shadow-md relative my-0 mx-auto print:max-w-full print:w-full">
         
-        {/* Page 1 Block */}
-        <div className="print-page-block">
+        {/* Page 1 Block: Cover & Overall Verdict */}
+        <div>
           {/* Top Header */}
         <div className="grid grid-cols-3 items-center gap-4 mb-8">
           <div className="flex justify-start">
             <div className="flex items-center gap-2">
-              <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
-                <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
-              </div>
-              {settings && settings.logo && (
-                <>
-                  <div className="h-8 w-[1px] bg-slate-300 self-center mx-1 shrink-0" />
-                  <div className="w-20 h-10 sm:w-24 sm:h-12 flex items-center justify-start shrink-0">
-                    <img src={settings.logo} alt="Client Logo" className="object-contain max-h-full max-w-full" />
-                  </div>
-                </>
+              {settings && settings.logo ? (
+                <div className="w-28 h-14 sm:w-36 sm:h-16 flex items-center justify-start shrink-0">
+                  <img src={settings.logo} alt="Company Logo" className="object-contain max-h-full max-w-full" />
+                </div>
+              ) : (
+                <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
+                  <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+                </div>
               )}
             </div>
           </div>
@@ -296,7 +351,6 @@ function EmploymentReportContent() {
               <div><span className="text-slate-500 font-semibold">Client Company:</span> <span className="font-bold text-slate-800">{verification.requestingOrgName || verification.orgName}</span></div>
               <div><span className="text-slate-500 font-semibold">Email:</span> <span className="font-semibold text-slate-800">{settings?.contactEmail || "contact@company.com"}</span></div>
               <div><span className="text-slate-500 font-semibold">Checks Requested:</span> <span className="font-bold text-slate-800">{verification.itemCount || (verification.employments?.length || 1)} Check(s)</span></div>
-              <div><span className="text-slate-500 font-semibold">Service Charge:</span> <span className="font-bold text-[#00450e]">${(verification.serviceCharge || (verification.itemCount || (verification.employments?.length || 1)) * 5).toFixed(2)}</span></div>
             </div>
           </div>
         </div>
@@ -322,156 +376,207 @@ function EmploymentReportContent() {
         </div>
 
         {/* Employment Information Table */}
-        <div className="mb-8 print-avoid-break">
-          <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#00450e] mb-2">Candidate Submitted Employment Details</h3>
-          <div className="overflow-x-auto border border-slate-200 rounded-xl">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                  <th className="p-2.5 border-r border-slate-200 w-1/2">Field</th>
-                  <th className="p-2.5">Response Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Company Name</td>
-                  <td className="p-2.5 font-bold text-slate-900">{emp.companyName || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Department</td>
-                  <td className="p-2.5">{emp.department || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Position / Designation</td>
-                  <td className="p-2.5">{emp.position || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Location</td>
-                  <td className="p-2.5">{[emp.city, emp.state, emp.country].filter(Boolean).join(", ") || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Employment Period</td>
-                  <td className="p-2.5">{emp.employmentPeriodFrom || "-"} to {emp.employmentPeriodTo || "Present"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Employee Code</td>
-                  <td className="p-2.5 font-mono">{emp.employeeCode || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Reporting Manager</td>
-                  <td className="p-2.5">{emp.reportingManagerName ? `${emp.reportingManagerName} (${emp.reportingManagerDepartment || "N/A"})` : "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Manager Contact</td>
-                  <td className="p-2.5">{[emp.reportingManagerEmail, emp.reportingManagerContact ? `${emp.reportingManagerContactCode || ""} ${emp.reportingManagerContact}` : null].filter(Boolean).join(" / ") || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Annual CTC</td>
-                  <td className="p-2.5 font-mono">{emp.annualCTC || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Employment Type</td>
-                  <td className="p-2.5">{emp.employmentType || "-"} {emp.agencyDetails ? `(Agency: ${emp.agencyDetails})` : ""}</td>
-                </tr>
-                {emp.reasonForLeaving && (
-                  <tr>
-                    <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Reason for Leaving</td>
-                    <td className="p-2.5 text-slate-700 font-normal">{emp.reasonForLeaving}</td>
-                  </tr>
-                )}
-                {emp.remarks && (
-                  <tr>
-                    <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Candidate Remarks</td>
-                    <td className="p-2.5 italic font-normal text-slate-500">{emp.remarks}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        </div>
-
-        {/* Page 2 Content Block */}
-        <div className="print-page-block print-break-before mt-6 print:mt-0">
-          {/* Verification Status & History Timeline */}
-          <div className="mb-8">
-            <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#00450e] border-b border-slate-200 pb-1 mb-3">Employment Verification Summary</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <span className="text-sm font-bold text-slate-800">Verification Result Log History</span>
-                  <span className="text-xs text-slate-500 font-semibold">
-                    Overall Verdict: <span className={`font-bold ${statusColor}`}>{verification.status}</span>
+        <div className="mb-8">
+          <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#00450e] mb-3 print-avoid-break">
+            Candidate Submitted Employment Details ({employmentsList.length} Organisation{employmentsList.length > 1 ? "s" : ""})
+          </h3>
+          <div className="space-y-6">
+            {employmentsList.map((empItem: any, idx: number) => (
+              <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs p-4 bg-white mb-6">
+                <div className="bg-slate-100/90 px-3.5 py-2.5 border-b border-slate-200 flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-[#00450e] uppercase tracking-wide">
+                    {idx + 1}. {empItem.companyName || `Organisation #${idx + 1}`}
+                    {idx === 0 ? " (Current / Most Recent)" : " (Past Employment Record)"}
                   </span>
+                  {[empItem.city, empItem.state, empItem.country].filter(Boolean).length > 0 && (
+                    <span className="text-[10px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                      {[empItem.city, empItem.state, empItem.country].filter(Boolean).join(", ")}
+                    </span>
+                  )}
                 </div>
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                      <th className="p-2.5 border-r border-slate-200 w-1/2">Field</th>
+                      <th className="p-2.5">Response Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold bg-white">
+                    {Boolean(empItem.companyName) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Company Name</td>
+                        <td className="p-2.5 font-bold text-slate-900">{empItem.companyName}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.department) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Department</td>
+                        <td className="p-2.5">{empItem.department}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.position) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Position / Designation</td>
+                        <td className="p-2.5">{empItem.position}</td>
+                      </tr>
+                    )}
+                    {Boolean([empItem.city, empItem.state, empItem.country].filter(Boolean).length > 0) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Location</td>
+                        <td className="p-2.5">{[empItem.city, empItem.state, empItem.country].filter(Boolean).join(", ")}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.addressLine1 || empItem.addressLine2) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Address</td>
+                        <td className="p-2.5">{[empItem.addressLine1, empItem.addressLine2].filter(Boolean).join(", ")}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.companyTelephone) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Company Telephone</td>
+                        <td className="p-2.5 font-mono">{empItem.companyTelephoneCode || ""} {empItem.companyTelephone}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.employmentPeriodFrom || empItem.employmentPeriodTo) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Employment Period</td>
+                        <td className="p-2.5 font-mono">{empItem.employmentPeriodFrom || "N/A"} to {empItem.employmentPeriodTo || "Present"}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.employeeCode) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Employee Code</td>
+                        <td className="p-2.5 font-mono">{empItem.employeeCode}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.reportingManagerName) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Reporting Manager</td>
+                        <td className="p-2.5">{empItem.reportingManagerName} {empItem.reportingManagerDepartment ? `(${empItem.reportingManagerDepartment})` : ""}</td>
+                      </tr>
+                    )}
+                    {Boolean([empItem.reportingManagerEmail, empItem.reportingManagerContact ? `${empItem.reportingManagerContactCode || ""} ${empItem.reportingManagerContact}` : null].filter(Boolean).join(" / ")) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Manager Contact</td>
+                        <td className="p-2.5">{[empItem.reportingManagerEmail, empItem.reportingManagerContact ? `${empItem.reportingManagerContactCode || ""} ${empItem.reportingManagerContact}` : null].filter(Boolean).join(" / ")}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.annualCTC) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Annual CTC</td>
+                        <td className="p-2.5 font-mono">{empItem.annualCTC}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.employmentType) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Employment Type</td>
+                        <td className="p-2.5">{empItem.employmentType} {empItem.agencyDetails ? `(Agency: ${empItem.agencyDetails})` : ""}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.reasonForLeaving) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Reason for Leaving</td>
+                        <td className="p-2.5 text-slate-700 font-normal">{empItem.reasonForLeaving}</td>
+                      </tr>
+                    )}
+                    {Boolean(empItem.remarks) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Candidate Remarks</td>
+                        <td className="p-2.5 italic font-normal text-slate-500">{empItem.remarks}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
 
-                {/* Audit Attempt History Log */}
-                <div className="print-avoid-break">
-                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                          <th className="p-2.5 border-r border-slate-200 w-1/4">Date &amp; Time</th>
-                          <th className="p-2.5 border-r border-slate-200 w-1/6">Status</th>
-                          <th className="p-2.5 border-r border-slate-200 w-1/6">Mode</th>
-                          <th className="p-2.5">Attempt Details</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold bg-white">
-                        {attempts && attempts.length > 0 ? (
-                          attempts.map((att: any, idx: number) => {
-                            const attOutcome = att.result || att.status || "In Progress";
-                            return (
-                              <tr key={idx} className="hover:bg-slate-50/30">
-                                <td className="p-2.5 border-r border-slate-200 font-mono text-[10px] bg-slate-50/30">{att.date}</td>
-                                <td className="p-2.5 border-r border-slate-200">
-                                  <span className={`inline-block font-bold px-1.5 py-0.5 rounded text-[8px] uppercase border ${
-                                    attOutcome === "Verified" || attOutcome === "Completed"
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                      : attOutcome === "In Progress" || attOutcome === "Processing"
-                                      ? "bg-blue-50 text-blue-700 border-blue-200"
-                                      : "bg-rose-50 text-rose-700 border-rose-200"
-                                  }`}>
-                                    {attOutcome}
-                                  </span>
-                                </td>
-                                <td className="p-2.5 border-r border-slate-200 font-medium text-slate-700 capitalize">{att.verificationMode || "Manual"}</td>
-                                <td className="p-2.5 text-[10px] text-slate-665 font-medium leading-normal">
-                                  {att.comment && <div className="font-bold text-slate-800">Comment: {att.comment}</div>}
-                                  {att.verifierNote && <div className="text-slate-500 italic mt-0.5">Note: {att.verifierNote}</div>}
-                                  {att.respondentName && <div className="mt-1">Respondent: {att.respondentName} {att.respondentEmail ? `(${att.respondentEmail})` : ""}</div>}
-                                  {att.respondentComment && <div className="italic text-slate-500">Respondent Comment: "{att.respondentComment}"</div>}
-                                  <div className="text-[9px] text-slate-400 mt-1">Logged by: {att.loggedBy || "indiaops@ozclu.com"}</div>
-                                </td>
+                {/* Per-Employment Verification Result Log History */}
+                {(() => {
+                  const orgAttempts = (attempts || []).filter((att: any) => {
+                    if (!att.targetOrg || att.targetOrg === "All / General") {
+                      return idx === 0;
+                    }
+                    const orgPrefix = `${idx + 1}.`;
+                    return att.targetOrg.startsWith(orgPrefix);
+                  });
+
+                  return (
+                    <div className="mt-4 pt-3 border-t border-slate-200">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-bold text-[#00450e] uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-sm">history</span>
+                          Verification Result Log History for {empItem.companyName || `Organisation #${idx + 1}`} ({orgAttempts.length})
+                        </span>
+                      </div>
+                      <div className="print-avoid-break">
+                        <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                                <th className="p-2.5 border-r border-slate-200 w-1/4">Date &amp; Time</th>
+                                <th className="p-2.5 border-r border-slate-200 w-1/6">Status</th>
+                                <th className="p-2.5 border-r border-slate-200 w-1/6">Mode</th>
+                                <th className="p-2.5">Attempt Details</th>
                               </tr>
-                            );
-                          })
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="p-4 text-center text-slate-400">No attempts logged in timeline.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold bg-white">
+                              {orgAttempts.length > 0 ? (
+                                orgAttempts.slice().reverse().map((att: any, attIdx: number) => {
+                                  const attOutcome = att.result || att.status || "In Progress";
+                                  return (
+                                    <tr key={attIdx} className="hover:bg-slate-50/30">
+                                      <td className="p-2.5 border-r border-slate-200 font-mono text-[10px] bg-slate-50/30">{att.date}</td>
+                                      <td className="p-2.5 border-r border-slate-200">
+                                        <span className={`inline-block font-bold px-1.5 py-0.5 rounded text-[8px] uppercase border ${
+                                          attOutcome === "Verified" || attOutcome === "Completed"
+                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                            : attOutcome === "In Progress" || attOutcome === "Processing"
+                                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                                            : "bg-rose-50 text-rose-700 border-rose-200"
+                                        }`}>
+                                          {attOutcome}
+                                        </span>
+                                      </td>
+                                      <td className="p-2.5 border-r border-slate-200 font-medium text-slate-700 capitalize">{att.verificationMode || "Manual"}</td>
+                                      <td className="p-2.5 text-[10px] text-slate-665 font-medium leading-normal">
+                                        {att.comment && <div className="font-bold text-slate-800">Comment: {att.comment}</div>}
+                                        {att.respondentName && <div className="mt-1">Respondent: {att.respondentName} {att.respondentEmail ? `(${att.respondentEmail})` : ""}</div>}
+                                        {att.respondentComment && <div className="italic text-slate-500">Respondent Comment: "{att.respondentComment}"</div>}
+                                        <div className="text-[9px] text-slate-400 mt-1">Logged by: {formatVerifierName(att.loggedBy || generatedBy)}</div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              ) : (
+                                <tr>
+                                  <td colSpan={4} className="p-3 text-center text-slate-400 text-[11px] italic">No verification attempt logs recorded for this employment.</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-            </div>
+            ))}
           </div>
+        </div>
+        </div>
 
+        {/* Sign-Off & Disclaimer — flows naturally after content, pushed to bottom of last page */}
+        <div className="report-sign-off mt-10 print:mt-auto">
           {/* Double Sign-off Section */}
           <div className="flex justify-between items-center my-10 px-4 text-xs font-bold text-slate-700 print-avoid-break">
             <div className="text-center">
               <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900 min-h-[24px] flex items-center justify-center">
-                {attempts.length > 0 ? (attempts[attempts.length - 1].loggedBy || generatedBy) : generatedBy}
+                {formatVerifierName(attempts.length > 0 ? (attempts[attempts.length - 1].loggedBy || generatedBy) : generatedBy)}
               </div>
               <div>Verifier Signature</div>
             </div>
             <div className="text-center">
               <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-[#00450e] min-h-[24px] flex items-center justify-center">
-                {isVerified ? "VERIFIED" : "UNDER VERIFICATION"}
+                {isVerified ? "VERIFIED" : "IN PROGRESS"}
               </div>
               <div>Verification Status</div>
             </div>

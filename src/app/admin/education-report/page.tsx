@@ -76,11 +76,28 @@ function EducationReportContent() {
     }
   };
 
+  const formatVerifierName = (val?: string): string => {
+    if (!val) return "India Ops";
+    const trimmed = String(val).trim();
+    if (!trimmed) return "India Ops";
+    if (!trimmed.includes("@")) return trimmed;
+    const emailLower = trimmed.toLowerCase();
+    if (emailLower.startsWith("indiaops")) return "India Ops";
+    if (emailLower.startsWith("pkumar") || emailLower.startsWith("prabirkumar")) return "P Kumar";
+    const handle = trimmed.split("@")[0];
+    return handle
+      .replace(/[._-]/g, " ")
+      .split(" ")
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   const generatedAtDate = verification.completedAt 
     ? new Date(verification.completedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase()
     : new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase();
 
-  const generatedBy = verification.verifier || "indiaops@ozclu.com";
+  const generatedBy = formatVerifierName(verification.verifier);
 
   const isVerified = verification.status === "Completed" || verification.status === "Verified";
   const isDiscrepancy = verification.status === "Needs Attention" || verification.status === "Discrepancy";
@@ -199,6 +216,40 @@ function EducationReportContent() {
             break-before: page !important;
             page-break-before: always !important;
           }
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
+          .print-page-border {
+            display: block !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px double #5b21b6;
+            pointer-events: none;
+            z-index: 9999;
+          }
+          .report-page-card {
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 8px 4px !important;
+            margin: 0 !important;
+          }
+          .print-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 8px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 100vh !important;
+          }
+          .report-sign-off {
+            margin-top: auto !important;
+            padding-top: 20px !important;
+          }
         }
       `}</style>
 
@@ -206,19 +257,15 @@ function EducationReportContent() {
       <div className="no-print print:hidden w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-800">Education Verification Report</span>
-          <span className="text-xs text-slate-500">Ready to save or print on standard A4 paper size.</span>
+          <span className="text-xs text-slate-500">Ready to save or export as official A4 PDF document.</span>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => window.print()}
             className="flex items-center gap-1.5 px-4 py-2 bg-[#5b21b6] text-white rounded-lg font-bold text-xs hover:bg-[#4c1d95] cursor-pointer shadow-sm transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <polyline points="6 9 6 2 18 2 18 9"></polyline>
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-              <rect x="6" y="14" width="12" height="8"></rect>
-            </svg>
-            <span>Print Report</span>
+            <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+            <span>Generate PDF</span>
           </button>
           <button
             onClick={() => window.close()}
@@ -233,25 +280,26 @@ function EducationReportContent() {
         </div>
       </div>
 
+      {/* Per-page border frame (repeats on every printed page via position:fixed) */}
+      <div className="print-page-border hidden print:block" aria-hidden="true" />
+
       {/* Main Report Container */}
-      <div className="print-card w-full max-w-[800px] bg-white border-[6px] border-double border-[#5b21b6] p-8 sm:p-10 shadow-lg relative my-0 mx-auto print:shadow-none print:p-8 print:max-w-full print:w-full">
+      <div className="print-card w-full max-w-[800px] bg-white border-[4px] border-double border-[#5b21b6] p-6 sm:p-8 shadow-md relative my-0 mx-auto print:max-w-full print:w-full">
         
-        {/* Page 1 Block */}
-        <div className="print-page-block">
+        {/* Page 1 Block: Cover & Overall Verdict */}
+        <div>
           {/* Top Header */}
         <div className="grid grid-cols-3 items-center gap-4 mb-8">
           <div className="flex justify-start">
             <div className="flex items-center gap-2">
-              <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
-                <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
-              </div>
-              {settings && settings.logo && (
-                <>
-                  <div className="h-8 w-[1px] bg-slate-300 self-center mx-1 shrink-0" />
-                  <div className="w-20 h-10 sm:w-24 sm:h-12 flex items-center justify-start shrink-0">
-                    <img src={settings.logo} alt="Client Logo" className="object-contain max-h-full max-w-full" />
-                  </div>
-                </>
+              {settings && settings.logo ? (
+                <div className="w-28 h-14 sm:w-36 sm:h-16 flex items-center justify-start shrink-0">
+                  <img src={settings.logo} alt="Company Logo" className="object-contain max-h-full max-w-full" />
+                </div>
+              ) : (
+                <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
+                  <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+                </div>
               )}
             </div>
           </div>
@@ -296,7 +344,6 @@ function EducationReportContent() {
               <div><span className="text-slate-500 font-semibold">Client Company:</span> <span className="font-bold text-slate-800">{verification.requestingOrgName || verification.orgName}</span></div>
               <div><span className="text-slate-500 font-semibold">Email:</span> <span className="font-semibold text-slate-800">{settings?.contactEmail || "contact@company.com"}</span></div>
               <div><span className="text-slate-500 font-semibold">Checks Requested:</span> <span className="font-bold text-slate-800">{verification.itemCount || (verification.educationList?.length || 1)} Check(s)</span></div>
-              <div><span className="text-slate-500 font-semibold">Service Charge:</span> <span className="font-bold text-purple-800">${(verification.serviceCharge || (verification.itemCount || (verification.educationList?.length || 1)) * 5).toFixed(2)}</span></div>
             </div>
           </div>
         </div>
@@ -322,7 +369,7 @@ function EducationReportContent() {
         </div>
 
         {/* Education Information Table */}
-        <div className="mb-8 print-avoid-break">
+        <div>
           <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#5b21b6] mb-2">Candidate Submitted Academic Details</h3>
           <div className="overflow-x-auto border border-slate-200 rounded-xl">
             <table className="w-full text-left text-xs border-collapse">
@@ -364,7 +411,7 @@ function EducationReportContent() {
         </div>
 
         {/* Page 2 Content Block */}
-        <div className="print-page-block print-break-before mt-6 print:mt-0">
+        <div>
           {/* Verification Status & History Timeline */}
           <div className="mb-8">
             <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#5b21b6] border-b border-slate-200 pb-1 mb-3">Education Verification Summary</h3>
@@ -411,10 +458,9 @@ function EducationReportContent() {
                                 <td className="p-2.5 border-r border-slate-200 font-medium text-slate-700 capitalize">{att.verificationMode || "Manual"}</td>
                                 <td className="p-2.5 text-[10px] text-slate-665 font-medium leading-normal">
                                   {att.comment && <div className="font-bold text-slate-800">Comment: {att.comment}</div>}
-                                  {att.verifierNote && <div className="text-slate-500 italic mt-0.5">Note: {att.verifierNote}</div>}
                                   {att.respondentName && <div className="mt-1">Respondent: {att.respondentName} {att.respondentEmail ? `(${att.respondentEmail})` : ""}</div>}
                                   {att.respondentComment && <div className="italic text-slate-500">Respondent Comment: "{att.respondentComment}"</div>}
-                                  <div className="text-[9px] text-slate-400 mt-1">Logged by: {att.loggedBy || "indiaops@ozclu.com"}</div>
+                                  <div className="text-[9px] text-slate-400 mt-1">Logged by: {formatVerifierName(att.loggedBy || generatedBy)}</div>
                                 </td>
                               </tr>
                             );
@@ -433,17 +479,19 @@ function EducationReportContent() {
             </div>
           </div>
 
-          {/* Double Sign-off Section */}
-          <div className="flex justify-between items-center my-10 px-4 text-xs font-bold text-slate-700 print-avoid-break">
+          {/* Sign-Off & Disclaimer — pushed to bottom of last page */}
+          <div className="report-sign-off mt-10 print:mt-auto">
+           {/* Double Sign-off Section */}
+           <div className="flex justify-between items-center my-10 px-4 text-xs font-bold text-slate-700 print-avoid-break">
             <div className="text-center">
               <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-slate-900 min-h-[24px] flex items-center justify-center">
-                {attempts.length > 0 ? (attempts[attempts.length - 1].loggedBy || generatedBy) : generatedBy}
+                {formatVerifierName(attempts.length > 0 ? (attempts[attempts.length - 1].loggedBy || generatedBy) : generatedBy)}
               </div>
               <div>Verifier Signature</div>
             </div>
             <div className="text-center">
               <div className="border-b border-slate-300 w-40 sm:w-44 pb-1 mb-1 font-semibold italic text-[#5b21b6] min-h-[24px] flex items-center justify-center">
-                {isVerified ? "VERIFIED" : "UNDER VERIFICATION"}
+                {isVerified ? "VERIFIED" : "IN PROGRESS"}
               </div>
               <div>Verification Status</div>
             </div>
@@ -466,6 +514,7 @@ function EducationReportContent() {
               </div>
               <span className="text-[9px] text-slate-400 font-mono">Generated: {generatedAtDate}</span>
             </div>
+          </div>
           </div>
         </div>
 

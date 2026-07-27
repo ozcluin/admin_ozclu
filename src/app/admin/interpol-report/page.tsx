@@ -294,16 +294,14 @@ function AdminInterpolReportContent() {
         <div className="grid grid-cols-3 items-center gap-4 mb-8 border-b-2 border-slate-100 pb-6">
           <div className="flex justify-start">
             <div className="flex items-center gap-2">
-              <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
-                <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
-              </div>
-              {settings && settings.logo && (
-                <>
-                  <div className="h-8 w-[1px] bg-slate-300 self-center mx-1 shrink-0" />
-                  <div className="w-20 h-10 sm:w-24 sm:h-12 flex items-center justify-start shrink-0">
-                    <img src={settings.logo} alt="Client Logo" className="object-contain max-h-full max-w-full" />
-                  </div>
-                </>
+              {settings && settings.logo ? (
+                <div className="w-28 h-14 sm:w-36 sm:h-16 flex items-center justify-start shrink-0">
+                  <img src={settings.logo} alt="Company Logo" className="object-contain max-h-full max-w-full" />
+                </div>
+              ) : (
+                <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
+                  <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+                </div>
               )}
             </div>
           </div>

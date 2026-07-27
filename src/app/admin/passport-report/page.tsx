@@ -152,26 +152,42 @@ function AdminPassportReportContent() {
           .print-card .p-8, .print-card .p-6, .print-card .p-5 {
             padding: 12px !important;
           }
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
+          .print-page-border {
+            display: block !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px double #8B0000;
+            pointer-events: none;
+            z-index: 9999;
+          }
+          .print-card {
+            border: none !important;
+            box-shadow: none !important;
+          }
         }
       `}</style>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
       {/* Floating Toolbar */}
       <div className="no-print print:hidden w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-800">Passport Verification Report Viewer (Admin Audit)</span>
-          <span className="text-xs text-slate-500">Ready to save or print on standard A4 paper size.</span>
+          <span className="text-xs text-slate-500">Ready to save or export as official A4 PDF document.</span>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#181d16] text-white rounded-lg font-bold text-xs hover:bg-[#1E293B] cursor-pointer shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0284c7] text-white rounded-lg font-bold text-xs hover:bg-[#0369a1] cursor-pointer shadow-sm transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <polyline points="6 9 6 2 18 2 18 9"></polyline>
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-              <rect x="6" y="14" width="12" height="8"></rect>
-            </svg>
-            <span>Print Report</span>
+            <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+            <span>Generate PDF</span>
           </button>
           <button
             onClick={() => window.close()}
@@ -182,8 +198,11 @@ function AdminPassportReportContent() {
         </div>
       </div>
 
+      {/* Per-page border frame (repeats on every printed page via position:fixed) */}
+      <div className="print-page-border hidden print:block" aria-hidden="true" />
+
       {/* Main Report Container */}
-      <div className="print-card w-full max-w-[800px] bg-white border-[6px] border-double border-[#8B0000] p-8 sm:p-10 shadow-lg relative my-0 mx-auto print:shadow-none print:p-8 print:max-w-full print:w-full">
+      <div className="print-card w-full max-w-[800px] bg-white border-[4px] border-double border-[#8B0000] p-8 sm:p-10 shadow-lg relative my-0 mx-auto print:shadow-none print:p-4 print:max-w-full print:w-full">
         
         {/* Page Block */}
         <div className="print-page-block">
@@ -191,9 +210,15 @@ function AdminPassportReportContent() {
           {/* Top Header */}
           <div className="grid grid-cols-3 items-center gap-4 mb-8 border-b border-slate-200 pb-6">
             <div className="flex justify-start">
-              <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start">
-                <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
-              </div>
+              {settings && settings.logo ? (
+                <div className="w-28 h-14 sm:w-36 sm:h-16 flex items-center justify-start shrink-0">
+                  <img src={settings.logo} alt="Company Logo" className="object-contain max-h-full max-w-full" />
+                </div>
+              ) : (
+                <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start shrink-0">
+                  <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+                </div>
+              )}
             </div>
             <h1 className="text-center font-sans text-[#8B0000] text-xl sm:text-2xl font-extrabold tracking-widest uppercase mt-2 leading-tight">
               PASSPORT CHECK<br />REPORT

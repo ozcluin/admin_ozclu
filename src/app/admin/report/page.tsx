@@ -118,7 +118,24 @@ function ReportContent() {
     ? new Date(verification.completedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase()
     : new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase();
 
-  const generatedBy = verification.verifier || "Ozclu";
+  const formatVerifierName = (val?: string): string => {
+    if (!val) return "India Ops";
+    const trimmed = String(val).trim();
+    if (!trimmed) return "India Ops";
+    if (!trimmed.includes("@")) return trimmed;
+    const emailLower = trimmed.toLowerCase();
+    if (emailLower.startsWith("indiaops")) return "India Ops";
+    if (emailLower.startsWith("pkumar") || emailLower.startsWith("prabirkumar")) return "P Kumar";
+    const handle = trimmed.split("@")[0];
+    return handle
+      .replace(/[._-]/g, " ")
+      .split(" ")
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  const generatedBy = formatVerifierName(verification.verifier);
   const verifiedBy = (verification.digilockerStatus === "Verified" || !!verification.digilockerName)
     ? "DigiLocker"
     : generatedBy;
@@ -258,9 +275,15 @@ function ReportContent() {
           {/* Top Header */}
         <div className="grid grid-cols-3 items-center gap-4 mb-8">
           <div className="flex justify-start">
-            <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start">
-              <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
-            </div>
+            {settings && settings.logo ? (
+              <div className="w-28 h-14 sm:w-36 sm:h-16 flex items-center justify-start shrink-0">
+                <img src={settings.logo} alt="Company Logo" className="object-contain max-h-full max-w-full" />
+              </div>
+            ) : (
+              <div className="w-28 h-14 sm:w-32 sm:h-16 flex items-center justify-start shrink-0">
+                <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+              </div>
+            )}
           </div>
           <h1 className="text-center font-sans text-[#1B365D] text-2xl sm:text-3xl font-extrabold tracking-widest uppercase mt-2">REPORT</h1>
           <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">

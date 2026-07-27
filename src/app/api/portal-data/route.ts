@@ -885,39 +885,43 @@ export async function POST(req: NextRequest) {
         const countriesList = [...new Set((validEmps.length > 0 ? validEmps : [employmentData]).map((e: any) => e.country || "India"))];
         const country = countriesList.join(", ");
 
+        const primaryEmp = validEmps[0] || employmentData;
+
         const result = await db.collection("verifications").updateOne(
           { id: verificationId },
           {
             $set: {
               employmentData: {
-                country: employmentData.country || "",
-                state: employmentData.state || "",
-                city: employmentData.city || "",
-                companyName: employmentData.companyName || "",
-                addressLine1: employmentData.addressLine1 || "",
-                addressLine2: employmentData.addressLine2 || "",
-                companyTelephoneCode: employmentData.companyTelephoneCode || "+91",
-                companyTelephone: employmentData.companyTelephone || "",
-                department: employmentData.department || "",
-                position: employmentData.position || "",
-                employmentPeriodFrom: employmentData.employmentPeriodFrom || "",
-                employmentPeriodTo: employmentData.employmentPeriodTo || "",
-                employeeCode: employmentData.employeeCode || "",
-                reportingManagerName: employmentData.reportingManagerName || "",
-                reportingManagerDepartment: employmentData.reportingManagerDepartment || "",
-                reportingManagerContactCode: employmentData.reportingManagerContactCode || "+91",
-                reportingManagerContact: employmentData.reportingManagerContact || "",
-                reportingManagerEmail: employmentData.reportingManagerEmail || "",
-                annualCTC: employmentData.annualCTC || "",
-                employmentType: employmentData.employmentType || "",
-                agencyDetails: employmentData.agencyDetails || "",
-                reasonForLeaving: employmentData.reasonForLeaving || "",
-                remarks: employmentData.remarks || "",
-                experienceLetterFile: employmentData.experienceLetterFile || "",
-                experienceLetterFileName: employmentData.experienceLetterFileName || "",
+                country: primaryEmp.country || "",
+                state: primaryEmp.state || "",
+                city: primaryEmp.city || "",
+                companyName: primaryEmp.companyName || "",
+                addressLine1: primaryEmp.addressLine1 || "",
+                addressLine2: primaryEmp.addressLine2 || "",
+                companyTelephoneCode: primaryEmp.companyTelephoneCode || "+91",
+                companyTelephone: primaryEmp.companyTelephone || "",
+                department: primaryEmp.department || "",
+                position: primaryEmp.position || "",
+                employmentPeriodFrom: primaryEmp.employmentPeriodFrom || "",
+                employmentPeriodTo: primaryEmp.employmentPeriodTo || "",
+                employeeCode: primaryEmp.employeeCode || "",
+                reportingManagerName: primaryEmp.reportingManagerName || "",
+                reportingManagerDepartment: primaryEmp.reportingManagerDepartment || "",
+                reportingManagerContactCode: primaryEmp.reportingManagerContactCode || "+91",
+                reportingManagerContact: primaryEmp.reportingManagerContact || "",
+                reportingManagerEmail: primaryEmp.reportingManagerEmail || "",
+                annualCTC: primaryEmp.annualCTC || "",
+                employmentType: primaryEmp.employmentType || "",
+                agencyDetails: primaryEmp.agencyDetails || "",
+                reasonForLeaving: primaryEmp.reasonForLeaving || "",
+                remarks: primaryEmp.remarks || "",
+                experienceLetterFile: primaryEmp.experienceLetterFile || "",
+                experienceLetterFileName: primaryEmp.experienceLetterFileName || "",
+                employments: validEmps.length > 0 ? validEmps : [primaryEmp],
+                pastOrganisations: validEmps.length > 0 ? validEmps : [primaryEmp],
               },
-              ...(Array.isArray(employmentData.pastOrganisations) ? { pastOrganisations: employmentData.pastOrganisations } : {}),
-              ...(Array.isArray(employmentData.employments) ? { employments: employmentData.employments } : {}),
+              pastOrganisations: validEmps.length > 0 ? validEmps : [primaryEmp],
+              employments: validEmps.length > 0 ? validEmps : [primaryEmp],
               itemCount,
               serviceCharge,
               country,
@@ -1513,7 +1517,7 @@ export async function POST(req: NextRequest) {
       }
       case "logEmploymentAttempt": {
         const {
-          verificationId, verificationMode, result, comment, verifierNote,
+          verificationId, targetOrg, verificationMode, result, comment, verifierNote,
           respondentName, respondentEmail, respondentComment,
           extraPayment, markAsPaid, askCustomerApproval, screenshot, sendEmail
         } = payload;
@@ -1524,6 +1528,7 @@ export async function POST(req: NextRequest) {
 
         const attemptEntry = {
           date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase(),
+          targetOrg: targetOrg || "",
           verificationMode: verificationMode || "Manual",
           result: result || "In Progress",
           comment: comment || "",

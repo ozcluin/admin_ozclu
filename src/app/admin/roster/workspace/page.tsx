@@ -35,6 +35,7 @@ function WorkspaceContent() {
   const [isRetrying, setIsRetrying] = useState(false);
 
   // Employment Log Attempt state
+  const [empAttemptTargetOrg, setEmpAttemptTargetOrg] = useState("all");
   const [empAttemptMode, setEmpAttemptMode] = useState("Manual");
   const [empAttemptResult, setEmpAttemptResult] = useState("In Progress");
   const [empAttemptComment, setEmpAttemptComment] = useState("");
@@ -51,6 +52,7 @@ function WorkspaceContent() {
   const [empAttemptSuccess, setEmpAttemptSuccess] = useState("");
   const [empAttemptError, setEmpAttemptError] = useState("");
   const [showLogAttemptForm, setShowLogAttemptForm] = useState(false);
+  const [activeLogOrgIndex, setActiveLogOrgIndex] = useState<number | null>(null);
 
   // Load details
   const loadDetail = useCallback(async () => {
@@ -457,40 +459,54 @@ function WorkspaceContent() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
-                    <tr className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Full name (as per government ID)</td>
-                      <td className="p-2.5 font-bold text-slate-900">{displayVerification.digilockerName || displayVerification.name || "-"}</td>
-                    </tr>
-                    <tr className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Date of birth</td>
-                      <td className="p-2.5">{displayVerification.digilockerDob || displayVerification.candidateDob || "-"}</td>
-                    </tr>
-                    <tr className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Mobile number</td>
-                      <td className="p-2.5">{displayVerification.digilockerMobile || displayVerification.candidateMobile || "-"}</td>
-                    </tr>
-                    <tr className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Current residential address</td>
-                      <td className="p-2.5">{displayVerification.addresses && displayVerification.addresses.length > 0
-                        ? [displayVerification.addresses[0].address, displayVerification.addresses[0].city, displayVerification.addresses[0].state, displayVerification.addresses[0].country].filter(Boolean).join(", ")
-                        : "-"}</td>
-                    </tr>
-                    <tr className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Primary government ID number</td>
-                      <td className="p-2.5 font-mono">{displayVerification.digilockerAadhaar || displayVerification.digilockerPan || displayVerification.idProofNumber || "-"}</td>
-                    </tr>
-                    <tr className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email address</td>
-                      <td className="p-2.5">{displayVerification.digilockerEmail || displayVerification.email || "-"}</td>
-                    </tr>
-                    <tr className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Nationality</td>
-                      <td className="p-2.5">{"Indian"}</td>
-                    </tr>
-                    <tr className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Gender</td>
-                      <td className="p-2.5">{displayVerification.digilockerGender || displayVerification.gender || "-"}</td>
-                    </tr>
+                    {Boolean(displayVerification.digilockerName || displayVerification.name) && (
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Full name (as per government ID)</td>
+                        <td className="p-2.5 font-bold text-slate-900">{displayVerification.digilockerName || displayVerification.name}</td>
+                      </tr>
+                    )}
+                    {Boolean(displayVerification.digilockerDob || displayVerification.candidateDob) && (
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Date of birth</td>
+                        <td className="p-2.5">{displayVerification.digilockerDob || displayVerification.candidateDob}</td>
+                      </tr>
+                    )}
+                    {Boolean(displayVerification.digilockerMobile || displayVerification.candidateMobile) && (
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Mobile number</td>
+                        <td className="p-2.5">{displayVerification.digilockerMobile || displayVerification.candidateMobile}</td>
+                      </tr>
+                    )}
+                    {Boolean(displayVerification.addresses && displayVerification.addresses.length > 0 && [displayVerification.addresses[0].address, displayVerification.addresses[0].city, displayVerification.addresses[0].state, displayVerification.addresses[0].country].filter(Boolean).join(", ")) && (
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Current residential address</td>
+                        <td className="p-2.5">{[displayVerification.addresses[0].address, displayVerification.addresses[0].city, displayVerification.addresses[0].state, displayVerification.addresses[0].country].filter(Boolean).join(", ")}</td>
+                      </tr>
+                    )}
+                    {Boolean(displayVerification.digilockerAadhaar || displayVerification.digilockerPan || displayVerification.idProofNumber) && (
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Primary government ID number</td>
+                        <td className="p-2.5 font-mono">{displayVerification.digilockerAadhaar || displayVerification.digilockerPan || displayVerification.idProofNumber}</td>
+                      </tr>
+                    )}
+                    {Boolean(displayVerification.digilockerEmail || displayVerification.email) && (
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email address</td>
+                        <td className="p-2.5">{displayVerification.digilockerEmail || displayVerification.email}</td>
+                      </tr>
+                    )}
+                    {Boolean(displayVerification.nationality) && (
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Nationality</td>
+                        <td className="p-2.5">{displayVerification.nationality}</td>
+                      </tr>
+                    )}
+                    {Boolean(displayVerification.digilockerGender || displayVerification.gender) && (
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Gender</td>
+                        <td className="p-2.5">{displayVerification.digilockerGender || displayVerification.gender}</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -512,30 +528,42 @@ function WorkspaceContent() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree Category</td>
-                        <td className="p-2.5">{displayVerification.educationData.degreeType || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Course / Degree Name</td>
-                        <td className="p-2.5 font-bold text-slate-900">{displayVerification.educationData.courseName || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Board / University</td>
-                        <td className="p-2.5">{displayVerification.educationData.boardUniversity || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">School / College Name</td>
-                        <td className="p-2.5">{displayVerification.educationData.institutionName || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Roll / Registration No.</td>
-                        <td className="p-2.5 font-mono">{displayVerification.educationData.rollNumber || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Passing Year</td>
-                        <td className="p-2.5 font-mono">{displayVerification.educationData.passingYear || "-"}</td>
-                      </tr>
+                      {Boolean(displayVerification.educationData.degreeType) && (
+                        <tr className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree Category</td>
+                          <td className="p-2.5">{displayVerification.educationData.degreeType}</td>
+                        </tr>
+                      )}
+                      {Boolean(displayVerification.educationData.courseName) && (
+                        <tr className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Course / Degree Name</td>
+                          <td className="p-2.5 font-bold text-slate-900">{displayVerification.educationData.courseName}</td>
+                        </tr>
+                      )}
+                      {Boolean(displayVerification.educationData.boardUniversity) && (
+                        <tr className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Board / University</td>
+                          <td className="p-2.5">{displayVerification.educationData.boardUniversity}</td>
+                        </tr>
+                      )}
+                      {Boolean(displayVerification.educationData.institutionName) && (
+                        <tr className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">School / College Name</td>
+                          <td className="p-2.5">{displayVerification.educationData.institutionName}</td>
+                        </tr>
+                      )}
+                      {Boolean(displayVerification.educationData.rollNumber) && (
+                        <tr className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Roll / Registration No.</td>
+                          <td className="p-2.5 font-mono">{displayVerification.educationData.rollNumber}</td>
+                        </tr>
+                      )}
+                      {Boolean(displayVerification.educationData.passingYear) && (
+                        <tr className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Passing Year</td>
+                          <td className="p-2.5 font-mono">{displayVerification.educationData.passingYear}</td>
+                        </tr>
+                      )}
                       {displayVerification.educationData.certificateFile && (
                         <tr className="hover:bg-slate-50/50 transition-colors">
                           <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree / Marksheet Proof</td>
@@ -558,303 +586,540 @@ function WorkspaceContent() {
             )}
 
             {/* Employment Check Details */}
-            {displayVerification.employmentData && (
-              <div className="flex flex-col gap-2">
-                <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                  <span className="material-symbols-outlined text-sm">work</span>
-                  Employment Check
-                </h5>
-                <div className="overflow-x-auto border border-slate-200/60 rounded-xl">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-                        <th className="p-2.5 border-r border-slate-200 w-2/5">Information Required</th>
-                        <th className="p-2.5">Provided Response</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Country</td>
-                        <td className="p-2.5">{displayVerification.employmentData.country || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">State</td>
-                        <td className="p-2.5">{displayVerification.employmentData.state || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">City</td>
-                        <td className="p-2.5">{displayVerification.employmentData.city || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Name</td>
-                        <td className="p-2.5 font-bold text-slate-900">{displayVerification.employmentData.companyName || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Address - Line 1</td>
-                        <td className="p-2.5">{displayVerification.employmentData.addressLine1 || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Address - Line 2</td>
-                        <td className="p-2.5">{displayVerification.employmentData.addressLine2 || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Telephone</td>
-                        <td className="p-2.5">{displayVerification.employmentData.companyTelephone ? `${displayVerification.employmentData.companyTelephoneCode || ""} ${displayVerification.employmentData.companyTelephone}` : "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department</td>
-                        <td className="p-2.5">{displayVerification.employmentData.department || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Position</td>
-                        <td className="p-2.5">{displayVerification.employmentData.position || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - From</td>
-                        <td className="p-2.5 font-mono">{displayVerification.employmentData.employmentPeriodFrom || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - To</td>
-                        <td className="p-2.5 font-mono">{displayVerification.employmentData.employmentPeriodTo || "Present"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employee Code</td>
-                        <td className="p-2.5 font-mono">{displayVerification.employmentData.employeeCode || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reporting Manager Name</td>
-                        <td className="p-2.5">{displayVerification.employmentData.reportingManagerName || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department of Reporting Manager</td>
-                        <td className="p-2.5">{displayVerification.employmentData.reportingManagerDepartment || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Contact No of Reporting Manager</td>
-                        <td className="p-2.5">{displayVerification.employmentData.reportingManagerContact ? `${displayVerification.employmentData.reportingManagerContactCode || ""} ${displayVerification.employmentData.reportingManagerContact}` : "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email ID of Reporting Manager</td>
-                        <td className="p-2.5">{displayVerification.employmentData.reportingManagerEmail || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Annual CTC</td>
-                        <td className="p-2.5 font-mono">{displayVerification.employmentData.annualCTC || "-"}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment is Permanent or Temporary</td>
-                        <td className="p-2.5">{displayVerification.employmentData.employmentType || "-"}</td>
-                      </tr>
-                      {displayVerification.employmentData.agencyDetails && (
-                        <tr className="hover:bg-slate-50/50 transition-colors">
-                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Agency Details (if temporary or contractual)</td>
-                          <td className="p-2.5">{displayVerification.employmentData.agencyDetails}</td>
-                        </tr>
-                      )}
-                      {displayVerification.employmentData.reasonForLeaving && (
-                        <tr className="hover:bg-slate-50/50 transition-colors">
-                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reason(s) for Leaving</td>
-                          <td className="p-2.5 font-normal text-slate-700">{displayVerification.employmentData.reasonForLeaving}</td>
-                        </tr>
-                      )}
-                      {displayVerification.employmentData.remarks && (
-                        <tr className="hover:bg-slate-50/50 transition-colors">
-                          <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Remarks If any</td>
-                          <td className="p-2.5 italic font-normal text-slate-500">{displayVerification.employmentData.remarks}</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+            {(() => {
+              const allEmpsList: any[] = Array.isArray(displayVerification.employments) && displayVerification.employments.length > 0
+                ? displayVerification.employments
+                : (Array.isArray(displayVerification.pastOrganisations) && displayVerification.pastOrganisations.length > 0
+                    ? displayVerification.pastOrganisations
+                    : (Array.isArray(displayVerification.employmentData?.employments) && displayVerification.employmentData.employments.length > 0
+                        ? displayVerification.employmentData.employments
+                        : (Array.isArray(displayVerification.employmentData?.pastOrganisations) && displayVerification.employmentData.pastOrganisations.length > 0
+                            ? displayVerification.employmentData.pastOrganisations
+                            : (displayVerification.employmentData ? [displayVerification.employmentData] : []))));
+
+              if (allEmpsList.length === 0) return null;
+
+              return (
+                <div className="flex flex-col gap-4">
+                  <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                    <span className="material-symbols-outlined text-sm">work</span>
+                    Employment Check ({allEmpsList.length} Organisation{allEmpsList.length > 1 ? "s" : ""})
+                  </h5>
+                  {allEmpsList.map((empObj: any, idx: number) => (
+                    <div key={idx} className="flex flex-col gap-1 border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
+                      <div className="bg-slate-100/80 px-3 py-2 border-b border-slate-200/80 flex items-center justify-between">
+                        <span className="font-bold text-xs text-[#016e1c] uppercase tracking-wide">
+                          {idx + 1}. {empObj.companyName || `Organisation #${idx + 1}`}
+                          {idx === 0 ? " (Current / Most Recent)" : " (Past Employment Record)"}
+                        </span>
+                        {[empObj.city, empObj.state, empObj.country].filter(Boolean).length > 0 && (
+                          <span className="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                            {[empObj.city, empObj.state, empObj.country].filter(Boolean).join(", ")}
+                          </span>
+                        )}
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                              <th className="p-2.5 border-r border-slate-200 w-2/5">Information Required</th>
+                              <th className="p-2.5">Provided Response</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
+                            {Boolean(empObj.country) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Country</td>
+                                <td className="p-2.5">{empObj.country}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.state) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">State</td>
+                                <td className="p-2.5">{empObj.state}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.city) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">City</td>
+                                <td className="p-2.5">{empObj.city}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.companyName) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Name</td>
+                                <td className="p-2.5 font-bold text-slate-900">{empObj.companyName}</td>
+                              </tr>
+                            )}
+                            {Boolean([empObj.addressLine1, empObj.addressLine2].filter(Boolean).join(", ")) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Address</td>
+                                <td className="p-2.5">{[empObj.addressLine1, empObj.addressLine2].filter(Boolean).join(", ")}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.companyTelephone) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Company Telephone</td>
+                                <td className="p-2.5">{empObj.companyTelephoneCode || ""} {empObj.companyTelephone}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.department) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department</td>
+                                <td className="p-2.5">{empObj.department}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.position) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Position</td>
+                                <td className="p-2.5">{empObj.position}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.employmentPeriodFrom) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - From</td>
+                                <td className="p-2.5 font-mono">{empObj.employmentPeriodFrom}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.employmentPeriodTo) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Period - To</td>
+                                <td className="p-2.5 font-mono">{empObj.employmentPeriodTo}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.employeeCode) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employee Code</td>
+                                <td className="p-2.5 font-mono">{empObj.employeeCode}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.reportingManagerName) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reporting Manager Name</td>
+                                <td className="p-2.5">{empObj.reportingManagerName}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.reportingManagerDepartment) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department of Reporting Manager</td>
+                                <td className="p-2.5">{empObj.reportingManagerDepartment}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.reportingManagerContact) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Contact No of Reporting Manager</td>
+                                <td className="p-2.5">{empObj.reportingManagerContactCode || ""} {empObj.reportingManagerContact}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.reportingManagerEmail) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Email ID of Reporting Manager</td>
+                                <td className="p-2.5">{empObj.reportingManagerEmail}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.annualCTC) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Annual CTC</td>
+                                <td className="p-2.5 font-mono">{empObj.annualCTC}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.employmentType) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Employment Type</td>
+                                <td className="p-2.5">{empObj.employmentType}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.agencyDetails) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Agency Details (if temporary or contractual)</td>
+                                <td className="p-2.5">{empObj.agencyDetails}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.reasonForLeaving) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reason(s) for Leaving</td>
+                                <td className="p-2.5 font-normal text-slate-700">{empObj.reasonForLeaving}</td>
+                              </tr>
+                            )}
+                            {Boolean(empObj.remarks) && (
+                              <tr className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Remarks If any</td>
+                                <td className="p-2.5 italic font-normal text-slate-500">{empObj.remarks}</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Log New Attempt Button & Form directly under this employment check */}
+                      <div className="bg-slate-50/90 px-3.5 py-2.5 border-t border-slate-200/80 flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-sm text-[#016e1c]">edit_note</span>
+                            Verification Attempt Log for <span className="text-[#016e1c] font-black">{empObj.companyName || `Organisation #${idx + 1}`}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (activeLogOrgIndex === idx) {
+                                setActiveLogOrgIndex(null);
+                              } else {
+                                setEmpAttemptTargetOrg(String(idx));
+                                setActiveLogOrgIndex(idx);
+                              }
+                            }}
+                            className="text-[10px] font-bold uppercase tracking-wider text-[#016e1c] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">{activeLogOrgIndex === idx ? "expand_less" : "add"}</span>
+                            {activeLogOrgIndex === idx ? "Collapse" : "Log New Attempt for this Employment"}
+                          </button>
+                        </div>
+
+                        {activeLogOrgIndex === idx && (
+                          <div className="bg-white border border-slate-200/80 rounded-xl p-4 flex flex-col gap-3 shadow-xs animate-fade-in text-left">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verification Mode</label>
+                                <select value={empAttemptMode} onChange={e => setEmpAttemptMode(e.target.value)}
+                                  className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer">
+                                  <option value="field">Field Verification</option>
+                                  <option value="Manual">Manual</option>
+                                  <option value="Email">Email</option>
+                                  <option value="Phone">Phone</option>
+                                  <option value="In-Person">In-Person</option>
+                                  <option value="Database">Database Check</option>
+                                  <option value="Document">Document Check</option>
+                                </select>
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Result</label>
+                                <select value={empAttemptResult} onChange={e => setEmpAttemptResult(e.target.value)}
+                                  className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer">
+                                  <option value="In Progress">In Progress</option>
+                                  <option value="Verified">Verified / Completed</option>
+                                  <option value="Discrepancy">Discrepancy</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Comment</label>
+                              <textarea value={empAttemptComment} onChange={e => setEmpAttemptComment(e.target.value)} rows={2}
+                                className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                                placeholder={`Add attempt comment for ${empObj.companyName || 'this organisation'}`} />
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verifier Note (Internal)</label>
+                              <textarea value={empAttemptVerifierNote} onChange={e => setEmpAttemptVerifierNote(e.target.value)} rows={2}
+                                className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                                placeholder="Internal note for verification method (not shown in report)" />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Name</label>
+                                <input type="text" value={empAttemptRespondentName} onChange={e => setEmpAttemptRespondentName(e.target.value)}
+                                  className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
+                                  placeholder="Enter respondent name" />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Email ID</label>
+                                <input type="email" value={empAttemptRespondentEmail} onChange={e => setEmpAttemptRespondentEmail(e.target.value)}
+                                  className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
+                                  placeholder="Enter respondent email" />
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Comment</label>
+                              <textarea value={empAttemptRespondentComment} onChange={e => setEmpAttemptRespondentComment(e.target.value)} rows={2}
+                                className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                                placeholder="Add respondent comment" />
+                            </div>
+
+                            <div className="flex items-center justify-end pt-2 border-t border-slate-200/60">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setEmpAttemptSubmitting(true);
+                                  setEmpAttemptError("");
+                                  setEmpAttemptSuccess("");
+                                  try {
+                                    const selectedOrgLabel = `${idx + 1}. ${empObj.companyName || 'Organisation'}`;
+                                    await logEmploymentAttempt(displayVerification.id, {
+                                      targetOrg: selectedOrgLabel,
+                                      verificationMode: empAttemptMode,
+                                      result: empAttemptResult,
+                                      comment: empAttemptComment,
+                                      verifierNote: empAttemptVerifierNote,
+                                      respondentName: empAttemptRespondentName,
+                                      respondentEmail: empAttemptRespondentEmail,
+                                      respondentComment: empAttemptRespondentComment,
+                                      extraPayment: empAttemptExtraPayment,
+                                      markAsPaid: empAttemptMarkAsPaid,
+                                      askCustomerApproval: empAttemptAskApproval,
+                                      screenshot: empAttemptScreenshot,
+                                      sendEmail: empAttemptSendEmail
+                                    });
+                                    setEmpAttemptSuccess(`Attempt logged successfully for ${empObj.companyName || 'Organisation'}!`);
+                                    setEmpAttemptComment(""); setEmpAttemptVerifierNote("");
+                                    setEmpAttemptRespondentName(""); setEmpAttemptRespondentEmail("");
+                                    setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot("");
+                                    setActiveLogOrgIndex(null);
+                                    loadDetail();
+                                  } catch (err: any) {
+                                    setEmpAttemptError(err.message || "Failed to log attempt");
+                                  } finally {
+                                    setEmpAttemptSubmitting(false);
+                                  }
+                                }}
+                                disabled={empAttemptSubmitting}
+                                className="px-4 py-2 bg-gradient-to-r from-[#016e1c] to-[#0099ff] text-white rounded-xl font-bold text-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {empAttemptSubmitting ? (
+                                  <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /><span>Logging...</span></>
+                                ) : (
+                                  <><span className="material-symbols-outlined text-[14px]">send</span><span>Save Attempt Log</span></>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {/* Attempts Timeline for this specific employment */}
+                        {(() => {
+                          const allAttempts: any[] = displayVerification.employmentAttempts || [];
+                          const orgAttempts = allAttempts.filter((att: any) => {
+                            if (!att.targetOrg || att.targetOrg === "All / General") {
+                              // Legacy attempts without targetOrg — only show under first card
+                              return idx === 0;
+                            }
+                            // Strict match: targetOrg must start with "N." where N is this card's 1-based index
+                            const orgPrefix = `${idx + 1}.`;
+                            return att.targetOrg.startsWith(orgPrefix);
+                          });
+
+                          if (orgAttempts.length === 0) return null;
+
+                          return (
+                            <div className="bg-slate-50/60 p-3.5 border-t border-slate-200/80 flex flex-col gap-2.5">
+                              <h6 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-1">
+                                <span className="material-symbols-outlined text-sm text-[#016e1c]">history</span>
+                                Attempt History Log for {empObj.companyName || `Organisation #${idx + 1}`} ({orgAttempts.length})
+                              </h6>
+                              <div className="flex flex-col gap-2">
+                                {orgAttempts.slice().reverse().map((att: any, attIdx: number) => {
+                                  const realIdx = allAttempts.indexOf(att);
+                                  const outcome = att.result || att.status || "In Progress";
+                                  return (
+                                    <div key={attIdx} className="bg-white border border-slate-200/70 rounded-xl p-3 flex flex-col gap-2 shadow-2xs text-left">
+                                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
+                                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-700">
+                                          <span className="font-mono text-slate-500 text-[11px]">{att.date}</span>
+                                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
+                                            outcome === "Verified" || outcome === "Completed" ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                              : outcome === "In Progress" || outcome === "Processing" ? "bg-blue-50 text-blue-700 border-blue-200"
+                                              : "bg-rose-50 text-rose-700 border-rose-200"
+                                          }`}>{outcome}</span>
+                                          <span className="text-[10px] text-slate-500 font-bold uppercase">Mode: {att.verificationMode || "field"}</span>
+                                        </div>
+                                        <button
+                                          onClick={async () => {
+                                            if (!confirm("Are you sure you want to delete this attempt log?")) return;
+                                            try {
+                                              await deleteEmploymentAttempt(displayVerification.id, realIdx >= 0 ? realIdx : attIdx);
+                                              loadDetail();
+                                            } catch (err: any) {
+                                              alert(err.message || "Failed to delete attempt");
+                                            }
+                                          }}
+                                          className="text-[9px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded border border-red-200 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                          <span className="material-symbols-outlined text-[12px]">delete</span>
+                                          Delete Log
+                                        </button>
+                                      </div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-[11px] leading-relaxed">
+                                        {att.comment && (
+                                          <div>
+                                            <span className="text-slate-400 font-medium block text-[9px] uppercase">Comment</span>
+                                            <span className="text-slate-800 font-semibold">{att.comment}</span>
+                                          </div>
+                                        )}
+                                        {att.verifierNote && (
+                                          <div>
+                                            <span className="text-slate-400 font-medium block text-[9px] uppercase">Verifier Note</span>
+                                            <span className="text-slate-800 font-semibold">{att.verifierNote}</span>
+                                          </div>
+                                        )}
+                                        {att.respondentName && (
+                                          <div>
+                                            <span className="text-slate-400 font-medium block text-[9px] uppercase">Respondent</span>
+                                            <span className="text-slate-800 font-semibold">{att.respondentName} {att.respondentEmail ? `(${att.respondentEmail})` : ""}</span>
+                                          </div>
+                                        )}
+                                        {att.respondentComment && (
+                                          <div>
+                                            <span className="text-slate-400 font-medium block text-[9px] uppercase">Respondent Comment</span>
+                                            <span className="text-slate-800 font-semibold">{att.respondentComment}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {/* Past Organisations (additional employment history) */}
-            {displayVerification.pastOrganisations && displayVerification.pastOrganisations.length > 1 && (
-              <div className="flex flex-col gap-2 mt-2">
-                <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5 select-none">
-                  <span className="material-symbols-outlined text-sm">domain_add</span>
-                  Additional Employment History ({displayVerification.pastOrganisations.length - 1} past organisation{displayVerification.pastOrganisations.length - 1 > 1 ? "s" : ""})
-                </h5>
-                {displayVerification.pastOrganisations.slice(1).map((org: any, idx: number) => (
-                  <div key={idx} className="border border-slate-100 rounded-xl overflow-hidden">
-                    <div className="bg-slate-50/50 p-2.5 flex items-center gap-2 border-b border-slate-100">
-                      <span className="material-symbols-outlined text-sm text-slate-400">business</span>
-                      <span className="font-bold text-xs text-slate-700">{org.companyName || `Organisation #${idx + 2}`}</span>
-                      {org.country && <span className="text-[10px] text-slate-400 ml-auto">{org.country}</span>}
-                    </div>
-                    <table className="w-full text-xs">
-                      <tbody>
-                        {org.companyName && (
-                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600 w-[40%]">Company</td><td className="p-2 font-bold">{org.companyName}</td></tr>
-                        )}
-                        {org.position && (
-                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600">Position</td><td className="p-2">{org.position}</td></tr>
-                        )}
-                        {org.department && (
-                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600">Department</td><td className="p-2">{org.department}</td></tr>
-                        )}
-                        {(org.employmentPeriodFrom || org.employmentPeriodTo) && (
-                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600">Period</td><td className="p-2 font-mono">{org.employmentPeriodFrom || "-"} → {org.employmentPeriodTo || "Present"}</td></tr>
-                        )}
-                        {org.reasonForLeaving && (
-                          <tr className="hover:bg-slate-50/50"><td className="p-2 border-r border-slate-200 bg-slate-50/30 text-slate-600">Reason for Leaving</td><td className="p-2">{org.reasonForLeaving}</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Log Attempt Section */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5 flex-1 select-none">
-                  <span className="material-symbols-outlined text-sm">edit_note</span>
-                  Log Verification Attempt
-                </h5>
-                <button
-                  onClick={() => setShowLogAttemptForm(!showLogAttemptForm)}
-                  className="text-[10px] font-bold uppercase tracking-wider text-[#016e1c] bg-[#016e1c]/10 hover:bg-[#016e1c]/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 shrink-0"
-                >
-                  <span className="material-symbols-outlined text-[14px]">{showLogAttemptForm ? "expand_less" : "add"}</span>
-                  {showLogAttemptForm ? "Collapse" : "New Attempt"}
-                </button>
-              </div>
-
-              {empAttemptSuccess && (
-                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
-                  <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
-                  {empAttemptSuccess}
+            {/* Log Attempt Section (For Education Verification) */}
+            {displayVerification.type === "education" && (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5 flex-1 select-none">
+                    <span className="material-symbols-outlined text-sm">edit_note</span>
+                    Log Education Verification Attempt
+                  </h5>
+                  <button
+                    onClick={() => setShowLogAttemptForm(!showLogAttemptForm)}
+                    className="text-[10px] font-bold uppercase tracking-wider text-[#016e1c] bg-[#016e1c]/10 hover:bg-[#016e1c]/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">{showLogAttemptForm ? "expand_less" : "add"}</span>
+                    {showLogAttemptForm ? "Collapse" : "New Attempt"}
+                  </button>
                 </div>
-              )}
-              {empAttemptError && (
-                <div className="bg-red-50 text-red-800 border border-red-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
-                  <span className="material-symbols-outlined text-base text-red-600">error</span>
-                  {empAttemptError}
-                </div>
-              )}
 
-              {showLogAttemptForm && (
-                <div className="bg-slate-50/60 border border-slate-200/60 rounded-2xl p-5 flex flex-col gap-4 animate-fade-in">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verification Mode</label>
-                      <select value={empAttemptMode} onChange={e => setEmpAttemptMode(e.target.value)}
-                        className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer">
-                        <option value="field">Field Verification</option>
-                        <option value="Manual">Manual</option>
-                        <option value="Email">Email</option>
-                        <option value="Phone">Phone</option>
-                        <option value="In-Person">In-Person</option>
-                        <option value="Database">Database Check</option>
-                        <option value="Document">Document Check</option>
-                      </select>
+                {empAttemptSuccess && (
+                  <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                    {empAttemptSuccess}
+                  </div>
+                )}
+                {empAttemptError && (
+                  <div className="bg-red-50 text-red-800 border border-red-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base text-red-600">error</span>
+                    {empAttemptError}
+                  </div>
+                )}
+
+                {showLogAttemptForm && (
+                  <div className="bg-slate-50/60 border border-slate-200/60 rounded-2xl p-5 flex flex-col gap-4 animate-fade-in text-left">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verification Mode</label>
+                        <select value={empAttemptMode} onChange={e => setEmpAttemptMode(e.target.value)}
+                          className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer">
+                          <option value="field">Field Verification</option>
+                          <option value="Manual">Manual</option>
+                          <option value="Email">Email</option>
+                          <option value="Phone">Phone</option>
+                          <option value="In-Person">In-Person</option>
+                          <option value="Database">Database Check</option>
+                          <option value="Document">Document Check</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Result</label>
+                        <select value={empAttemptResult} onChange={e => setEmpAttemptResult(e.target.value)}
+                          className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer">
+                          <option value="In Progress">In Progress</option>
+                          <option value="Verified">Verified / Completed</option>
+                          <option value="Discrepancy">Discrepancy</option>
+                        </select>
+                      </div>
                     </div>
+
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Result</label>
-                      <select value={empAttemptResult} onChange={e => setEmpAttemptResult(e.target.value)}
-                        className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer">
-                        <option value="In Progress">In Progress</option>
-                        <option value="Verified">Verified / Completed</option>
-                        <option value="Discrepancy">Discrepancy</option>
-                        <option value="Unable to Verify">Unable to Verify</option>
-                      </select>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Comment</label>
+                      <textarea value={empAttemptComment} onChange={e => setEmpAttemptComment(e.target.value)} rows={2}
+                        className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                        placeholder="Add attempt comment" />
                     </div>
-                  </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Comment</label>
-                    <textarea value={empAttemptComment} onChange={e => setEmpAttemptComment(e.target.value)} rows={2}
-                      className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
-                      placeholder="Add attempt comment" />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verifier Note (Internal)</label>
-                    <textarea value={empAttemptVerifierNote} onChange={e => setEmpAttemptVerifierNote(e.target.value)} rows={2}
-                      className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
-                      placeholder="Internal note for verification method (not shown in report)" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Name</label>
-                      <input type="text" value={empAttemptRespondentName} onChange={e => setEmpAttemptRespondentName(e.target.value)}
-                        className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
-                        placeholder="Enter respondent name" />
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verifier Note (Internal)</label>
+                      <textarea value={empAttemptVerifierNote} onChange={e => setEmpAttemptVerifierNote(e.target.value)} rows={2}
+                        className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                        placeholder="Internal note for verification method (not shown in report)" />
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Name</label>
+                        <input type="text" value={empAttemptRespondentName} onChange={e => setEmpAttemptRespondentName(e.target.value)}
+                          className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
+                          placeholder="Enter respondent name" />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Email ID</label>
+                        <input type="email" value={empAttemptRespondentEmail} onChange={e => setEmpAttemptRespondentEmail(e.target.value)}
+                          className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
+                          placeholder="Enter respondent email" />
+                      </div>
+                    </div>
+
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Email ID</label>
-                      <input type="email" value={empAttemptRespondentEmail} onChange={e => setEmpAttemptRespondentEmail(e.target.value)}
-                        className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
-                        placeholder="Enter respondent email" />
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Comment</label>
+                      <textarea value={empAttemptRespondentComment} onChange={e => setEmpAttemptRespondentComment(e.target.value)} rows={2}
+                        className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
+                        placeholder="Add respondent comment" />
                     </div>
-                  </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Respondent Comment</label>
-                    <textarea value={empAttemptRespondentComment} onChange={e => setEmpAttemptRespondentComment(e.target.value)} rows={2}
-                      className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400 resize-none"
-                      placeholder="Add respondent comment" />
-                  </div>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" checked={empAttemptExtraPayment} onChange={e => setEmpAttemptExtraPayment(e.target.checked)}
+                          className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
+                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Extra Payment</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" checked={empAttemptMarkAsPaid} onChange={e => setEmpAttemptMarkAsPaid(e.target.checked)}
+                          className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
+                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Mark As Paid</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" checked={empAttemptAskApproval} onChange={e => setEmpAttemptAskApproval(e.target.checked)}
+                          className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
+                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Ask Customer Approval</span>
+                      </label>
+                    </div>
 
-                  <div className="flex flex-wrap items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input type="checkbox" checked={empAttemptExtraPayment} onChange={e => setEmpAttemptExtraPayment(e.target.checked)}
-                        className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
-                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Extra Payment</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input type="checkbox" checked={empAttemptMarkAsPaid} onChange={e => setEmpAttemptMarkAsPaid(e.target.checked)}
-                        className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
-                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Mark As Paid</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input type="checkbox" checked={empAttemptAskApproval} onChange={e => setEmpAttemptAskApproval(e.target.checked)}
-                        className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
-                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Ask Customer Approval</span>
-                    </label>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Screenshot / Receipt (Max 2MB)</label>
-                    <input type="file" accept="image/*,.pdf" onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        if (file.size > 2 * 1024 * 1024) {
-                          setEmpAttemptError("File size exceeds 2MB limit");
-                          return;
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Screenshot / Receipt (Max 2MB)</label>
+                      <input type="file" accept="image/*,.pdf" onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 2 * 1024 * 1024) {
+                            setEmpAttemptError("File size exceeds 2MB limit");
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => setEmpAttemptScreenshot(reader.result as string);
+                          reader.readAsDataURL(file);
                         }
-                        const reader = new FileReader();
-                        reader.onload = () => setEmpAttemptScreenshot(reader.result as string);
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                      className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-50 file:cursor-pointer file:transition-colors" />
-                    {empAttemptScreenshot && (
-                      <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                        File attached
-                      </span>
-                    )}
-                  </div>
+                      }}
+                        className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-50 file:cursor-pointer file:transition-colors" />
+                      {empAttemptScreenshot && (
+                        <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                          File attached
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/60">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input type="checkbox" checked={empAttemptSendEmail} onChange={e => setEmpAttemptSendEmail(e.target.checked)}
-                        className="w-4 h-4 border border-slate-300 rounded text-[#016e1c] focus:ring-[#016e1c] cursor-pointer" />
-                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Email Customer</span>
-                    </label>
-                    <button
-                      onClick={async () => {
-                        setEmpAttemptSubmitting(true);
-                        setEmpAttemptError("");
-                        setEmpAttemptSuccess("");
-                        try {
-                          if (displayVerification.type === "education") {
-                            // education check attempt logic
+                    <div className="flex items-center justify-end pt-2 border-t border-slate-200/60">
+                      <button
+                        onClick={async () => {
+                          setEmpAttemptSubmitting(true);
+                          setEmpAttemptError("");
+                          setEmpAttemptSuccess("");
+                          try {
                             const res = await fetch("/api/portal-data", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
@@ -880,65 +1145,46 @@ function WorkspaceContent() {
                               })
                             });
                             if (!res.ok) throw new Error("Failed to log education attempt");
-                          } else {
-                            await logEmploymentAttempt(displayVerification.id, {
-                              verificationMode: empAttemptMode,
-                              result: empAttemptResult,
-                              comment: empAttemptComment,
-                              verifierNote: empAttemptVerifierNote,
-                              respondentName: empAttemptRespondentName,
-                              respondentEmail: empAttemptRespondentEmail,
-                              respondentComment: empAttemptRespondentComment,
-                              extraPayment: empAttemptExtraPayment,
-                              markAsPaid: empAttemptMarkAsPaid,
-                              askCustomerApproval: empAttemptAskApproval,
-                              screenshot: empAttemptScreenshot,
-                              sendEmail: empAttemptSendEmail
-                            });
+                            setEmpAttemptSuccess("Attempt logged successfully!");
+                            setEmpAttemptComment(""); setEmpAttemptVerifierNote("");
+                            setEmpAttemptRespondentName(""); setEmpAttemptRespondentEmail("");
+                            setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot("");
+                            setEmpAttemptExtraPayment(false); setEmpAttemptMarkAsPaid(false);
+                            setEmpAttemptAskApproval(false); setEmpAttemptSendEmail(false);
+                            loadDetail();
+                          } catch (err: any) {
+                            setEmpAttemptError(err.message || "Failed to log attempt");
+                          } finally {
+                            setEmpAttemptSubmitting(false);
                           }
-                          setEmpAttemptSuccess("Attempt logged successfully!");
-                          // Reset form
-                          setEmpAttemptComment(""); setEmpAttemptVerifierNote("");
-                          setEmpAttemptRespondentName(""); setEmpAttemptRespondentEmail("");
-                          setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot("");
-                          setEmpAttemptExtraPayment(false); setEmpAttemptMarkAsPaid(false);
-                          setEmpAttemptAskApproval(false); setEmpAttemptSendEmail(false);
-                          // Re-fetch detail
-                          loadDetail();
-                        } catch (err: any) {
-                          setEmpAttemptError(err.message || "Failed to log attempt");
-                        } finally {
-                          setEmpAttemptSubmitting(false);
-                        }
-                      }}
-                      disabled={empAttemptSubmitting}
-                      className="px-5 py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] text-white rounded-xl font-bold text-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {empAttemptSubmitting ? (
-                        <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /><span>Logging...</span></>
-                      ) : (
-                        <><span className="material-symbols-outlined text-[14px]">send</span><span>Log Attempt</span></>
-                      )}
-                    </button>
+                        }}
+                        disabled={empAttemptSubmitting}
+                        className="px-5 py-2.5 bg-gradient-to-r from-[#016e1c] to-[#0099ff] text-white rounded-xl font-bold text-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {empAttemptSubmitting ? (
+                          <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /><span>Logging...</span></>
+                        ) : (
+                          <><span className="material-symbols-outlined text-[14px]">send</span><span>Log Attempt</span></>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
-            {/* Attempts Timeline */}
-            {(() => {
-              const attempts = displayVerification.type === "education" 
-                ? (displayVerification.educationAttempts || [])
-                : (displayVerification.employmentAttempts || []);
+            {/* Education Attempts Timeline (For Education Verification) */}
+            {displayVerification.type === "education" && (() => {
+              const attempts = displayVerification.educationAttempts || [];
               if (attempts.length === 0) return null;
               return (
                 <div className="flex flex-col gap-3">
                   <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5 select-none">
                     <span className="material-symbols-outlined text-sm">history</span>
-                    Attempts Timeline ({attempts.length})
+                    Education Attempts Timeline ({attempts.length})
                   </h5>
                   <div className="flex flex-col gap-3">
-                    {attempts.map((att: any, idx: number) => {
+                    {attempts.slice().reverse().map((att: any, idx: number) => {
                       const outcome = att.result || att.status || "In Progress";
                       return (
                         <div key={idx} className="bg-slate-50/40 border border-slate-200/60 rounded-xl p-4 flex flex-col gap-3 relative transition-all hover:bg-slate-50">
@@ -951,6 +1197,12 @@ function WorkspaceContent() {
                                   : "bg-rose-50 text-rose-700 border-rose-200"
                               }`}>{outcome}</span>
                               <span className="text-[10px] text-slate-500 font-bold uppercase">Mode: {att.verificationMode || "field"}</span>
+                              {att.targetOrg && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-[#016e1c] border border-emerald-200 uppercase tracking-wide">
+                                  <span className="material-symbols-outlined text-[12px]">domain</span>
+                                  {att.targetOrg}
+                                </span>
+                              )}
                             </div>
                             <button
                               onClick={async () => {

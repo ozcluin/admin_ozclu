@@ -81,6 +81,7 @@ export default function ManageInvoicesPage() {
 
   const [planEmploymentRates, setPlanEmploymentRates] = useState<Record<string, string>>({});
   const [planEducationRates, setPlanEducationRates] = useState<Record<string, string>>({});
+  const [planServiceTats, setPlanServiceTats] = useState<Record<string, string>>({});
   const [showEmpCountryRatesView, setShowEmpCountryRatesView] = useState(false);
   const [showEduCountryRatesView, setShowEduCountryRatesView] = useState(false);
   const [showEmpCountryRatesEdit, setShowEmpCountryRatesEdit] = useState(false);
@@ -457,6 +458,17 @@ export default function ManageInvoicesPage() {
     setPlanEmploymentRates(defaultEmpRates);
     setPlanEducationRates(defaultEduRates);
 
+    const defaultTats: Record<string, string> = {
+      identity: org.serviceTats?.identity ?? "24 Hours",
+      court_record: org.serviceTats?.court_record ?? "24 - 48 Hours",
+      employment: org.serviceTats?.employment ?? "2 - 4 Business Days",
+      education: org.serviceTats?.education ?? "3 - 5 Business Days",
+      interpol: org.serviceTats?.interpol ?? "24 Hours",
+      passport: org.serviceTats?.passport ?? "24 Hours",
+      digital_address: org.serviceTats?.digital_address ?? "24 - 48 Hours",
+    };
+    setPlanServiceTats(defaultTats);
+
     setPlanIdentityEnabled(org.identityEnabled !== false);
     setPlanCourtEnabled(org.courtRecordEnabled !== false);
     setPlanEmploymentEnabled(org.employmentEnabled !== false);
@@ -494,6 +506,7 @@ export default function ManageInvoicesPage() {
 
       employmentRates: parsedEmpRates,
       educationRates: parsedEduRates,
+      serviceTats: planServiceTats,
 
       identityEnabled: planIdentityEnabled,
       courtRecordEnabled: planCourtEnabled,
@@ -1337,7 +1350,7 @@ export default function ManageInvoicesPage() {
                   <div className="flex flex-col gap-5 animate-fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                       {/* Payment Plan Card */}
-                      <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50 flex flex-col justify-between min-h-[190px]">
+                      <div className={`bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50 flex flex-col justify-between min-h-[190px] transition-all duration-300 ${editingPlan ? "md:col-span-2 lg:col-span-2 shadow-lg ring-1 ring-emerald-500/20 bg-white" : ""}`}>
                         {!editingPlan ? (
                           <>
                             <div>
@@ -1542,277 +1555,372 @@ export default function ManageInvoicesPage() {
                             </div>
                           </>
                         ) : (
-                          <div className="flex flex-col gap-2.5 text-left flex-1 justify-between">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <span className="material-symbols-outlined text-[16px] text-emerald-600 font-bold">payments</span>
-                              <span className="font-label-caps text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold">Configure 7 Services</span>
+                          <div className="flex flex-col gap-3 text-left flex-1 justify-between">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[18px] text-emerald-600 font-bold">payments</span>
+                                <span className="font-label-caps text-emerald-700 text-xs uppercase tracking-wider font-extrabold">Configure 7 Verification Services &amp; TAT</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-semibold">Enable/Disable, set custom TAT &amp; Rates</span>
                             </div>
                             
-                            <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-                              {/* Identity Check Toggle */}
-                              <div className="flex items-center justify-between">
-                                <label className="relative inline-flex items-center cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={planIdentityEnabled}
-                                    onChange={(e) => setPlanIdentityEnabled(e.target.checked)}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Identity Check</span>
-                                </label>
-                                <div className="flex items-center gap-0.5">
-                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={planRate}
-                                    onChange={(e) => setPlanRate(e.target.value)}
-                                    disabled={!planIdentityEnabled}
-                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                  />
-                                </div>
-                              </div>
+                            <div className="flex flex-col gap-2.5 max-h-[460px] overflow-y-auto pr-1">
+                               {/* Identity Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planIdentityEnabled}
+                                     onChange={(e) => setPlanIdentityEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Identity Check</span>
+                                 </label>
+                                 <div className="flex items-center gap-2">
+                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24 Hours"
+                                       value={planServiceTats["identity"] ?? "24 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, identity: e.target.value }))}
+                                       disabled={!planIdentityEnabled}
+                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planRate}
+                                       onChange={(e) => setPlanRate(e.target.value)}
+                                       disabled={!planIdentityEnabled}
+                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
 
-                              {/* Court Check Toggle */}
-                              <div className="flex items-center justify-between">
-                                <label className="relative inline-flex items-center cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={planCourtEnabled}
-                                    onChange={(e) => setPlanCourtEnabled(e.target.checked)}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Court Check</span>
-                                </label>
-                                <div className="flex items-center gap-0.5">
-                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={planCourtRate}
-                                    onChange={(e) => setPlanCourtRate(e.target.value)}
-                                    disabled={!planCourtEnabled}
-                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                  />
-                                </div>
-                              </div>
+                               {/* Court Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planCourtEnabled}
+                                     onChange={(e) => setPlanCourtEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Court Check</span>
+                                 </label>
+                                 <div className="flex items-center gap-2">
+                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24-48 Hours"
+                                       value={planServiceTats["court_record"] ?? "24 - 48 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, court_record: e.target.value }))}
+                                       disabled={!planCourtEnabled}
+                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planCourtRate}
+                                       onChange={(e) => setPlanCourtRate(e.target.value)}
+                                       disabled={!planCourtEnabled}
+                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
 
-                              {/* Employment Check Toggle in Edit Mode */}
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center justify-between">
-                                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                                    <input
-                                      type="checkbox"
-                                      checked={planEmploymentEnabled}
-                                      onChange={(e) => setPlanEmploymentEnabled(e.target.checked)}
-                                      className="sr-only peer"
-                                    />
-                                    <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                    <span className="ms-1.5 text-[11px] font-bold text-slate-700">Employment Check</span>
-                                  </label>
-                                  <div className="flex items-center gap-1">
-                                    {planEmploymentEnabled && (
-                                      <button
-                                        type="button"
-                                        onClick={() => setShowEmpCountryRatesEdit(!showEmpCountryRatesEdit)}
-                                        className="text-[9px] text-emerald-700 hover:bg-emerald-50 px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border border-emerald-200/60 flex items-center gap-0.5"
-                                      >
-                                        <span>Country Rates</span>
-                                        <span className="material-symbols-outlined text-[10px] font-bold">{showEmpCountryRatesEdit ? "expand_less" : "expand_more"}</span>
-                                      </button>
-                                    )}
-                                    <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      value={planEmploymentRate}
-                                      onChange={(e) => setPlanEmploymentRate(e.target.value)}
-                                      disabled={!planEmploymentEnabled}
-                                      className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                    />
-                                  </div>
-                                </div>
-                                {showEmpCountryRatesEdit && planEmploymentEnabled && (
-                                  <div className="bg-slate-100/80 p-2.5 rounded-xl border border-slate-200/70 my-1 animate-fade-in">
-                                    <p className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">Employment Rates per Country ($ USD)</p>
-                                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                                      {STANDARD_RATE_COUNTRIES.map((cntry) => (
-                                        <div key={cntry} className="flex items-center justify-between text-[10px]">
-                                          <span className="font-semibold text-slate-700">{cntry}:</span>
-                                          <div className="flex items-center gap-0.5">
-                                            <span className="text-[9px] text-slate-400 font-bold">$</span>
-                                            <input
-                                              type="number"
-                                              min="0"
-                                              step="0.01"
-                                              value={planEmploymentRates[cntry] ?? ""}
-                                              onChange={(e) => setPlanEmploymentRates(prev => ({ ...prev, [cntry]: e.target.value }))}
-                                              className="w-11 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold"
-                                            />
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
+                               {/* Employment Check Toggle in Edit Mode */}
+                               <div className="flex flex-col gap-1.5 py-1 border-b border-slate-100/60">
+                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                   <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                                     <input
+                                       type="checkbox"
+                                       checked={planEmploymentEnabled}
+                                       onChange={(e) => setPlanEmploymentEnabled(e.target.checked)}
+                                       className="sr-only peer"
+                                     />
+                                     <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                     <span className="ms-2 text-[11px] font-bold text-slate-800">Employment Check</span>
+                                   </label>
+                                   <div className="flex items-center gap-2">
+                                     {planEmploymentEnabled && (
+                                       <button
+                                         type="button"
+                                         onClick={() => setShowEmpCountryRatesEdit(!showEmpCountryRatesEdit)}
+                                         className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg font-extrabold cursor-pointer transition-all border border-emerald-200/80 flex items-center gap-1"
+                                       >
+                                         <span>Country Rates</span>
+                                         <span className="material-symbols-outlined text-[12px]">{showEmpCountryRatesEdit ? "expand_less" : "expand_more"}</span>
+                                       </button>
+                                     )}
+                                     <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                       <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                       <input
+                                         type="text"
+                                         placeholder="e.g. 2-4 Days"
+                                         value={planServiceTats["employment"] ?? "2 - 4 Business Days"}
+                                         onChange={(e) => setPlanServiceTats(prev => ({ ...prev, employment: e.target.value }))}
+                                         disabled={!planEmploymentEnabled}
+                                         className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       />
+                                     </div>
+                                     <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                       <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                       <input
+                                         type="number"
+                                         min="0"
+                                         step="0.01"
+                                         value={planEmploymentRate}
+                                         onChange={(e) => setPlanEmploymentRate(e.target.value)}
+                                         disabled={!planEmploymentEnabled}
+                                         className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       />
+                                     </div>
+                                   </div>
+                                 </div>
+                                 {showEmpCountryRatesEdit && planEmploymentEnabled && (
+                                   <div className="bg-slate-100/80 p-3 rounded-xl border border-slate-200/70 my-1 animate-fade-in">
+                                     <p className="text-[9px] font-extrabold text-emerald-800 uppercase tracking-wider mb-2">Employment Rates per Country ($ USD)</p>
+                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                       {STANDARD_RATE_COUNTRIES.map((cntry) => (
+                                         <div key={cntry} className="flex items-center justify-between text-[10px] bg-white p-1.5 rounded-lg border border-slate-200/60">
+                                           <span className="font-bold text-slate-700">{cntry}:</span>
+                                           <div className="flex items-center gap-0.5">
+                                             <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                             <input
+                                               type="number"
+                                               min="0"
+                                               step="0.01"
+                                               value={planEmploymentRates[cntry] ?? ""}
+                                               onChange={(e) => setPlanEmploymentRates(prev => ({ ...prev, [cntry]: e.target.value }))}
+                                               className="w-12 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold"
+                                             />
+                                           </div>
+                                         </div>
+                                       ))}
+                                     </div>
+                                   </div>
+                                 )}
+                               </div>
 
-                              {/* Education Check Toggle in Edit Mode */}
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center justify-between">
-                                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                                    <input
-                                      type="checkbox"
-                                      checked={planEducationEnabled}
-                                      onChange={(e) => setPlanEducationEnabled(e.target.checked)}
-                                      className="sr-only peer"
-                                    />
-                                    <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                    <span className="ms-1.5 text-[11px] font-bold text-slate-700">Education Check</span>
-                                  </label>
-                                  <div className="flex items-center gap-1">
-                                    {planEducationEnabled && (
-                                      <button
-                                        type="button"
-                                        onClick={() => setShowEduCountryRatesEdit(!showEduCountryRatesEdit)}
-                                        className="text-[9px] text-emerald-700 hover:bg-emerald-50 px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border border-emerald-200/60 flex items-center gap-0.5"
-                                      >
-                                        <span>Country Rates</span>
-                                        <span className="material-symbols-outlined text-[10px] font-bold">{showEduCountryRatesEdit ? "expand_less" : "expand_more"}</span>
-                                      </button>
-                                    )}
-                                    <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      value={planEducationRate}
-                                      onChange={(e) => setPlanEducationRate(e.target.value)}
-                                      disabled={!planEducationEnabled}
-                                      className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                    />
-                                  </div>
-                                </div>
-                                {showEduCountryRatesEdit && planEducationEnabled && (
-                                  <div className="bg-slate-100/80 p-2.5 rounded-xl border border-slate-200/70 my-1 animate-fade-in">
-                                    <p className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">Education Rates per Country ($ USD)</p>
-                                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                                      {STANDARD_RATE_COUNTRIES.map((cntry) => (
-                                        <div key={cntry} className="flex items-center justify-between text-[10px]">
-                                          <span className="font-semibold text-slate-700">{cntry}:</span>
-                                          <div className="flex items-center gap-0.5">
-                                            <span className="text-[9px] text-slate-400 font-bold">$</span>
-                                            <input
-                                              type="number"
-                                              min="0"
-                                              step="0.01"
-                                              value={planEducationRates[cntry] ?? ""}
-                                              onChange={(e) => setPlanEducationRates(prev => ({ ...prev, [cntry]: e.target.value }))}
-                                              className="w-11 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold"
-                                            />
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
+                               {/* Education Check Toggle in Edit Mode */}
+                               <div className="flex flex-col gap-1.5 py-1 border-b border-slate-100/60">
+                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                   <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                                     <input
+                                       type="checkbox"
+                                       checked={planEducationEnabled}
+                                       onChange={(e) => setPlanEducationEnabled(e.target.checked)}
+                                       className="sr-only peer"
+                                     />
+                                     <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                     <span className="ms-2 text-[11px] font-bold text-slate-800">Education Check</span>
+                                   </label>
+                                   <div className="flex items-center gap-2">
+                                     {planEducationEnabled && (
+                                       <button
+                                         type="button"
+                                         onClick={() => setShowEduCountryRatesEdit(!showEduCountryRatesEdit)}
+                                         className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg font-extrabold cursor-pointer transition-all border border-emerald-200/80 flex items-center gap-1"
+                                       >
+                                         <span>Country Rates</span>
+                                         <span className="material-symbols-outlined text-[12px]">{showEduCountryRatesEdit ? "expand_less" : "expand_more"}</span>
+                                       </button>
+                                     )}
+                                     <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                       <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                       <input
+                                         type="text"
+                                         placeholder="e.g. 3-5 Days"
+                                         value={planServiceTats["education"] ?? "3 - 5 Business Days"}
+                                         onChange={(e) => setPlanServiceTats(prev => ({ ...prev, education: e.target.value }))}
+                                         disabled={!planEducationEnabled}
+                                         className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       />
+                                     </div>
+                                     <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                       <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                       <input
+                                         type="number"
+                                         min="0"
+                                         step="0.01"
+                                         value={planEducationRate}
+                                         onChange={(e) => setPlanEducationRate(e.target.value)}
+                                         disabled={!planEducationEnabled}
+                                         className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       />
+                                     </div>
+                                   </div>
+                                 </div>
+                                 {showEduCountryRatesEdit && planEducationEnabled && (
+                                   <div className="bg-slate-100/80 p-3 rounded-xl border border-slate-200/70 my-1 animate-fade-in">
+                                     <p className="text-[9px] font-extrabold text-emerald-800 uppercase tracking-wider mb-2">Education Rates per Country ($ USD)</p>
+                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                       {STANDARD_RATE_COUNTRIES.map((cntry) => (
+                                         <div key={cntry} className="flex items-center justify-between text-[10px] bg-white p-1.5 rounded-lg border border-slate-200/60">
+                                           <span className="font-bold text-slate-700">{cntry}:</span>
+                                           <div className="flex items-center gap-0.5">
+                                             <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                             <input
+                                               type="number"
+                                               min="0"
+                                               step="0.01"
+                                               value={planEducationRates[cntry] ?? ""}
+                                               onChange={(e) => setPlanEducationRates(prev => ({ ...prev, [cntry]: e.target.value }))}
+                                               className="w-12 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold"
+                                             />
+                                           </div>
+                                         </div>
+                                       ))}
+                                     </div>
+                                   </div>
+                                 )}
+                               </div>
 
-                              {/* Interpol Check Toggle */}
-                              <div className="flex items-center justify-between">
-                                <label className="relative inline-flex items-center cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={planInterpolEnabled}
-                                    onChange={(e) => setPlanInterpolEnabled(e.target.checked)}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Interpol Check</span>
-                                </label>
-                                <div className="flex items-center gap-0.5">
-                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={planInterpolRate}
-                                    onChange={(e) => setPlanInterpolRate(e.target.value)}
-                                    disabled={!planInterpolEnabled}
-                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                  />
-                                </div>
-                              </div>
+                               {/* Interpol Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planInterpolEnabled}
+                                     onChange={(e) => setPlanInterpolEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Interpol Check</span>
+                                 </label>
+                                 <div className="flex items-center gap-2">
+                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24 Hours"
+                                       value={planServiceTats["interpol"] ?? "24 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, interpol: e.target.value }))}
+                                       disabled={!planInterpolEnabled}
+                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planInterpolRate}
+                                       onChange={(e) => setPlanInterpolRate(e.target.value)}
+                                       disabled={!planInterpolEnabled}
+                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
 
-                              {/* Passport Check Toggle */}
-                              <div className="flex items-center justify-between">
-                                <label className="relative inline-flex items-center cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={planPassportEnabled}
-                                    onChange={(e) => setPlanPassportEnabled(e.target.checked)}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Passport Check</span>
-                                </label>
-                                <div className="flex items-center gap-0.5">
-                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={planPassportRate}
-                                    onChange={(e) => setPlanPassportRate(e.target.value)}
-                                    disabled={!planPassportEnabled}
-                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                  />
-                                </div>
-                              </div>
+                               {/* Passport Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planPassportEnabled}
+                                     onChange={(e) => setPlanPassportEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Passport Check</span>
+                                 </label>
+                                 <div className="flex items-center gap-2">
+                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24 Hours"
+                                       value={planServiceTats["passport"] ?? "24 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, passport: e.target.value }))}
+                                       disabled={!planPassportEnabled}
+                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planPassportRate}
+                                       onChange={(e) => setPlanPassportRate(e.target.value)}
+                                       disabled={!planPassportEnabled}
+                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
 
-                              {/* Digital Address Check Toggle */}
-                              <div className="flex items-center justify-between">
-                                <label className="relative inline-flex items-center cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={planDigitalAddressEnabled}
-                                    onChange={(e) => setPlanDigitalAddressEnabled(e.target.checked)}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                  <span className="ms-1.5 text-[11px] font-bold text-slate-700">Digital Address Check</span>
-                                </label>
-                                <div className="flex items-center gap-0.5">
-                                  <span className="text-[11px] font-extrabold text-slate-400">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={planDigitalAddressRate}
-                                    onChange={(e) => setPlanDigitalAddressRate(e.target.value)}
-                                    disabled={!planDigitalAddressEnabled}
-                                    className="w-12 border border-slate-200 rounded-lg p-0.5 font-body-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
-                                  />
-                                </div>
-                              </div>
+                               {/* Digital Address Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planDigitalAddressEnabled}
+                                     onChange={(e) => setPlanDigitalAddressEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Digital Address Check</span>
+                                 </label>
+                                 <div className="flex items-center gap-2">
+                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24-48 Hours"
+                                       value={planServiceTats["digital_address"] ?? "24 - 48 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, digital_address: e.target.value }))}
+                                       disabled={!planDigitalAddressEnabled}
+                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
+                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planDigitalAddressRate}
+                                       onChange={(e) => setPlanDigitalAddressRate(e.target.value)}
+                                       disabled={!planDigitalAddressEnabled}
+                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
                             </div>
 
-                            <div className="flex gap-2 mt-1.5 shrink-0">
+                            <div className="flex gap-2 mt-2 shrink-0 border-t border-slate-100 pt-3">
                               <button
                                 onClick={handleSavePlan}
                                 disabled={planSaving}
-                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm shadow-emerald-500/10"
+                                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer border-none shadow-md shadow-emerald-600/10"
                               >
-                                {planSaving ? "Saving..." : "Save"}
+                                <span className="material-symbols-outlined text-sm">save</span>
+                                {planSaving ? "Saving..." : "Save Service Configuration"}
                               </button>
                               <button
                                 onClick={() => setEditingPlan(false)}
-                                className="flex-1 py-2 border border-slate-200 text-slate-600 font-bold rounded-lg text-[10px] transition-all cursor-pointer bg-white"
+                                className="px-5 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl text-xs transition-all cursor-pointer bg-white hover:bg-slate-50"
                               >
                                 Cancel
                               </button>

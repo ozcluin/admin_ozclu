@@ -278,6 +278,7 @@ export interface Organisation {
   digitalAddressRate?: number;
   employmentRates?: Record<string, number>;
   educationRates?: Record<string, number>;
+  serviceTats?: Record<string, string>;
 }
 
 export interface CompanySettings {
@@ -355,6 +356,7 @@ interface PortalContextType {
   reviewCourtRecord: (verificationId: string, reviewedResults: Array<{ resultIndex: number; complexSearchIndex: number; caseIndex: number; action: "confirm" | "delete" }>) => Promise<any>;
   adminRetryCourtSearch: (verificationId: string, overrides?: { candidateName?: string; addresses?: any[] }) => Promise<any>;
   logEmploymentAttempt: (verificationId: string, attempt: {
+    targetOrg?: string;
     verificationMode: string;
     result: string;
     comment?: string;
@@ -1169,6 +1171,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const logEmploymentAttempt = async (verificationId: string, attempt: {
+    targetOrg?: string;
     verificationMode: string;
     result: string;
     comment?: string;

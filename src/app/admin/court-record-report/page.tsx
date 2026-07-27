@@ -215,21 +215,15 @@ function AdminCourtRecordReportContent() {
       <div className="no-print print:hidden w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-800">Court Record Report (Admin View)</span>
-          <span className="text-xs text-slate-500">
-            {isSearchComplete ? "Ready to save or print." : "Search still in progress..."}
-          </span>
+          <span className="text-xs text-slate-500">Ready to save or export as official A4 PDF document.</span>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#181d16] text-white rounded-lg font-bold text-xs hover:bg-[#1E293B] cursor-pointer shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#016e1c] text-white rounded-lg font-bold text-xs hover:bg-[#00450e] cursor-pointer shadow-sm transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <polyline points="6 9 6 2 18 2 18 9"></polyline>
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-              <rect x="6" y="14" width="12" height="8"></rect>
-            </svg>
-            <span>Print Report</span>
+            <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+            <span>Generate PDF</span>
           </button>
           <button
             onClick={() => window.close()}
@@ -249,16 +243,14 @@ function AdminCourtRecordReportContent() {
           <div className="grid grid-cols-3 items-center gap-4 mb-8">
             <div className="flex justify-start">
               <div className="flex items-center gap-2">
-                <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
-                  <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
-                </div>
-                {settings && settings.logo && (
-                  <>
-                    <div className="h-8 w-[1px] bg-slate-300 self-center mx-1 shrink-0" />
-                    <div className="w-20 h-10 sm:w-24 sm:h-12 flex items-center justify-start shrink-0">
-                      <img src={settings.logo} alt="Client Logo" className="object-contain max-h-full max-w-full" />
-                    </div>
-                  </>
+                {settings && settings.logo ? (
+                  <div className="w-28 h-14 sm:w-36 sm:h-16 flex items-center justify-start shrink-0">
+                    <img src={settings.logo} alt="Company Logo" className="object-contain max-h-full max-w-full" />
+                  </div>
+                ) : (
+                  <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
+                    <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
+                  </div>
                 )}
               </div>
             </div>
