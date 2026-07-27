@@ -105,15 +105,7 @@ export function normalizeCandidateSetupUrl(setupUrl?: string | null, email?: str
   // If setupUrl contains localhost in production or when non-localhost baseUrl is set, replace origin
   if (setupUrl.includes("localhost") || setupUrl.includes("127.0.0.1")) {
     if (process.env.NODE_ENV === "production" || !baseUrl.includes("localhost")) {
-      try {
-        const parsed = new URL(setupUrl);
-        const target = new URL(baseUrl);
-        parsed.protocol = target.protocol;
-        parsed.host = target.host;
-        return parsed.toString();
-      } catch {
-        return setupUrl.replace(/^https?:\/\/[^\/]+/, baseUrl);
-      }
+      return setupUrl.replace(/^https?:\/\/[^\/]+/, baseUrl);
     }
   }
 
