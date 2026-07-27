@@ -388,7 +388,7 @@ function WorkspaceContent() {
               <span className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">
                 {displayVerification?.sendToCustomer
                   ? "The client can view and download the official findings report PDF. If new data is updated, click 'Regenerate Report'."
-                  : "The client sees 'Under Review' and cannot access the report until you click 'Generate Report & Send to Client'."}
+                  : "The client sees 'In Progress' and cannot access the report until you click 'Generate Report & Send to Client'."}
               </span>
             </div>
           </div>

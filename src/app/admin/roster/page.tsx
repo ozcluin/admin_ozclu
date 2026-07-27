@@ -480,7 +480,7 @@ export default function VerificationRosterPage() {
                             ? "bg-[#016e1c]"
                             : "bg-red-500"
                         }`}></span>
-                        {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry") ? "Under Review" : v.status === "Needs Attention" ? "Reviewing with attorney" : v.status}
+                        {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry") ? "In Progress" : v.status === "Needs Attention" ? "Reviewing with attorney" : v.status}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
@@ -544,7 +544,7 @@ export default function VerificationRosterPage() {
                         : "bg-red-500/10 text-red-600 border-red-500/15"
                     }`}
                   >
-                    {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry") ? "Under Review" : v.status === "Needs Attention" ? "Reviewing with attorney" : v.status}
+                    {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry") ? "In Progress" : v.status === "Needs Attention" ? "Reviewing with attorney" : v.status}
                   </span>
                 </div>
 
