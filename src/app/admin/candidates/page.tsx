@@ -38,6 +38,7 @@ export default function CandidatesPage() {
   const [empAttemptMarkAsPaid, setEmpAttemptMarkAsPaid] = useState(false);
   const [empAttemptAskApproval, setEmpAttemptAskApproval] = useState(false);
   const [empAttemptScreenshot, setEmpAttemptScreenshot] = useState("");
+  const [empAttemptScreenshotCaption, setEmpAttemptScreenshotCaption] = useState("");
   const [empAttemptSendEmail, setEmpAttemptSendEmail] = useState(false);
   const [empAttemptSubmitting, setEmpAttemptSubmitting] = useState(false);
   const [empAttemptSuccess, setEmpAttemptSuccess] = useState("");
@@ -1439,28 +1440,41 @@ export default function CandidatesPage() {
                         </label>
                       </div>
 
-                      {/* Row 7: Screenshot Upload */}
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Screenshot / Receipt (Max 2MB)</label>
-                        <input type="file" accept="image/*,.pdf" onChange={e => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            if (file.size > 2 * 1024 * 1024) {
-                              setEmpAttemptError("File size exceeds 2MB limit");
-                              return;
+                      {/* Row 7: Screenshot Upload & Caption */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Screenshot / Proof Evidence (Max 3MB)</label>
+                          <input type="file" accept="image/*,.pdf" onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 3 * 1024 * 1024) {
+                                setEmpAttemptError("File size exceeds 3MB limit");
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onload = () => setEmpAttemptScreenshot(reader.result as string);
+                              reader.readAsDataURL(file);
                             }
-                            const reader = new FileReader();
-                            reader.onload = () => setEmpAttemptScreenshot(reader.result as string);
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                          className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-50 file:cursor-pointer file:transition-colors" />
-                        {empAttemptScreenshot && (
-                          <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                            File attached
-                          </span>
-                        )}
+                          }}
+                            className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-50 file:cursor-pointer file:transition-colors" />
+                          {empAttemptScreenshot && (
+                            <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                              Proof attached
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Proof Caption (Shown in Appendix)</label>
+                          <input
+                            type="text"
+                            value={empAttemptScreenshotCaption}
+                            onChange={e => setEmpAttemptScreenshotCaption(e.target.value)}
+                            className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
+                            placeholder="e.g. Official HR Verification Response"
+                          />
+                        </div>
                       </div>
 
                       {/* Row 8: Submit Button */}
@@ -1485,6 +1499,7 @@ export default function CandidatesPage() {
                                   markAsPaid: empAttemptMarkAsPaid,
                                   askCustomerApproval: empAttemptAskApproval,
                                   screenshot: empAttemptScreenshot,
+                                  screenshotCaption: empAttemptScreenshotCaption,
                                   sendEmail: empAttemptSendEmail
                                 });
                               } else if (displayCandidate.type === "education") {
@@ -1500,6 +1515,7 @@ export default function CandidatesPage() {
                                   markAsPaid: empAttemptMarkAsPaid,
                                   askCustomerApproval: empAttemptAskApproval,
                                   screenshot: empAttemptScreenshot,
+                                  screenshotCaption: empAttemptScreenshotCaption,
                                   sendEmail: empAttemptSendEmail
                                 });
                               } else {
@@ -1514,14 +1530,15 @@ export default function CandidatesPage() {
                                   extraPayment: empAttemptExtraPayment,
                                   markAsPaid: empAttemptMarkAsPaid,
                                   askCustomerApproval: empAttemptAskApproval,
-                                  screenshot: empAttemptScreenshot
+                                  screenshot: empAttemptScreenshot,
+                                  screenshotCaption: empAttemptScreenshotCaption
                                 });
                               }
                               setEmpAttemptSuccess("Attempt logged successfully!");
                               // Reset form
                               setEmpAttemptComment(""); setEmpAttemptVerifierNote("");
                               setEmpAttemptRespondentName(""); setEmpAttemptRespondentEmail("");
-                              setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot("");
+                              setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot(""); setEmpAttemptScreenshotCaption("");
                               setEmpAttemptExtraPayment(false); setEmpAttemptMarkAsPaid(false);
                               setEmpAttemptAskApproval(false); setEmpAttemptSendEmail(false);
                               // Re-fetch detail

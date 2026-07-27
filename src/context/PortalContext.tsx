@@ -164,6 +164,8 @@ export interface Verification {
     markAsPaid?: boolean;
     askCustomerApproval?: boolean;
     screenshot?: string;
+    screenshotCaption?: string;
+    caption?: string;
     sendEmail?: boolean;
     loggedBy?: string;
   }>;
@@ -194,6 +196,8 @@ export interface Verification {
     markAsPaid?: boolean;
     askCustomerApproval?: boolean;
     screenshot?: string;
+    screenshotCaption?: string;
+    caption?: string;
     sendEmail?: boolean;
     loggedBy?: string;
   }>;
@@ -368,6 +372,7 @@ interface PortalContextType {
     markAsPaid?: boolean;
     askCustomerApproval?: boolean;
     screenshot?: string;
+    screenshotCaption?: string;
     sendEmail?: boolean;
   }) => Promise<any>;
   logVerificationAttempt: (verificationId: string, attempt: {
@@ -382,6 +387,7 @@ interface PortalContextType {
     markAsPaid?: boolean;
     askCustomerApproval?: boolean;
     screenshot?: string;
+    screenshotCaption?: string;
   }) => Promise<any>;
   saveReportData: (verificationId: string, reportData: Record<string, unknown>) => Promise<any>;
   deleteEmploymentAttempt: (verificationId: string, attemptIndex: number) => Promise<any>;
@@ -397,6 +403,7 @@ interface PortalContextType {
     markAsPaid?: boolean;
     askCustomerApproval?: boolean;
     screenshot?: string;
+    screenshotCaption?: string;
     sendEmail?: boolean;
   }) => Promise<any>;
   deleteEducationAttempt: (verificationId: string, attemptIndex: number) => Promise<any>;

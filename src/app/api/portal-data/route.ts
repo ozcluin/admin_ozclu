@@ -1519,7 +1519,7 @@ export async function POST(req: NextRequest) {
         const {
           verificationId, targetOrg, verificationMode, result, comment, verifierNote,
           respondentName, respondentEmail, respondentComment,
-          extraPayment, markAsPaid, askCustomerApproval, screenshot, sendEmail
+          extraPayment, markAsPaid, askCustomerApproval, screenshot, sendEmail, screenshotCaption, caption
         } = payload;
 
         if (!verificationId) {
@@ -1540,6 +1540,7 @@ export async function POST(req: NextRequest) {
           markAsPaid: !!markAsPaid,
           askCustomerApproval: !!askCustomerApproval,
           screenshot: screenshot || "",
+          screenshotCaption: screenshotCaption || caption || "",
           sendEmail: !!sendEmail,
           loggedBy: user.email
         };
@@ -1585,7 +1586,7 @@ export async function POST(req: NextRequest) {
         const {
           verificationId, verificationMode, status: attemptStatus, comment, verifierNote,
           respondentName, respondentEmail, respondentComment,
-          extraPayment, markAsPaid, askCustomerApproval, screenshot
+          extraPayment, markAsPaid, askCustomerApproval, screenshot, screenshotCaption, caption
         } = payload;
 
         if (!verificationId) {
@@ -1605,6 +1606,7 @@ export async function POST(req: NextRequest) {
           markAsPaid: !!markAsPaid,
           askCustomerApproval: !!askCustomerApproval,
           screenshot: screenshot || "",
+          screenshotCaption: screenshotCaption || caption || "",
           loggedBy: user.email
         };
 

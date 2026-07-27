@@ -47,6 +47,7 @@ function WorkspaceContent() {
   const [empAttemptMarkAsPaid, setEmpAttemptMarkAsPaid] = useState(false);
   const [empAttemptAskApproval, setEmpAttemptAskApproval] = useState(false);
   const [empAttemptScreenshot, setEmpAttemptScreenshot] = useState("");
+  const [empAttemptScreenshotCaption, setEmpAttemptScreenshotCaption] = useState("");
   const [empAttemptSendEmail, setEmpAttemptSendEmail] = useState(false);
   const [empAttemptSubmitting, setEmpAttemptSubmitting] = useState(false);
   const [empAttemptSuccess, setEmpAttemptSuccess] = useState("");
@@ -838,6 +839,60 @@ function WorkspaceContent() {
                                 placeholder="Add respondent comment" />
                             </div>
 
+                            {/* Screenshot & Caption Upload for Appendix */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[14px] text-[#016e1c]">upload_file</span>
+                                  <span>Proof / Screenshot (Shown in Appendix)</span>
+                                </label>
+                                <input
+                                  type="file"
+                                  accept="image/*,.pdf"
+                                  onChange={e => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      if (file.size > 3 * 1024 * 1024) {
+                                        setEmpAttemptError("File size exceeds 3MB limit");
+                                        return;
+                                      }
+                                      const reader = new FileReader();
+                                      reader.onload = () => setEmpAttemptScreenshot(reader.result as string);
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                  className="text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-slate-200 file:text-[11px] file:font-bold file:bg-emerald-50 file:text-[#016e1c] hover:file:bg-emerald-100 file:cursor-pointer file:transition-colors"
+                                />
+                                {empAttemptScreenshot && (
+                                  <div className="flex items-center gap-2 mt-1 bg-emerald-50 p-2 rounded-xl border border-emerald-200/60">
+                                    <img src={empAttemptScreenshot} alt="Proof preview" className="w-10 h-10 object-cover rounded-lg border border-emerald-300" />
+                                    <span className="text-[10px] text-emerald-700 font-bold flex-1">Proof Attached</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEmpAttemptScreenshot("")}
+                                      className="text-slate-400 hover:text-red-600 text-xs font-bold px-1.5 py-0.5 rounded cursor-pointer"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[14px] text-[#016e1c]">title</span>
+                                  <span>Proof Caption (Shown in Report Appendix)</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  value={empAttemptScreenshotCaption}
+                                  onChange={e => setEmpAttemptScreenshotCaption(e.target.value)}
+                                  className="border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all placeholder-slate-400"
+                                  placeholder="e.g. Official HR Email Confirmation from Employer"
+                                />
+                              </div>
+                            </div>
+
                             <div className="flex items-center justify-end pt-2 border-t border-slate-200/60">
                               <button
                                 type="button"
@@ -860,12 +915,13 @@ function WorkspaceContent() {
                                       markAsPaid: empAttemptMarkAsPaid,
                                       askCustomerApproval: empAttemptAskApproval,
                                       screenshot: empAttemptScreenshot,
+                                      screenshotCaption: empAttemptScreenshotCaption,
                                       sendEmail: empAttemptSendEmail
                                     });
                                     setEmpAttemptSuccess(`Attempt logged successfully for ${empObj.companyName || 'Organisation'}!`);
                                     setEmpAttemptComment(""); setEmpAttemptVerifierNote("");
                                     setEmpAttemptRespondentName(""); setEmpAttemptRespondentEmail("");
-                                    setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot("");
+                                    setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot(""); setEmpAttemptScreenshotCaption("");
                                     setActiveLogOrgIndex(null);
                                     loadDetail();
                                   } catch (err: any) {

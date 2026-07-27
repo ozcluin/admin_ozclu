@@ -578,6 +578,39 @@ function AdminCourtRecordReportContent() {
             <span className="text-[9px] text-slate-400 font-mono">Generated: {generatedAtDate}</span>
           </div>
         </div>
+
+        {/* Appendix: Verification Evidence */}
+        {(() => {
+          const attemptsWithScreenshots = (verification?.verificationAttempts || verification?.employmentAttempts || verification?.educationAttempts || []).filter((att: any) => att.screenshot);
+          if (!attemptsWithScreenshots || attemptsWithScreenshots.length === 0) return null;
+          return (
+            <div className="print-page-block print-break-before mt-6 print:mt-0 border-t border-slate-200 pt-6">
+              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] mb-4">Appendix: Verification Evidence &amp; Screenshots</h3>
+              <div className="space-y-6">
+                {attemptsWithScreenshots.map((att: any, idx: number) => (
+                  <div key={idx} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 print-avoid-break">
+                    <span className="text-[10px] font-bold text-[#1B365D] uppercase block mb-1.5 tracking-wider">
+                      Attachment #{idx + 1} — logged on {att.date} (Mode: {att.verificationMode || "Manual"}, Result: {att.result || att.status || "Completed"})
+                    </span>
+                    {(att.screenshotCaption || att.caption) && (
+                      <p className="text-xs font-extrabold text-slate-800 mb-2 bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200/60 w-fit">
+                        Caption: {att.screenshotCaption || att.caption}
+                      </p>
+                    )}
+                    {att.comment && (
+                      <p className="text-[10.5px] text-slate-600 font-semibold mb-3">
+                        Comment: {att.comment}
+                      </p>
+                    )}
+                    <div className="flex justify-center bg-white border border-slate-200 rounded-lg p-2 max-h-[500px] overflow-hidden">
+                      <img src={att.screenshot} alt={att.screenshotCaption || att.caption || `Evidence #${idx + 1}`} className="object-contain max-h-[480px]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
         </div>
       </div>
     </div>

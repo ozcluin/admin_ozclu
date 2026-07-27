@@ -612,16 +612,21 @@ function EmploymentReportContent() {
               <div className="space-y-6">
                 {attemptsWithScreenshots.map((att: any, idx: number) => (
                   <div key={idx} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 print-avoid-break">
-                    <span className="text-[10px] font-bold text-[#00450e] uppercase block mb-2 tracking-wider">
-                      Attachment #{idx + 1} — logged on {att.date} (Mode: {att.verificationMode}, Result: {att.result})
+                    <span className="text-[10px] font-bold text-[#00450e] uppercase block mb-1.5 tracking-wider">
+                      Attachment #{idx + 1} — logged on {att.date} (Mode: {att.verificationMode}, Result: {att.result || att.status})
                     </span>
+                    {(att.screenshotCaption || att.caption) && (
+                      <p className="text-xs font-extrabold text-slate-800 mb-2 bg-emerald-50/80 px-2.5 py-1 rounded-lg border border-emerald-200/60 w-fit">
+                        Caption: {att.screenshotCaption || att.caption}
+                      </p>
+                    )}
                     {att.comment && (
                       <p className="text-[10.5px] text-slate-600 font-semibold mb-3">
                         Comment: {att.comment}
                       </p>
                     )}
                     <div className="flex justify-center bg-white border border-slate-200 rounded-lg p-2 max-h-[500px] overflow-hidden">
-                      <img src={att.screenshot} alt={`Evidence #${idx + 1}`} className="object-contain max-h-[480px]" />
+                      <img src={att.screenshot} alt={att.screenshotCaption || att.caption || `Evidence #${idx + 1}`} className="object-contain max-h-[480px]" />
                     </div>
                   </div>
                 ))}
