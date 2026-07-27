@@ -82,6 +82,44 @@ export function requireMfaVerified(user: SessionUser): NextResponse | null {
   return null;
 }
 
+export function getCandidatePortalUrl(): string {
+  const envUrl = process.env.CANDIDATE_PORTAL_URL || process.env.NEXT_PUBLIC_CANDIDATE_PORTAL_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, "");
+  }
+  if (process.env.NODE_ENV === "production") {
+    return "https://candidate.verify.ozclu.com";
+  }
+  return "http://localhost:3012";
+}
+
+export function normalizeCandidateSetupUrl(setupUrl?: string | null, email?: string, tempPassword?: string): string | undefined {
+  const baseUrl = getCandidatePortalUrl();
+
+  if (!setupUrl && email && tempPassword) {
+    return `${baseUrl}/?email=${encodeURIComponent(email.toLowerCase().trim())}&password=${encodeURIComponent(tempPassword)}`;
+  }
+
+  if (!setupUrl) return undefined;
+
+  // If setupUrl contains localhost in production or when non-localhost baseUrl is set, replace origin
+  if (setupUrl.includes("localhost") || setupUrl.includes("127.0.0.1")) {
+    if (process.env.NODE_ENV === "production" || !baseUrl.includes("localhost")) {
+      try {
+        const parsed = new URL(setupUrl);
+        const target = new URL(baseUrl);
+        parsed.protocol = target.protocol;
+        parsed.host = target.host;
+        return parsed.toString();
+      } catch {
+        return setupUrl.replace(/^https?:\/\/[^\/]+/, baseUrl);
+      }
+    }
+  }
+
+  return setupUrl;
+}
+
 /**
  * Strip sensitive fields from a verification document for admin responses.
  * Removes: password, tempPassword (legacy), and converts _id.
@@ -91,11 +129,7 @@ export function sanitizeVerification(doc: any): any {
   if (!doc) return doc;
   const clean = { ...doc };
 
-  // Generate setupUrl on-the-fly if missing but email and tempPassword exist
-  if (!clean.setupUrl && clean.tempPassword && clean.email) {
-    const candidatePortalUrl = process.env.CANDIDATE_PORTAL_URL || "https://candidate.verify.ozclu.com";
-    clean.setupUrl = `${candidatePortalUrl}/?email=${encodeURIComponent(clean.email.toLowerCase().trim())}&password=${encodeURIComponent(clean.tempPassword)}`;
-  }
+  clean.setupUrl = normalizeCandidateSetupUrl(clean.setupUrl, clean.email, clean.tempPassword);
 
   delete clean.password;
   delete clean.tempPassword; // Legacy field — no longer stored
