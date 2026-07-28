@@ -944,31 +944,53 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: "Verification request not found" }, { status: 404 });
         }
 
+        // Normalize to array (support multi-entry like employment)
+        const submittedEducations = Array.isArray(educationData.educations) && educationData.educations.length > 0
+          ? educationData.educations
+          : (Array.isArray(educationData.educationList) && educationData.educationList.length > 0
+              ? educationData.educationList
+              : [educationData]);
+
+        const validEdus = submittedEducations.filter((e: any) => e?.degreeType?.trim() || e?.courseName?.trim());
+        const itemCount = validEdus.length > 0 ? validEdus.length : 1;
+
         const defaultCountryRates: Record<string, number> = { Singapore: 15, Malaysia: 12, Philippines: 10, UAE: 20, India: 5 };
         const safeOrgName = existingVer.orgName;
         const orgDoc = await db.collection("organisations").findOne({
           name: { $regex: new RegExp("^" + (safeOrgName || "").replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") }
         });
 
-        const itemCountry = educationData.country || "India";
-        const serviceCharge = orgDoc?.educationRates?.[itemCountry] ?? (defaultCountryRates[itemCountry] || 5);
-        const country = itemCountry;
+        const serviceCharge = (validEdus.length > 0 ? validEdus : [educationData]).reduce((sum: number, e: any) => {
+          const itemCountry = e.country || "India";
+          const rate = orgDoc?.educationRates?.[itemCountry] ?? (defaultCountryRates[itemCountry] || 5);
+          return sum + rate;
+        }, 0);
+
+        const countriesList = [...new Set((validEdus.length > 0 ? validEdus : [educationData]).map((e: any) => e.country || "India"))];
+        const country = countriesList.join(", ");
+
+        const primaryEdu = validEdus[0] || educationData;
 
         const result = await db.collection("verifications").updateOne(
           { id: verificationId },
           {
             $set: {
               educationData: {
-                country: educationData.country || "",
-                degreeType: educationData.degreeType || "",
-                courseName: educationData.courseName || "",
-                boardUniversity: educationData.boardUniversity || "",
-                institutionName: educationData.institutionName || "",
-                rollNumber: educationData.rollNumber || "",
-                passingYear: educationData.passingYear || "",
-                certificateFile: educationData.certificateFile || "",
-                certificateFileName: educationData.certificateFileName || "",
+                country: primaryEdu.country || "",
+                degreeType: primaryEdu.degreeType || "",
+                courseName: primaryEdu.courseName || "",
+                boardUniversity: primaryEdu.boardUniversity || "",
+                institutionName: primaryEdu.institutionName || "",
+                rollNumber: primaryEdu.rollNumber || "",
+                passingYear: primaryEdu.passingYear || "",
+                certificateFile: primaryEdu.certificateFile || "",
+                certificateFileName: primaryEdu.certificateFileName || "",
+                educations: validEdus.length > 0 ? validEdus : [primaryEdu],
+                educationList: validEdus.length > 0 ? validEdus : [primaryEdu],
               },
+              educationList: validEdus.length > 0 ? validEdus : [primaryEdu],
+              educations: validEdus.length > 0 ? validEdus : [primaryEdu],
+              itemCount,
               serviceCharge,
               country,
               educationDataSubmitted: true,
@@ -979,6 +1001,7 @@ export async function POST(req: NextRequest) {
         );
         return NextResponse.json({ success: true });
       }
+
       case "setOrganisationOwner": {
         const { orgId, ownerName, ownerEmail, ownerPassword, maxVerifiers } = payload;
         

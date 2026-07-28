@@ -368,46 +368,77 @@ function EducationReportContent() {
           </div>
         </div>
 
-        {/* Education Information Table */}
+        {/* Education Information Table(s) */}
         <div>
           <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#5b21b6] mb-2">Candidate Submitted Academic Details</h3>
-          <div className="overflow-x-auto border border-slate-200 rounded-xl">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                  <th className="p-2.5 border-r border-slate-200 w-1/2">Academic Field</th>
-                  <th className="p-2.5">Response Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Degree Category</td>
-                  <td className="p-2.5 font-bold text-slate-900">{edu.degreeType || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Course / Degree Name</td>
-                  <td className="p-2.5 font-bold text-slate-900">{edu.courseName || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Board / University</td>
-                  <td className="p-2.5">{edu.boardUniversity || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">School / College Name</td>
-                  <td className="p-2.5">{edu.institutionName || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Roll / Registration No.</td>
-                  <td className="p-2.5 font-mono">{edu.rollNumber || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Passing Year</td>
-                  <td className="p-2.5 font-mono">{edu.passingYear || "-"}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {(() => {
+            const eduList: any[] = Array.isArray(verification.educationList) && verification.educationList.length > 0
+              ? verification.educationList
+              : (Array.isArray(verification.educations) && verification.educations.length > 0
+                  ? verification.educations
+                  : (Array.isArray(verification.educationData?.educations) && verification.educationData.educations.length > 0
+                      ? verification.educationData.educations
+                      : (Array.isArray(verification.educationData?.educationList) && verification.educationData.educationList.length > 0
+                          ? verification.educationData.educationList
+                          : [edu])));
+
+            return (
+              <div className="space-y-4">
+                {eduList.map((eduItem: any, eduIdx: number) => (
+                  <div key={eduIdx}>
+                    {eduList.length > 1 && (
+                      <div className="text-[10px] font-bold text-[#5b21b6] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded bg-[#5b21b6] text-white flex items-center justify-center text-[9px] font-extrabold">{eduIdx + 1}</span>
+                        Academic Record #{eduIdx + 1} — {eduItem.courseName || eduItem.degreeType || "Credential"}
+                      </div>
+                    )}
+                    <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                            <th className="p-2.5 border-r border-slate-200 w-1/2">Academic Field</th>
+                            <th className="p-2.5">Response Details</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
+                          <tr>
+                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Degree Category</td>
+                            <td className="p-2.5 font-bold text-slate-900">{eduItem.degreeType || "-"}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Course / Degree Name</td>
+                            <td className="p-2.5 font-bold text-slate-900">{eduItem.courseName || "-"}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Board / University</td>
+                            <td className="p-2.5">{eduItem.boardUniversity || "-"}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">School / College Name</td>
+                            <td className="p-2.5">{eduItem.institutionName || "-"}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Roll / Registration No.</td>
+                            <td className="p-2.5 font-mono">{eduItem.rollNumber || "-"}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Passing Year</td>
+                            <td className="p-2.5 font-mono">{eduItem.passingYear || "-"}</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Country</td>
+                            <td className="p-2.5">{eduItem.country || "-"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
+
         </div>
 
         {/* Page 2 Content Block */}
