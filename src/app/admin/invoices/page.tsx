@@ -78,6 +78,11 @@ export default function ManageInvoicesPage() {
   const [planInterpolRate, setPlanInterpolRate] = useState("");
   const [planPassportRate, setPlanPassportRate] = useState("");
   const [planDigitalAddressRate, setPlanDigitalAddressRate] = useState("");
+  const [planRednoticeWorldwideRate, setPlanRednoticeWorldwideRate] = useState("");
+  const [planSafliiCourtRate, setPlanSafliiCourtRate] = useState("");
+  const [planSapsWantedRate, setPlanSapsWantedRate] = useState("");
+  const [planUkCourtRate, setPlanUkCourtRate] = useState("");
+  const [planMalaysiaCourtRate, setPlanMalaysiaCourtRate] = useState("");
 
   const [planEmploymentRates, setPlanEmploymentRates] = useState<Record<string, string>>({});
   const [planEducationRates, setPlanEducationRates] = useState<Record<string, string>>({});
@@ -97,6 +102,11 @@ export default function ManageInvoicesPage() {
   const [planInterpolEnabled, setPlanInterpolEnabled] = useState(true);
   const [planPassportEnabled, setPlanPassportEnabled] = useState(true);
   const [planDigitalAddressEnabled, setPlanDigitalAddressEnabled] = useState(true);
+  const [planRednoticeWorldwideEnabled, setPlanRednoticeWorldwideEnabled] = useState(true);
+  const [planSafliiCourtEnabled, setPlanSafliiCourtEnabled] = useState(true);
+  const [planSapsWantedEnabled, setPlanSapsWantedEnabled] = useState(true);
+  const [planUkCourtEnabled, setPlanUkCourtEnabled] = useState(true);
+  const [planMalaysiaCourtEnabled, setPlanMalaysiaCourtEnabled] = useState(true);
 
   const [planSaving, setPlanSaving] = useState(false);
 
@@ -434,6 +444,11 @@ export default function ManageInvoicesPage() {
     setPlanInterpolRate(String(org.interpolRate !== undefined ? org.interpolRate : 10));
     setPlanPassportRate(String(org.passportRate !== undefined ? org.passportRate : 8));
     setPlanDigitalAddressRate(String(org.digitalAddressRate !== undefined ? org.digitalAddressRate : 5));
+    setPlanRednoticeWorldwideRate(String(org.rednoticeWorldwideRate !== undefined ? org.rednoticeWorldwideRate : 15));
+    setPlanSafliiCourtRate(String(org.safliiCourtRate !== undefined ? org.safliiCourtRate : 15));
+    setPlanSapsWantedRate(String(org.sapsWantedRate !== undefined ? org.sapsWantedRate : 15));
+    setPlanUkCourtRate(String(org.ukCourtRate !== undefined ? org.ukCourtRate : 25));
+    setPlanMalaysiaCourtRate(String(org.malaysiaCourtRate !== undefined ? org.malaysiaCourtRate : 20));
 
     const defaultEmpRates: Record<string, string> = {
       Singapore: String(org.employmentRates?.["Singapore"] ?? 15),
@@ -466,6 +481,11 @@ export default function ManageInvoicesPage() {
       interpol: org.serviceTats?.interpol ?? "24 Hours",
       passport: org.serviceTats?.passport ?? "24 Hours",
       digital_address: org.serviceTats?.digital_address ?? "24 - 48 Hours",
+      rednotice_worldwide: org.serviceTats?.rednotice_worldwide ?? "24 Hours",
+      saflii_court: org.serviceTats?.saflii_court ?? "24 - 48 Hours",
+      saps_wanted: org.serviceTats?.saps_wanted ?? "24 Hours",
+      uk_court: org.serviceTats?.uk_court ?? "24 Hours",
+      malaysia_court: org.serviceTats?.malaysia_court ?? "24 Hours",
     };
     setPlanServiceTats(defaultTats);
 
@@ -476,6 +496,11 @@ export default function ManageInvoicesPage() {
     setPlanInterpolEnabled(org.interpolEnabled !== false);
     setPlanPassportEnabled(org.passportEnabled !== false);
     setPlanDigitalAddressEnabled(org.digitalAddressEnabled !== false);
+    setPlanRednoticeWorldwideEnabled(org.rednoticeWorldwideEnabled !== false);
+    setPlanSafliiCourtEnabled(org.safliiCourtEnabled !== false);
+    setPlanSapsWantedEnabled(org.sapsWantedEnabled !== false);
+    setPlanUkCourtEnabled(org.ukCourtEnabled !== false);
+    setPlanMalaysiaCourtEnabled(org.malaysiaCourtEnabled !== false);
     setEditingPlan(true);
   };
 
@@ -503,6 +528,11 @@ export default function ManageInvoicesPage() {
       interpolRate: parseFloat(planInterpolRate) || 10,
       passportRate: parseFloat(planPassportRate) || 8,
       digitalAddressRate: parseFloat(planDigitalAddressRate) || 5,
+      rednoticeWorldwideRate: parseFloat(planRednoticeWorldwideRate) || 15,
+      safliiCourtRate: parseFloat(planSafliiCourtRate) || 15,
+      sapsWantedRate: parseFloat(planSapsWantedRate) || 15,
+      ukCourtRate: parseFloat(planUkCourtRate) || 25,
+      malaysiaCourtRate: parseFloat(planMalaysiaCourtRate) || 20,
 
       employmentRates: parsedEmpRates,
       educationRates: parsedEduRates,
@@ -515,6 +545,11 @@ export default function ManageInvoicesPage() {
       interpolEnabled: planInterpolEnabled,
       passportEnabled: planPassportEnabled,
       digitalAddressEnabled: planDigitalAddressEnabled,
+      rednoticeWorldwideEnabled: planRednoticeWorldwideEnabled,
+      safliiCourtEnabled: planSafliiCourtEnabled,
+      sapsWantedEnabled: planSapsWantedEnabled,
+      ukCourtEnabled: planUkCourtEnabled,
+      malaysiaCourtEnabled: planMalaysiaCourtEnabled,
     });
     setEditingPlan(false);
     setPlanSaving(false);
@@ -852,6 +887,16 @@ export default function ManageInvoicesPage() {
                       rate = org.passportRate !== undefined ? org.passportRate : 8;
                     } else if (verType === "digital_address") {
                       rate = org.digitalAddressRate !== undefined ? org.digitalAddressRate : 5;
+                    } else if (verType === "rednotice_worldwide") {
+                      rate = org.rednoticeWorldwideRate !== undefined ? org.rednoticeWorldwideRate : 15;
+                    } else if (verType === "saflii_court") {
+                      rate = org.safliiCourtRate !== undefined ? org.safliiCourtRate : 15;
+                    } else if (verType === "saps_wanted") {
+                      rate = org.sapsWantedRate !== undefined ? org.sapsWantedRate : 15;
+                    } else if (verType === "uk_court") {
+                      rate = org.ukCourtRate !== undefined ? org.ukCourtRate : 25;
+                    } else if (verType === "malaysia_court") {
+                      rate = org.malaysiaCourtRate !== undefined ? org.malaysiaCourtRate : 20;
                     } else if (verType === "employment") {
                       const c = v.country || (v as any).employmentData?.country || (v as any).addresses?.[0]?.country || "";
                       if (c && org.employmentRates && org.employmentRates[c] !== undefined) {
@@ -1166,7 +1211,7 @@ export default function ManageInvoicesPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <h3 className="font-headline-md text-slate-900 font-extrabold text-lg leading-none">{selectedOrg.name}</h3>
+                    <h3 className="text-lg font-semibold text-slate-900 tracking-tight leading-none">{selectedOrg.name}</h3>
                     {selectedOrg.status === "Deactivated" ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-700 border border-rose-500/15 uppercase tracking-wide leading-none">
                         Deactivated
@@ -1192,7 +1237,7 @@ export default function ManageInvoicesPage() {
                       setDeactivateInvoiceOption("keep");
                       setDeactivateError("");
                     }}
-                    className="text-xs text-amber-600 hover:bg-amber-500/5 border border-amber-500/10 px-3.5 py-2 rounded-xl transition-all font-bold flex items-center gap-1.5 cursor-pointer"
+                    className="text-xs text-amber-700 hover:bg-amber-50 border border-amber-200/70 px-3 py-1.5 rounded-xl transition-all font-medium flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   >
                     <span className="material-symbols-outlined text-[15px] font-bold">block</span>
                     Deactivate Org
@@ -1212,7 +1257,7 @@ export default function ManageInvoicesPage() {
                     setDeletePassword("");
                     setDeleteError("");
                   }}
-                  className="text-xs text-red-600 hover:bg-red-500/5 border border-red-500/10 px-3.5 py-2 rounded-xl transition-all font-bold flex items-center gap-1.5 cursor-pointer"
+                  className="text-xs text-rose-700 hover:bg-rose-50 border border-rose-200/70 px-3 py-1.5 rounded-xl transition-all font-medium flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 >
                   <span className="material-symbols-outlined text-[15px] font-bold">delete</span>
                   Delete Org
@@ -1238,8 +1283,8 @@ export default function ManageInvoicesPage() {
                       onClick={() => setActiveTab(tab)}
                       className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-button-text text-xs transition-all cursor-pointer ${
                         activeTab === tab
-                          ? "bg-white text-slate-800 shadow-sm border border-slate-200/40 font-bold"
-                          : "text-slate-500 hover:text-slate-800"
+                          ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-semibold"
+                          : "text-slate-500 hover:text-slate-800 font-medium"
                       }`}
                     >
                       <span className="material-symbols-outlined text-[16px] font-medium" style={{ fontVariationSettings: `'FILL' ${activeTab === tab ? 1 : 0}` }}>{icons[tab]}</span>
@@ -1317,6 +1362,16 @@ export default function ManageInvoicesPage() {
                       rate = selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8;
                     } else if (verType === "digital_address") {
                       rate = selectedOrg.digitalAddressRate !== undefined ? selectedOrg.digitalAddressRate : 5;
+                    } else if (verType === "rednotice_worldwide") {
+                      rate = selectedOrg.rednoticeWorldwideRate !== undefined ? selectedOrg.rednoticeWorldwideRate : 15;
+                    } else if (verType === "saflii_court") {
+                      rate = selectedOrg.safliiCourtRate !== undefined ? selectedOrg.safliiCourtRate : 15;
+                    } else if (verType === "saps_wanted") {
+                      rate = selectedOrg.sapsWantedRate !== undefined ? selectedOrg.sapsWantedRate : 15;
+                    } else if (verType === "uk_court") {
+                      rate = selectedOrg.ukCourtRate !== undefined ? selectedOrg.ukCourtRate : 25;
+                    } else if (verType === "malaysia_court") {
+                      rate = selectedOrg.malaysiaCourtRate !== undefined ? selectedOrg.malaysiaCourtRate : 20;
                     } else if (verType === "employment") {
                       const c = v.country || (v as any).employmentData?.country || (v as any).addresses?.[0]?.country || "";
                       if (c && selectedOrg.employmentRates && selectedOrg.employmentRates[c] !== undefined) {
@@ -1350,48 +1405,59 @@ export default function ManageInvoicesPage() {
                   <div className="flex flex-col gap-5 animate-fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                       {/* Payment Plan Card */}
-                      <div className={`bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50 flex flex-col justify-between min-h-[190px] transition-all duration-300 ${editingPlan ? "md:col-span-2 lg:col-span-2 shadow-lg ring-1 ring-emerald-500/20 bg-white" : ""}`}>
+                      <div className={`rounded-2xl p-5 border transition-all duration-300 flex flex-col justify-between ${
+                        editingPlan 
+                          ? "md:col-span-2 lg:col-span-2 bg-white border-slate-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.04)] ring-1 ring-emerald-500/15" 
+                          : "bg-slate-50/50 border-slate-200/60 min-h-[190px]"
+                      }`}>
                         {!editingPlan ? (
                           <>
                             <div>
-                              <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
                                 <div className="flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">payments</span>
-                                  <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Payment Plan</span>
+                                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100/60 shadow-2xs">
+                                    <span className="material-symbols-outlined text-[15px]">payments</span>
+                                  </div>
+                                  <div>
+                                    <h4 className="text-xs font-semibold text-slate-900 tracking-tight">Active Service Portfolio</h4>
+                                    <p className="text-[10px] text-slate-400 font-normal">Per-verification rates</p>
+                                  </div>
                                 </div>
                                 <button
                                   onClick={() => openPlanEdit(selectedOrg)}
-                                  className="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer p-1 border-none bg-transparent"
+                                  className="text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/50 px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
                                 >
-                                  <span className="material-symbols-outlined text-[14px]">edit</span>
+                                  <span className="material-symbols-outlined text-[13px]">edit</span>
+                                  <span>Edit Rates &amp; TAT</span>
                                 </button>
                               </div>
-                              <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.identityEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+
+                              <div className="flex flex-col gap-1 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin">
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.identityEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                     Identity Check
                                   </span>
-                                  <span className="font-extrabold text-slate-900">
-                                    {selectedOrg.identityEnabled !== false ? `$${selectedOrg.monthlyRate.toLocaleString("en-US")}` : "Disabled"}
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.identityEnabled !== false ? `$${selectedOrg.monthlyRate.toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
 
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.courtRecordEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.courtRecordEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                     Court Check
                                   </span>
-                                  <span className="font-extrabold text-slate-900">
-                                    {selectedOrg.courtRecordEnabled !== false ? `$${(selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate).toLocaleString("en-US")}` : "Disabled"}
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.courtRecordEnabled !== false ? `$${(selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
 
                                 {/* Employment Check in View Mode */}
                                 <div className="flex flex-col gap-1">
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                      <span className={`w-2 h-2 rounded-full ${selectedOrg.employmentEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                  <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                    <span className="font-normal text-slate-600 flex items-center gap-2">
+                                      <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.employmentEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                       Employment Check
                                     </span>
                                     <div className="flex items-center gap-2">
@@ -1401,7 +1467,6 @@ export default function ManageInvoicesPage() {
                                             const opening = !showEmpCountryRatesView;
                                             setShowEmpCountryRatesView(opening);
                                             if (opening) {
-                                              // Initialize inline edit values from current org data
                                               const defaultMap: Record<string, number> = { Singapore: 15, Malaysia: 12, Philippines: 10, UAE: 20, India: selectedOrg.employmentRate ?? 5, Default: selectedOrg.employmentRate ?? 5 };
                                               const initRates: Record<string, string> = {};
                                               STANDARD_RATE_COUNTRIES.forEach(c => {
@@ -1410,32 +1475,32 @@ export default function ManageInvoicesPage() {
                                               setInlineEditEmpRates(initRates);
                                             }
                                           }}
-                                          className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border border-emerald-200/60 flex items-center gap-0.5"
+                                          className="text-[10px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full transition-all border border-emerald-200/60 flex items-center gap-0.5 cursor-pointer shadow-2xs"
                                         >
                                           <span>Country Rates</span>
-                                          <span className="material-symbols-outlined text-[10px] font-bold">{showEmpCountryRatesView ? "expand_less" : "expand_more"}</span>
+                                          <span className="material-symbols-outlined text-[10px]">{showEmpCountryRatesView ? "expand_less" : "expand_more"}</span>
                                         </button>
                                       )}
-                                      <span className="font-extrabold text-slate-900">
-                                        {selectedOrg.employmentEnabled !== false ? `$${(selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5).toLocaleString("en-US")}` : "Disabled"}
+                                      <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                        {selectedOrg.employmentEnabled !== false ? `$${(selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                       </span>
                                     </div>
                                   </div>
                                   {showEmpCountryRatesView && selectedOrg.employmentEnabled !== false && (
-                                    <div className="bg-slate-100/70 rounded-xl p-2.5 border border-slate-200/50 my-1 animate-fade-in text-[10px]">
+                                    <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-200/60 my-1 animate-fade-in text-[10px]">
                                       <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                                         {STANDARD_RATE_COUNTRIES.map((cntry) => (
-                                          <div key={cntry} className="flex items-center justify-between text-slate-600 font-medium">
+                                          <div key={cntry} className="flex items-center justify-between text-slate-600 font-normal">
                                             <span>{cntry}:</span>
                                             <div className="flex items-center gap-0.5">
-                                              <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                              <span className="text-[9px] text-slate-400 font-medium">$</span>
                                               <input
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
                                                 value={inlineEditEmpRates[cntry] ?? ""}
                                                 onChange={(e) => setInlineEditEmpRates(prev => ({ ...prev, [cntry]: e.target.value }))}
-                                                className="w-11 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+                                                className="w-11 border border-slate-200 rounded px-1 py-0.5 bg-white text-[10px] text-right font-medium focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
                                               />
                                             </div>
                                           </div>
@@ -1444,9 +1509,9 @@ export default function ManageInvoicesPage() {
                                       <button
                                         onClick={() => handleSaveInlineRates("emp")}
                                         disabled={inlineRateSaving === "emp"}
-                                        className="mt-2 w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[9px] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm"
+                                        className="mt-2 w-full py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm"
                                       >
-                                        <span className="material-symbols-outlined text-[12px]">save</span>
+                                        <span className="material-symbols-outlined text-[12px] text-emerald-400">check_circle</span>
                                         {inlineRateSaving === "emp" ? "Saving..." : "Save Employment Rates"}
                                       </button>
                                     </div>
@@ -1455,9 +1520,9 @@ export default function ManageInvoicesPage() {
 
                                 {/* Education Check in View Mode */}
                                 <div className="flex flex-col gap-1">
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                      <span className={`w-2 h-2 rounded-full ${selectedOrg.educationEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                  <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                    <span className="font-normal text-slate-600 flex items-center gap-2">
+                                      <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.educationEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                       Education Check
                                     </span>
                                     <div className="flex items-center gap-2">
@@ -1475,32 +1540,32 @@ export default function ManageInvoicesPage() {
                                               setInlineEditEduRates(initRates);
                                             }
                                           }}
-                                          className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border border-emerald-200/60 flex items-center gap-0.5"
+                                          className="text-[10px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full transition-all border border-emerald-200/60 flex items-center gap-0.5 cursor-pointer shadow-2xs"
                                         >
                                           <span>Country Rates</span>
-                                          <span className="material-symbols-outlined text-[10px] font-bold">{showEduCountryRatesView ? "expand_less" : "expand_more"}</span>
+                                          <span className="material-symbols-outlined text-[10px]">{showEduCountryRatesView ? "expand_less" : "expand_more"}</span>
                                         </button>
                                       )}
-                                      <span className="font-extrabold text-slate-900">
-                                        {selectedOrg.educationEnabled !== false ? `$${(selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5).toLocaleString("en-US")}` : "Disabled"}
+                                      <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                        {selectedOrg.educationEnabled !== false ? `$${(selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                       </span>
                                     </div>
                                   </div>
                                   {showEduCountryRatesView && selectedOrg.educationEnabled !== false && (
-                                    <div className="bg-slate-100/70 rounded-xl p-2.5 border border-slate-200/50 my-1 animate-fade-in text-[10px]">
+                                    <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-200/60 my-1 animate-fade-in text-[10px]">
                                       <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                                         {STANDARD_RATE_COUNTRIES.map((cntry) => (
-                                          <div key={cntry} className="flex items-center justify-between text-slate-600 font-medium">
+                                          <div key={cntry} className="flex items-center justify-between text-slate-600 font-normal">
                                             <span>{cntry}:</span>
                                             <div className="flex items-center gap-0.5">
-                                              <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                              <span className="text-[9px] text-slate-400 font-medium">$</span>
                                               <input
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
                                                 value={inlineEditEduRates[cntry] ?? ""}
                                                 onChange={(e) => setInlineEditEduRates(prev => ({ ...prev, [cntry]: e.target.value }))}
-                                                className="w-11 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+                                                className="w-11 border border-slate-200 rounded px-1 py-0.5 bg-white text-[10px] text-right font-medium focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
                                               />
                                             </div>
                                           </div>
@@ -1509,88 +1574,145 @@ export default function ManageInvoicesPage() {
                                       <button
                                         onClick={() => handleSaveInlineRates("edu")}
                                         disabled={inlineRateSaving === "edu"}
-                                        className="mt-2 w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[9px] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm"
+                                        className="mt-2 w-full py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm"
                                       >
-                                        <span className="material-symbols-outlined text-[12px]">save</span>
+                                        <span className="material-symbols-outlined text-[12px] text-emerald-400">check_circle</span>
                                         {inlineRateSaving === "edu" ? "Saving..." : "Save Education Rates"}
                                       </button>
                                     </div>
                                   )}
                                 </div>
 
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.interpolEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.interpolEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                     Interpol Check
                                   </span>
-                                  <span className="font-extrabold text-slate-900">
-                                    {selectedOrg.interpolEnabled !== false ? `$${(selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : 10).toLocaleString("en-US")}` : "Disabled"}
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.interpolEnabled !== false ? `$${(selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : 10).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.passportEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.passportEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                     Passport Check
                                   </span>
-                                  <span className="font-extrabold text-slate-900">
-                                    {selectedOrg.passportEnabled !== false ? `$${(selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8).toLocaleString("en-US")}` : "Disabled"}
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.passportEnabled !== false ? `$${(selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span className={`w-2 h-2 rounded-full ${selectedOrg.digitalAddressEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.digitalAddressEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
                                     Digital Address Check
                                   </span>
-                                  <span className="font-extrabold text-slate-900">
-                                    {selectedOrg.digitalAddressEnabled !== false ? `$${(selectedOrg.digitalAddressRate !== undefined ? selectedOrg.digitalAddressRate : 5).toLocaleString("en-US")}` : "Disabled"}
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.digitalAddressEnabled !== false ? `$${(selectedOrg.digitalAddressRate !== undefined ? selectedOrg.digitalAddressRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.rednoticeWorldwideEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Red Notice Worldwide
+                                  </span>
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.rednoticeWorldwideEnabled !== false ? `$${(selectedOrg.rednoticeWorldwideRate !== undefined ? selectedOrg.rednoticeWorldwideRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.sapsWantedEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    SAPS Wanted Check
+                                  </span>
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.sapsWantedEnabled !== false ? `$${(selectedOrg.sapsWantedRate !== undefined ? selectedOrg.sapsWantedRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.safliiCourtEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    SA Court Check
+                                  </span>
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.safliiCourtEnabled !== false ? `$${(selectedOrg.safliiCourtRate !== undefined ? selectedOrg.safliiCourtRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.ukCourtEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    UK Court Check
+                                  </span>
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.ukCourtEnabled !== false ? `$${(selectedOrg.ukCourtRate !== undefined ? selectedOrg.ukCourtRate : 25).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.malaysiaCourtEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Malaysia Court Check
+                                  </span>
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.malaysiaCourtEnabled !== false ? `$${(selectedOrg.malaysiaCourtRate !== undefined ? selectedOrg.malaysiaCourtRate : 20).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                               </div>
                             </div>
                             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wide">Plan: Monthly</span>
+                              <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Plan: Monthly</span>
                               {selectedOrg.paymentPlan === "pay_as_you_go" && (
-                                <span className="text-[9px] text-amber-600 font-extrabold uppercase tracking-wide">Pay As You Go</span>
+                                <span className="text-[10px] text-amber-600 font-medium uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/50">Pay As You Go</span>
                               )}
                             </div>
                           </>
                         ) : (
                           <div className="flex flex-col gap-3 text-left flex-1 justify-between">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                              <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[18px] text-emerald-600 font-bold">payments</span>
-                                <span className="font-label-caps text-emerald-700 text-xs uppercase tracking-wider font-extrabold">Configure 7 Verification Services &amp; TAT</span>
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-1">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100/60 shadow-2xs">
+                                  <span className="material-symbols-outlined text-[16px]">tune</span>
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-xs font-semibold text-slate-900 tracking-tight">Service Rates &amp; Turnaround Times</h3>
+                                    <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50/90 border border-emerald-200/60 rounded-full px-2 py-0.5">
+                                      11 Channels
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-400 font-normal mt-0.5">Toggle active verification channels, default SLAs, and per-check commercial rates</p>
+                                </div>
                               </div>
-                              <span className="text-[10px] text-slate-400 font-semibold">Enable/Disable, set custom TAT &amp; Rates</span>
                             </div>
                             
-                            <div className="flex flex-col gap-2.5 max-h-[460px] overflow-y-auto pr-1">
+                            <div className="flex flex-col gap-1 max-h-[480px] overflow-y-auto pr-1.5 scrollbar-thin">
                                {/* Identity Check Toggle */}
-                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
-                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
                                    <input
                                      type="checkbox"
                                      checked={planIdentityEnabled}
                                      onChange={(e) => setPlanIdentityEnabled(e.target.checked)}
                                      className="sr-only peer"
                                    />
-                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Identity Check</span>
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planIdentityEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     Identity Check
+                                   </span>
                                  </label>
-                                 <div className="flex items-center gap-2">
-                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
                                      <input
                                        type="text"
                                        placeholder="e.g. 24 Hours"
                                        value={planServiceTats["identity"] ?? "24 Hours"}
                                        onChange={(e) => setPlanServiceTats(prev => ({ ...prev, identity: e.target.value }))}
                                        disabled={!planIdentityEnabled}
-                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
-                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -1598,38 +1720,41 @@ export default function ManageInvoicesPage() {
                                        value={planRate}
                                        onChange={(e) => setPlanRate(e.target.value)}
                                        disabled={!planIdentityEnabled}
-                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
                                  </div>
                                </div>
 
                                {/* Court Check Toggle */}
-                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
-                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
                                    <input
                                      type="checkbox"
                                      checked={planCourtEnabled}
                                      onChange={(e) => setPlanCourtEnabled(e.target.checked)}
                                      className="sr-only peer"
                                    />
-                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Court Check</span>
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planCourtEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     Court Check
+                                   </span>
                                  </label>
-                                 <div className="flex items-center gap-2">
-                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
                                      <input
                                        type="text"
-                                       placeholder="e.g. 24-48 Hours"
+                                       placeholder="e.g. 24 - 48 Hours"
                                        value={planServiceTats["court_record"] ?? "24 - 48 Hours"}
                                        onChange={(e) => setPlanServiceTats(prev => ({ ...prev, court_record: e.target.value }))}
                                        disabled={!planCourtEnabled}
-                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
-                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -1637,49 +1762,54 @@ export default function ManageInvoicesPage() {
                                        value={planCourtRate}
                                        onChange={(e) => setPlanCourtRate(e.target.value)}
                                        disabled={!planCourtEnabled}
-                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
                                  </div>
                                </div>
 
                                {/* Employment Check Toggle in Edit Mode */}
-                               <div className="flex flex-col gap-1.5 py-1 border-b border-slate-100/60">
+                               <div className="flex flex-col gap-1 py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100">
                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                   <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
-                                     <input
-                                       type="checkbox"
-                                       checked={planEmploymentEnabled}
-                                       onChange={(e) => setPlanEmploymentEnabled(e.target.checked)}
-                                       className="sr-only peer"
-                                     />
-                                     <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                     <span className="ms-2 text-[11px] font-bold text-slate-800">Employment Check</span>
-                                   </label>
-                                   <div className="flex items-center gap-2">
+                                   <div className="flex items-center gap-2 min-w-[190px]">
+                                     <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5">
+                                       <input
+                                         type="checkbox"
+                                         checked={planEmploymentEnabled}
+                                         onChange={(e) => setPlanEmploymentEnabled(e.target.checked)}
+                                         className="sr-only peer"
+                                       />
+                                       <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                       <span className={`text-[12px] font-medium tracking-tight transition-colors ${planEmploymentEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                         Employment Check
+                                       </span>
+                                     </label>
                                      {planEmploymentEnabled && (
                                        <button
                                          type="button"
                                          onClick={() => setShowEmpCountryRatesEdit(!showEmpCountryRatesEdit)}
-                                         className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg font-extrabold cursor-pointer transition-all border border-emerald-200/80 flex items-center gap-1"
+                                         className="text-[10px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full transition-all border border-emerald-200/60 flex items-center gap-0.5 cursor-pointer shadow-2xs"
                                        >
                                          <span>Country Rates</span>
-                                         <span className="material-symbols-outlined text-[12px]">{showEmpCountryRatesEdit ? "expand_less" : "expand_more"}</span>
+                                         <span className="material-symbols-outlined text-[11px]">{showEmpCountryRatesEdit ? "expand_less" : "expand_more"}</span>
                                        </button>
                                      )}
-                                     <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                       <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                   </div>
+                                   <div className="flex items-center gap-2 shrink-0">
+                                     <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                       <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                       <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
                                        <input
                                          type="text"
-                                         placeholder="e.g. 2-4 Days"
+                                         placeholder="e.g. 2 - 4 Business Days"
                                          value={planServiceTats["employment"] ?? "2 - 4 Business Days"}
                                          onChange={(e) => setPlanServiceTats(prev => ({ ...prev, employment: e.target.value }))}
                                          disabled={!planEmploymentEnabled}
-                                         className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                         className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
                                        />
                                      </div>
-                                     <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                       <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                     <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                       <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
                                        <input
                                          type="number"
                                          min="0"
@@ -1687,27 +1817,27 @@ export default function ManageInvoicesPage() {
                                          value={planEmploymentRate}
                                          onChange={(e) => setPlanEmploymentRate(e.target.value)}
                                          disabled={!planEmploymentEnabled}
-                                         className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                         className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
                                        />
                                      </div>
                                    </div>
                                  </div>
                                  {showEmpCountryRatesEdit && planEmploymentEnabled && (
-                                   <div className="bg-slate-100/80 p-3 rounded-xl border border-slate-200/70 my-1 animate-fade-in">
-                                     <p className="text-[9px] font-extrabold text-emerald-800 uppercase tracking-wider mb-2">Employment Rates per Country ($ USD)</p>
+                                   <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/60 my-1 animate-fade-in text-[10px]">
+                                     <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Employment Rates per Country ($ USD)</p>
                                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                        {STANDARD_RATE_COUNTRIES.map((cntry) => (
-                                         <div key={cntry} className="flex items-center justify-between text-[10px] bg-white p-1.5 rounded-lg border border-slate-200/60">
-                                           <span className="font-bold text-slate-700">{cntry}:</span>
+                                         <div key={cntry} className="flex items-center justify-between text-[11px] bg-white p-1.5 rounded-lg border border-slate-200/60 shadow-2xs">
+                                           <span className="text-slate-600 font-normal">{cntry}:</span>
                                            <div className="flex items-center gap-0.5">
-                                             <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                             <span className="text-[10px] text-slate-400 font-medium">$</span>
                                              <input
                                                type="number"
                                                min="0"
                                                step="0.01"
                                                value={planEmploymentRates[cntry] ?? ""}
                                                onChange={(e) => setPlanEmploymentRates(prev => ({ ...prev, [cntry]: e.target.value }))}
-                                               className="w-12 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold"
+                                               className="w-12 border border-slate-200 rounded px-1 py-0.5 bg-white text-[11px] text-right font-medium focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
                                              />
                                            </div>
                                          </div>
@@ -1718,42 +1848,47 @@ export default function ManageInvoicesPage() {
                                </div>
 
                                {/* Education Check Toggle in Edit Mode */}
-                               <div className="flex flex-col gap-1.5 py-1 border-b border-slate-100/60">
+                               <div className="flex flex-col gap-1 py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100">
                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                   <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
-                                     <input
-                                       type="checkbox"
-                                       checked={planEducationEnabled}
-                                       onChange={(e) => setPlanEducationEnabled(e.target.checked)}
-                                       className="sr-only peer"
-                                     />
-                                     <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                     <span className="ms-2 text-[11px] font-bold text-slate-800">Education Check</span>
-                                   </label>
-                                   <div className="flex items-center gap-2">
+                                   <div className="flex items-center gap-2 min-w-[190px]">
+                                     <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5">
+                                       <input
+                                         type="checkbox"
+                                         checked={planEducationEnabled}
+                                         onChange={(e) => setPlanEducationEnabled(e.target.checked)}
+                                         className="sr-only peer"
+                                       />
+                                       <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                       <span className={`text-[12px] font-medium tracking-tight transition-colors ${planEducationEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                         Education Check
+                                       </span>
+                                     </label>
                                      {planEducationEnabled && (
                                        <button
                                          type="button"
                                          onClick={() => setShowEduCountryRatesEdit(!showEduCountryRatesEdit)}
-                                         className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg font-extrabold cursor-pointer transition-all border border-emerald-200/80 flex items-center gap-1"
+                                         className="text-[10px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full transition-all border border-emerald-200/60 flex items-center gap-0.5 cursor-pointer shadow-2xs"
                                        >
                                          <span>Country Rates</span>
-                                         <span className="material-symbols-outlined text-[12px]">{showEduCountryRatesEdit ? "expand_less" : "expand_more"}</span>
+                                         <span className="material-symbols-outlined text-[11px]">{showEduCountryRatesEdit ? "expand_less" : "expand_more"}</span>
                                        </button>
                                      )}
-                                     <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                       <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                   </div>
+                                   <div className="flex items-center gap-2 shrink-0">
+                                     <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                       <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                       <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
                                        <input
                                          type="text"
-                                         placeholder="e.g. 3-5 Days"
-                                         value={planServiceTats["education"] ?? "3 - 5 Business Days"}
+                                         placeholder="e.g. 5 - 10 Business Days"
+                                         value={planServiceTats["education"] ?? "5 - 10 Business Days"}
                                          onChange={(e) => setPlanServiceTats(prev => ({ ...prev, education: e.target.value }))}
                                          disabled={!planEducationEnabled}
-                                         className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                         className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
                                        />
                                      </div>
-                                     <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                       <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                     <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                       <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
                                        <input
                                          type="number"
                                          min="0"
@@ -1761,27 +1896,27 @@ export default function ManageInvoicesPage() {
                                          value={planEducationRate}
                                          onChange={(e) => setPlanEducationRate(e.target.value)}
                                          disabled={!planEducationEnabled}
-                                         className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                         className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
                                        />
                                      </div>
                                    </div>
                                  </div>
                                  {showEduCountryRatesEdit && planEducationEnabled && (
-                                   <div className="bg-slate-100/80 p-3 rounded-xl border border-slate-200/70 my-1 animate-fade-in">
-                                     <p className="text-[9px] font-extrabold text-emerald-800 uppercase tracking-wider mb-2">Education Rates per Country ($ USD)</p>
+                                   <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/60 my-1 animate-fade-in text-[10px]">
+                                     <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Education Rates per Country ($ USD)</p>
                                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                        {STANDARD_RATE_COUNTRIES.map((cntry) => (
-                                         <div key={cntry} className="flex items-center justify-between text-[10px] bg-white p-1.5 rounded-lg border border-slate-200/60">
-                                           <span className="font-bold text-slate-700">{cntry}:</span>
+                                         <div key={cntry} className="flex items-center justify-between text-[11px] bg-white p-1.5 rounded-lg border border-slate-200/60 shadow-2xs">
+                                           <span className="text-slate-600 font-normal">{cntry}:</span>
                                            <div className="flex items-center gap-0.5">
-                                             <span className="text-[9px] text-slate-400 font-bold">$</span>
+                                             <span className="text-[10px] text-slate-400 font-medium">$</span>
                                              <input
                                                type="number"
                                                min="0"
                                                step="0.01"
                                                value={planEducationRates[cntry] ?? ""}
-                                               onChange={(e) => setPlanEducationRates(prev => ({ ...prev, [cntry]: e.target.value }))}
-                                               className="w-12 border border-slate-200 rounded p-0.5 bg-white text-[10px] text-center font-bold"
+                                               onChange={(e) => setPlanEducationRates((prev: any) => ({ ...prev, [cntry]: e.target.value }))}
+                                               className="w-12 border border-slate-200 rounded px-1 py-0.5 bg-white text-[11px] text-right font-medium focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
                                              />
                                            </div>
                                          </div>
@@ -1792,31 +1927,34 @@ export default function ManageInvoicesPage() {
                                </div>
 
                                {/* Interpol Check Toggle */}
-                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
-                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
                                    <input
                                      type="checkbox"
                                      checked={planInterpolEnabled}
                                      onChange={(e) => setPlanInterpolEnabled(e.target.checked)}
                                      className="sr-only peer"
                                    />
-                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Interpol Check</span>
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planInterpolEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     Interpol Check
+                                   </span>
                                  </label>
-                                 <div className="flex items-center gap-2">
-                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
                                      <input
                                        type="text"
                                        placeholder="e.g. 24 Hours"
                                        value={planServiceTats["interpol"] ?? "24 Hours"}
                                        onChange={(e) => setPlanServiceTats(prev => ({ ...prev, interpol: e.target.value }))}
                                        disabled={!planInterpolEnabled}
-                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
-                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -1824,38 +1962,41 @@ export default function ManageInvoicesPage() {
                                        value={planInterpolRate}
                                        onChange={(e) => setPlanInterpolRate(e.target.value)}
                                        disabled={!planInterpolEnabled}
-                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
                                  </div>
                                </div>
 
                                {/* Passport Check Toggle */}
-                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
-                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
                                    <input
                                      type="checkbox"
                                      checked={planPassportEnabled}
                                      onChange={(e) => setPlanPassportEnabled(e.target.checked)}
                                      className="sr-only peer"
                                    />
-                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Passport Check</span>
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planPassportEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     Passport Check
+                                   </span>
                                  </label>
-                                 <div className="flex items-center gap-2">
-                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
                                      <input
                                        type="text"
                                        placeholder="e.g. 24 Hours"
                                        value={planServiceTats["passport"] ?? "24 Hours"}
                                        onChange={(e) => setPlanServiceTats(prev => ({ ...prev, passport: e.target.value }))}
                                        disabled={!planPassportEnabled}
-                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
-                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -1863,38 +2004,41 @@ export default function ManageInvoicesPage() {
                                        value={planPassportRate}
                                        onChange={(e) => setPlanPassportRate(e.target.value)}
                                        disabled={!planPassportEnabled}
-                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-[11px] text-center font-bold disabled:opacity-40"
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
                                  </div>
                                </div>
 
                                {/* Digital Address Check Toggle */}
-                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100/60 gap-2">
-                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 min-w-[150px]">
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
                                    <input
                                      type="checkbox"
                                      checked={planDigitalAddressEnabled}
                                      onChange={(e) => setPlanDigitalAddressEnabled(e.target.checked)}
                                      className="sr-only peer"
                                    />
-                                   <div className="w-7 h-3.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                   <span className="ms-2 text-[11px] font-bold text-slate-800">Digital Address Check</span>
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planDigitalAddressEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     Digital Address Check
+                                   </span>
                                  </label>
-                                 <div className="flex items-center gap-2">
-                                   <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">TAT:</span>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
                                      <input
                                        type="text"
-                                       placeholder="e.g. 24-48 Hours"
+                                       placeholder="e.g. 24 - 48 Hours"
                                        value={planServiceTats["digital_address"] ?? "24 - 48 Hours"}
                                        onChange={(e) => setPlanServiceTats(prev => ({ ...prev, digital_address: e.target.value }))}
                                        disabled={!planDigitalAddressEnabled}
-                                       className="w-24 border border-slate-200/80 rounded px-1.5 py-0.5 text-[10px] text-slate-800 bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
-                                   <div className="flex items-center gap-0.5 bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200/50">
-                                     <span className="text-[11px] font-extrabold text-emerald-700">$</span>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -1902,27 +2046,239 @@ export default function ManageInvoicesPage() {
                                        value={planDigitalAddressRate}
                                        onChange={(e) => setPlanDigitalAddressRate(e.target.value)}
                                        disabled={!planDigitalAddressEnabled}
-                                       className="w-14 border border-slate-200/80 rounded px-1.5 py-0.5 text-[11px] text-center text-slate-900 bg-white font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
+
+                               {/* Red Notice Worldwide Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planRednoticeWorldwideEnabled}
+                                     onChange={(e) => setPlanRednoticeWorldwideEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planRednoticeWorldwideEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     Red Notice Worldwide
+                                   </span>
+                                 </label>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24 Hours"
+                                       value={planServiceTats["rednotice_worldwide"] ?? "24 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, rednotice_worldwide: e.target.value }))}
+                                       disabled={!planRednoticeWorldwideEnabled}
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planRednoticeWorldwideRate}
+                                       onChange={(e) => setPlanRednoticeWorldwideRate(e.target.value)}
+                                       disabled={!planRednoticeWorldwideEnabled}
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
+
+                               {/* SAPS Wanted Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planSapsWantedEnabled}
+                                     onChange={(e) => setPlanSapsWantedEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planSapsWantedEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     SAPS Wanted Check
+                                   </span>
+                                 </label>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24 Hours"
+                                       value={planServiceTats["saps_wanted"] ?? "24 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, saps_wanted: e.target.value }))}
+                                       disabled={!planSapsWantedEnabled}
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planSapsWantedRate}
+                                       onChange={(e) => setPlanSapsWantedRate(e.target.value)}
+                                       disabled={!planSapsWantedEnabled}
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
+
+                               {/* South African Court Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planSafliiCourtEnabled}
+                                     onChange={(e) => setPlanSafliiCourtEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planSafliiCourtEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     SA Court Check
+                                   </span>
+                                 </label>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24 - 48 Hours"
+                                       value={planServiceTats["saflii_court"] ?? "24 - 48 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, saflii_court: e.target.value }))}
+                                       disabled={!planSafliiCourtEnabled}
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planSafliiCourtRate}
+                                       onChange={(e) => setPlanSafliiCourtRate(e.target.value)}
+                                       disabled={!planSafliiCourtEnabled}
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
+
+                               {/* UK Court Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planUkCourtEnabled}
+                                     onChange={(e) => setPlanUkCourtEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planUkCourtEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     UK Court Check
+                                   </span>
+                                 </label>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24 Hours"
+                                       value={planServiceTats["uk_court"] ?? "24 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, uk_court: e.target.value }))}
+                                       disabled={!planUkCourtEnabled}
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planUkCourtRate}
+                                       onChange={(e) => setPlanUkCourtRate(e.target.value)}
+                                       disabled={!planUkCourtEnabled}
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                 </div>
+                               </div>
+
+                               {/* Malaysia Court Check Toggle */}
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                 <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
+                                   <input
+                                     type="checkbox"
+                                     checked={planMalaysiaCourtEnabled}
+                                     onChange={(e) => setPlanMalaysiaCourtEnabled(e.target.checked)}
+                                     className="sr-only peer"
+                                   />
+                                   <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                   <span className={`text-[12px] font-medium tracking-tight transition-colors ${planMalaysiaCourtEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                     Malaysia Court Check
+                                   </span>
+                                 </label>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                   <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                     <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
+                                     <input
+                                       type="text"
+                                       placeholder="e.g. 24 Hours"
+                                       value={planServiceTats["malaysia_court"] ?? "24 Hours"}
+                                       onChange={(e) => setPlanServiceTats(prev => ({ ...prev, malaysia_court: e.target.value }))}
+                                       disabled={!planMalaysiaCourtEnabled}
+                                       className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
+                                     />
+                                   </div>
+                                   <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <input
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       value={planMalaysiaCourtRate}
+                                       onChange={(e) => setPlanMalaysiaCourtRate(e.target.value)}
+                                       disabled={!planMalaysiaCourtEnabled}
+                                       className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
                                      />
                                    </div>
                                  </div>
                                </div>
                             </div>
 
-                            <div className="flex gap-2 mt-2 shrink-0 border-t border-slate-100 pt-3">
+                            <div className="flex items-center justify-end gap-2.5 mt-3 pt-3 border-t border-slate-100 shrink-0">
                               <button
-                                onClick={handleSavePlan}
-                                disabled={planSaving}
-                                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer border-none shadow-md shadow-emerald-600/10"
-                              >
-                                <span className="material-symbols-outlined text-sm">save</span>
-                                {planSaving ? "Saving..." : "Save Service Configuration"}
-                              </button>
-                              <button
+                                type="button"
                                 onClick={() => setEditingPlan(false)}
-                                className="px-5 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl text-xs transition-all cursor-pointer bg-white hover:bg-slate-50"
+                                className="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 rounded-xl transition-all cursor-pointer"
                               >
                                 Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleSavePlan}
+                                disabled={planSaving}
+                                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white text-xs font-medium rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                              >
+                                <span className="material-symbols-outlined text-[15px] text-emerald-400">check_circle</span>
+                                <span>{planSaving ? "Saving..." : "Save Configuration"}</span>
                               </button>
                             </div>
                           </div>
@@ -1930,70 +2286,82 @@ export default function ManageInvoicesPage() {
                       </div>
 
                       {/* Billing Details Card */}
-                      <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50 flex flex-col justify-between">
+                      <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/60 flex flex-col justify-between">
                         <div>
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">event</span>
-                            <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Billing Cycle</span>
+                          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                            <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-[15px]">event_repeat</span>
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-semibold text-slate-900 tracking-tight">Billing Cycle</h4>
+                              <p className="text-[10px] text-slate-400 font-normal">Auto-invoicing schedule</p>
+                            </div>
                           </div>
-                          <p className="font-body-sm text-slate-600 leading-normal mb-4">
-                            Invoices are automatically generated on the <span className="font-extrabold text-slate-900">last day</span> of every month at <span className="font-extrabold text-slate-900">11:59 PM</span>.
+                          <p className="text-[11px] text-slate-500 font-normal leading-relaxed mb-4">
+                            Invoices are automatically generated on the <span className="font-medium text-slate-800">last day</span> of every month at <span className="font-medium text-slate-800">11:59 PM</span>.
                           </p>
-                          <div className="flex items-center gap-4 border-b border-slate-100 pb-4 mb-4">
+                          <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-3">
                             <div className="text-center flex-1">
-                              <p className="text-xl font-extrabold text-slate-900 tracking-tight">{orgInvoices.length}</p>
-                              <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Invoices</p>
+                              <p className="text-lg font-semibold text-slate-900 tracking-tight">{orgInvoices.length}</p>
+                              <p className="text-[10px] text-slate-400 font-normal mt-0.5">Invoices</p>
                             </div>
-                            <div className="w-px h-8 bg-slate-200"></div>
+                            <div className="w-px h-6 bg-slate-200/60"></div>
                             <div className="text-center flex-1">
-                              <p className="text-xl font-extrabold text-emerald-600 tracking-tight">{orgInvoices.filter(i => i.status === "Paid").length}</p>
-                              <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Paid</p>
+                              <p className="text-lg font-semibold text-emerald-600 tracking-tight">{orgInvoices.filter(i => i.status === "Paid").length}</p>
+                              <p className="text-[10px] text-slate-400 font-normal mt-0.5">Paid</p>
                             </div>
-                            <div className="w-px h-8 bg-slate-200"></div>
+                            <div className="w-px h-6 bg-slate-200/60"></div>
                             <div className="text-center flex-1">
-                              <p className="text-xl font-extrabold text-red-600 tracking-tight">{orgInvoices.filter(i => i.status !== "Paid").length}</p>
-                              <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Outstanding</p>
+                              <p className="text-lg font-semibold text-rose-600 tracking-tight">{orgInvoices.filter(i => i.status !== "Paid").length}</p>
+                              <p className="text-[10px] text-slate-400 font-normal mt-0.5">Outstanding</p>
                             </div>
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 bg-[#016e1c]/5 border border-[#016e1c]/10 rounded-xl p-3.5 mt-auto">
-                          <div className="flex justify-between items-baseline text-xs">
-                            <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Unpaid Invoices</span>
-                            <span className="font-bold text-slate-800 font-mono">${orgUnpaidBalance.toFixed(2)}</span>
+                        <div className="flex flex-col gap-2 bg-emerald-50/40 border border-emerald-100/80 rounded-xl p-3 mt-auto">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-[10px] text-slate-500 font-medium">Unpaid Invoices</span>
+                            <span className="font-semibold text-slate-800 font-mono text-[11px]">${orgUnpaidBalance.toFixed(2)}</span>
                           </div>
-                          <div className="flex justify-between items-baseline text-xs border-b border-slate-100/50 pb-2 mb-1.5">
-                            <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">{currentMonthName} {currentYear} (Live)</span>
-                            <span className="font-bold text-slate-850 font-mono">${liveTotal.toFixed(2)}</span>
+                          <div className="flex justify-between items-center text-xs border-b border-emerald-100/60 pb-2">
+                            <span className="text-[10px] text-slate-500 font-medium">{currentMonthName} {currentYear} (Live)</span>
+                            <span className="font-semibold text-slate-800 font-mono text-[11px]">${liveTotal.toFixed(2)}</span>
                           </div>
-                          <div className="flex justify-between items-baseline">
-                            <span className="text-[9px] text-[#00450e] uppercase tracking-wider font-extrabold">Current Dues</span>
-                            <span className="font-black text-base text-[#00450e] font-mono">${totalDues.toFixed(2)}</span>
+                          <div className="flex justify-between items-baseline pt-1">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-900">Current Dues</span>
+                            <span className="text-base font-bold text-emerald-700 font-mono tracking-tight">${totalDues.toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Verifiers Card */}
-                      <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="material-symbols-outlined text-[16px] text-slate-400 font-bold">groups</span>
-                          <span className="font-label-caps text-slate-400 text-[9px] uppercase tracking-wider font-bold">Assigned Team</span>
-                        </div>
-                        <p className="text-2xl font-extrabold text-slate-900 tracking-tight">{orgVerifiers.length}</p>
-                        <p className="text-[11px] text-slate-400 font-semibold mt-1">
-                          {orgVerifiers.filter(v => v.status === "Active").length} Active
-                          {orgVerifiers.filter(v => v.status === "Pending").length > 0 && `, ${orgVerifiers.filter(v => v.status === "Pending").length} Pending`}
-                        </p>
-                        <div className="mt-4 flex flex-wrap gap-1">
-                          {orgVerifiers.slice(0, 5).map((v) => (
-                            <div key={v.id} className="w-7 h-7 bg-gradient-to-br from-[#f6fbf0] via-[#eaf0e4] to-[#bfcab9] rounded-full flex items-center justify-center text-[10px] font-black text-[#016e1c] border-2 border-white shadow-sm" title={v.name}>
-                              {v.name.charAt(0)}
+                      <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/60 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                            <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-[15px]">groups</span>
                             </div>
-                          ))}
-                          {orgVerifiers.length > 5 && (
-                            <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-extrabold text-slate-500 border-2 border-white shadow-sm">
-                              +{orgVerifiers.length - 5}
+                            <div>
+                              <h4 className="text-xs font-semibold text-slate-900 tracking-tight">Assigned Team</h4>
+                              <p className="text-[10px] text-slate-400 font-normal">Active verifiers</p>
                             </div>
-                          )}
+                          </div>
+                          <p className="text-2xl font-semibold text-slate-900 tracking-tight">{orgVerifiers.length}</p>
+                          <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                            {orgVerifiers.filter(v => v.status === "Active").length} Active
+                            {orgVerifiers.filter(v => v.status === "Pending").length > 0 && `, ${orgVerifiers.filter(v => v.status === "Pending").length} Pending`}
+                          </p>
+                          <div className="mt-4 flex flex-wrap gap-1">
+                            {orgVerifiers.slice(0, 5).map((v) => (
+                              <div key={v.id} className="w-7 h-7 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center text-[11px] font-semibold border border-emerald-200/60 shadow-2xs" title={v.name}>
+                                {v.name.charAt(0)}
+                              </div>
+                            ))}
+                            {orgVerifiers.length > 5 && (
+                              <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-medium text-slate-500 border border-slate-200/60 shadow-2xs">
+                                +{orgVerifiers.length - 5}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -3325,6 +3693,18 @@ export default function ManageInvoicesPage() {
                                 ? (selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : selectedOrg.monthlyRate)
                                 : verType === "passport"
                                 ? (selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : selectedOrg.monthlyRate)
+                                : verType === "digital_address"
+                                ? (selectedOrg.digitalAddressRate !== undefined ? selectedOrg.digitalAddressRate : 5)
+                                : verType === "rednotice_worldwide"
+                                ? (selectedOrg.rednoticeWorldwideRate !== undefined ? selectedOrg.rednoticeWorldwideRate : 15)
+                                : verType === "saflii_court"
+                                ? (selectedOrg.safliiCourtRate !== undefined ? selectedOrg.safliiCourtRate : 15)
+                                : verType === "saps_wanted"
+                                ? (selectedOrg.sapsWantedRate !== undefined ? selectedOrg.sapsWantedRate : 15)
+                                : verType === "uk_court"
+                                ? (selectedOrg.ukCourtRate !== undefined ? selectedOrg.ukCourtRate : 25)
+                                : verType === "malaysia_court"
+                                ? (selectedOrg.malaysiaCourtRate !== undefined ? selectedOrg.malaysiaCourtRate : 20)
                                 : selectedOrg.monthlyRate;
                               return (
                                 <tr key={v.id}>

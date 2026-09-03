@@ -30,16 +30,26 @@ export default function AdminSuggestionsPage() {
   const [rateEmployment, setRateEmployment] = useState<number>(5);
   const [rateEducation, setRateEducation] = useState<number>(5);
   const [rateInterpol, setRateInterpol] = useState<number>(10);
+  const [rateRednoticeWorldwide, setRateRednoticeWorldwide] = useState<number>(15);
   const [ratePassport, setRatePassport] = useState<number>(8);
   const [rateDigitalAddress, setRateDigitalAddress] = useState<number>(5);
+  const [rateSapsWanted, setRateSapsWanted] = useState<number>(15);
+  const [rateSafliiCourt, setRateSafliiCourt] = useState<number>(15);
+  const [rateUkCourt, setRateUkCourt] = useState<number>(25);
+  const [rateMalaysiaCourt, setRateMalaysiaCourt] = useState<number>(20);
 
   const [enableIdentity, setEnableIdentity] = useState<boolean>(true);
   const [enableCourt, setEnableCourt] = useState<boolean>(true);
   const [enableEmployment, setEnableEmployment] = useState<boolean>(true);
   const [enableEducation, setEnableEducation] = useState<boolean>(true);
   const [enableInterpol, setEnableInterpol] = useState<boolean>(true);
+  const [enableRednoticeWorldwide, setEnableRednoticeWorldwide] = useState<boolean>(true);
   const [enablePassport, setEnablePassport] = useState<boolean>(true);
   const [enableDigitalAddress, setEnableDigitalAddress] = useState<boolean>(true);
+  const [enableSapsWanted, setEnableSapsWanted] = useState<boolean>(true);
+  const [enableSafliiCourt, setEnableSafliiCourt] = useState<boolean>(true);
+  const [enableUkCourt, setEnableUkCourt] = useState<boolean>(true);
+  const [enableMalaysiaCourt, setEnableMalaysiaCourt] = useState<boolean>(true);
 
   const [savingOrgRates, setSavingOrgRates] = useState(false);
   const [orgSuccess, setOrgSuccess] = useState("");
@@ -131,16 +141,26 @@ export default function AdminSuggestionsPage() {
     setRateEmployment(org.employmentRate ?? 5);
     setRateEducation(org.educationRate ?? 5);
     setRateInterpol(org.interpolRate ?? 10);
+    setRateRednoticeWorldwide(org.rednoticeWorldwideRate ?? 15);
     setRatePassport(org.passportRate ?? 8);
     setRateDigitalAddress(org.digitalAddressRate ?? 5);
+    setRateSapsWanted(org.sapsWantedRate ?? 15);
+    setRateSafliiCourt(org.safliiCourtRate ?? 15);
+    setRateUkCourt(org.ukCourtRate ?? 25);
+    setRateMalaysiaCourt(org.malaysiaCourtRate ?? 20);
 
     setEnableIdentity(org.identityEnabled !== false);
     setEnableCourt(org.courtRecordEnabled !== false);
     setEnableEmployment(org.employmentEnabled !== false);
     setEnableEducation(org.educationEnabled !== false);
     setEnableInterpol(org.interpolEnabled !== false);
+    setEnableRednoticeWorldwide(org.rednoticeWorldwideEnabled !== false);
     setEnablePassport(org.passportEnabled !== false);
     setEnableDigitalAddress(org.digitalAddressEnabled !== false);
+    setEnableSapsWanted(org.sapsWantedEnabled !== false);
+    setEnableSafliiCourt(org.safliiCourtEnabled !== false);
+    setEnableUkCourt(org.ukCourtEnabled !== false);
+    setEnableMalaysiaCourt(org.malaysiaCourtEnabled !== false);
 
     setOrgSuccess("");
     setOrgError("");
@@ -162,8 +182,13 @@ export default function AdminSuggestionsPage() {
           employmentRate: rateEmployment,
           educationRate: rateEducation,
           interpolRate: rateInterpol,
+          rednoticeWorldwideRate: rateRednoticeWorldwide,
           passportRate: ratePassport,
-          digitalAddressRate: rateDigitalAddress
+          digitalAddressRate: rateDigitalAddress,
+          sapsWantedRate: rateSapsWanted,
+          safliiCourtRate: rateSafliiCourt,
+          ukCourtRate: rateUkCourt,
+          malaysiaCourtRate: rateMalaysiaCourt
         },
         enabledServices: {
           identityEnabled: enableIdentity,
@@ -171,8 +196,13 @@ export default function AdminSuggestionsPage() {
           employmentEnabled: enableEmployment,
           educationEnabled: enableEducation,
           interpolEnabled: enableInterpol,
+          rednoticeWorldwideEnabled: enableRednoticeWorldwide,
           passportEnabled: enablePassport,
-          digitalAddressEnabled: enableDigitalAddress
+          digitalAddressEnabled: enableDigitalAddress,
+          sapsWantedEnabled: enableSapsWanted,
+          safliiCourtEnabled: enableSafliiCourt,
+          ukCourtEnabled: enableUkCourt,
+          malaysiaCourtEnabled: enableMalaysiaCourt
         }
       });
       setOrgSuccess("Service rates and access rules updated successfully!");
@@ -435,12 +465,32 @@ export default function AdminSuggestionsPage() {
                       <span className="font-extrabold text-[#016e1c]">${(org.interpolRate ?? 10).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
+                      <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">public</span> Red Notice Worldwide</span>
+                      <span className="font-extrabold text-[#016e1c]">${(org.rednoticeWorldwideRate ?? 15).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">assignment_ind</span> Passport Check</span>
                       <span className="font-extrabold text-[#016e1c]">${(org.passportRate ?? 8).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-1">
+                    <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">location_on</span> Digital Address</span>
                       <span className="font-extrabold text-[#016e1c]">${(org.digitalAddressRate ?? 5).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
+                      <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">local_police</span> SAPS Wanted</span>
+                      <span className="font-extrabold text-[#016e1c]">${(org.sapsWantedRate ?? 15).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
+                      <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">account_balance</span> SA Court Check</span>
+                      <span className="font-extrabold text-[#016e1c]">${(org.safliiCourtRate ?? 15).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
+                      <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">gavel</span> UK Court Check</span>
+                      <span className="font-extrabold text-[#016e1c]">${(org.ukCourtRate ?? 25).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-emerald-600">balance</span> Malaysia Court Check</span>
+                      <span className="font-extrabold text-[#016e1c]">${(org.malaysiaCourtRate ?? 20).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -738,6 +788,35 @@ export default function AdminSuggestionsPage() {
                 </div>
               </div>
 
+              {/* Red Notice Worldwide */}
+              <div className="pt-3 flex items-center justify-between gap-4">
+                <div>
+                  <span className="font-bold text-slate-900 block">Red Notice Worldwide</span>
+                  <span className="text-[11px] text-slate-500 font-normal">196 member countries database</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={rateRednoticeWorldwide}
+                      onChange={(e) => setRateRednoticeWorldwide(parseFloat(e.target.value) || 0)}
+                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800"
+                    />
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enableRednoticeWorldwide}
+                      onChange={(e) => setEnableRednoticeWorldwide(e.target.checked)}
+                      className="w-4 h-4 text-[#016e1c] rounded"
+                    />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
               {/* Passport */}
               <div className="pt-3 flex items-center justify-between gap-4">
                 <div>
@@ -789,6 +868,122 @@ export default function AdminSuggestionsPage() {
                       type="checkbox"
                       checked={enableDigitalAddress}
                       onChange={(e) => setEnableDigitalAddress(e.target.checked)}
+                      className="w-4 h-4 text-[#016e1c] rounded"
+                    />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* SAPS Wanted Check */}
+              <div className="pt-3 flex items-center justify-between gap-4 border-t border-slate-100">
+                <div>
+                  <span className="font-bold text-slate-900 block">SAPS Wanted Persons Check</span>
+                  <span className="text-[11px] text-slate-500 font-normal">South Africa Police wanted registry</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={rateSapsWanted}
+                      onChange={(e) => setRateSapsWanted(parseFloat(e.target.value) || 0)}
+                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800"
+                    />
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enableSapsWanted}
+                      onChange={(e) => setEnableSapsWanted(e.target.checked)}
+                      className="w-4 h-4 text-[#016e1c] rounded"
+                    />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* SA Court Check */}
+              <div className="pt-3 flex items-center justify-between gap-4 border-t border-slate-100">
+                <div>
+                  <span className="font-bold text-slate-900 block">South African Court Check</span>
+                  <span className="text-[11px] text-slate-500 font-normal">SAFLII Southern African Legal Information Institute</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={rateSafliiCourt}
+                      onChange={(e) => setRateSafliiCourt(parseFloat(e.target.value) || 0)}
+                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800"
+                    />
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enableSafliiCourt}
+                      onChange={(e) => setEnableSafliiCourt(e.target.checked)}
+                      className="w-4 h-4 text-[#016e1c] rounded"
+                    />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* UK Court Check */}
+              <div className="pt-3 flex items-center justify-between gap-4 border-t border-slate-100">
+                <div>
+                  <span className="font-bold text-slate-900 block">UK Court Check</span>
+                  <span className="text-[11px] text-slate-500 font-normal">Courts &amp; Tribunals Judiciary of England &amp; Wales</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={rateUkCourt}
+                      onChange={(e) => setRateUkCourt(parseFloat(e.target.value) || 0)}
+                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800"
+                    />
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enableUkCourt}
+                      onChange={(e) => setEnableUkCourt(e.target.checked)}
+                      className="w-4 h-4 text-[#016e1c] rounded"
+                    />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Malaysia Court Check */}
+              <div className="pt-3 flex items-center justify-between gap-4 border-t border-slate-100">
+                <div>
+                  <span className="font-bold text-slate-900 block">Malaysia Court Check</span>
+                  <span className="text-[11px] text-slate-500 font-normal">Mahkamah Persekutuan Malaysia • Portal eJudgment</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={rateMalaysiaCourt}
+                      onChange={(e) => setRateMalaysiaCourt(parseFloat(e.target.value) || 0)}
+                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800"
+                    />
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enableMalaysiaCourt}
+                      onChange={(e) => setEnableMalaysiaCourt(e.target.checked)}
                       className="w-4 h-4 text-[#016e1c] rounded"
                     />
                     <span className="text-xs">Enabled</span>

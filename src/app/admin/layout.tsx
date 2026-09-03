@@ -21,7 +21,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Pending verifications for notifications
   const pendingVerifications = verifications.filter(
     (v) => (v.courtRecordAdminReview === true && v.courtRecordStatus === "admin_review") ||
-           (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry")
+           (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry") ||
+           ((v.type as string) === "saps_wanted" && v.status === "Halted")
   );
   const visibleNotifications = pendingVerifications.filter(v => !dismissedNotifs.has(v.id));
   const pendingReviewCount = visibleNotifications.length;
@@ -99,7 +100,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     pathname.includes("/admin/digital-address-report") ||
     pathname.includes("/admin/employment-report") ||
     pathname.includes("/admin/education-report") ||
-    pathname.includes("/admin/interpol-report")
+    pathname.includes("/admin/interpol-report") ||
+    pathname.includes("/admin/rednotice-worldwide-report") ||
+    pathname.includes("/admin/saps-wanted-report") ||
+    pathname.includes("/admin/saflii-court-report") ||
+    pathname.includes("/admin/uk-court-report") ||
+    pathname.includes("/admin/malaysia-court-report")
   ) {
     return <>{children}</>;
   }

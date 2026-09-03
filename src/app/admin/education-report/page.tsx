@@ -129,6 +129,14 @@ function EducationReportContent() {
   const edu = verification.educationData || {};
   const attempts = verification.educationAttempts || [];
 
+  const educationsList: any[] = (() => {
+    if (Array.isArray(verification.educationList) && verification.educationList.length > 0) return verification.educationList;
+    if (Array.isArray(verification.educations) && verification.educations.length > 0) return verification.educations;
+    if (Array.isArray(verification.educationData?.educations) && verification.educationData.educations.length > 0) return verification.educationData.educations;
+    if (Array.isArray(verification.educationData?.educationList) && verification.educationData.educationList.length > 0) return verification.educationData.educationList;
+    return [edu];
+  })();
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 print:bg-white print:p-0 p-4 sm:p-6 md:p-8 flex flex-col items-center justify-start font-sans">
       <style>{`
@@ -368,147 +376,154 @@ function EducationReportContent() {
           </div>
         </div>
 
-        {/* Education Information Table(s) */}
-        <div>
-          <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#5b21b6] mb-2">Candidate Submitted Academic Details</h3>
-          {(() => {
-            const eduList: any[] = Array.isArray(verification.educationList) && verification.educationList.length > 0
-              ? verification.educationList
-              : (Array.isArray(verification.educations) && verification.educations.length > 0
-                  ? verification.educations
-                  : (Array.isArray(verification.educationData?.educations) && verification.educationData.educations.length > 0
-                      ? verification.educationData.educations
-                      : (Array.isArray(verification.educationData?.educationList) && verification.educationData.educationList.length > 0
-                          ? verification.educationData.educationList
-                          : [edu])));
-
-            return (
-              <div className="space-y-4">
-                {eduList.map((eduItem: any, eduIdx: number) => (
-                  <div key={eduIdx}>
-                    {eduList.length > 1 && (
-                      <div className="text-[10px] font-bold text-[#5b21b6] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                        <span className="w-5 h-5 rounded bg-[#5b21b6] text-white flex items-center justify-center text-[9px] font-extrabold">{eduIdx + 1}</span>
-                        Academic Record #{eduIdx + 1} — {eduItem.courseName || eduItem.degreeType || "Credential"}
-                      </div>
-                    )}
-                    <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <th className="p-2.5 border-r border-slate-200 w-1/2">Academic Field</th>
-                            <th className="p-2.5">Response Details</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold">
-                          <tr>
-                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Degree Category</td>
-                            <td className="p-2.5 font-bold text-slate-900">{eduItem.degreeType || "-"}</td>
-                          </tr>
-                          <tr>
-                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Course / Degree Name</td>
-                            <td className="p-2.5 font-bold text-slate-900">{eduItem.courseName || "-"}</td>
-                          </tr>
-                          <tr>
-                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Board / University</td>
-                            <td className="p-2.5">{eduItem.boardUniversity || "-"}</td>
-                          </tr>
-                          <tr>
-                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">School / College Name</td>
-                            <td className="p-2.5">{eduItem.institutionName || "-"}</td>
-                          </tr>
-                          <tr>
-                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Roll / Registration No.</td>
-                            <td className="p-2.5 font-mono">{eduItem.rollNumber || "-"}</td>
-                          </tr>
-                          <tr>
-                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Passing Year</td>
-                            <td className="p-2.5 font-mono">{eduItem.passingYear || "-"}</td>
-                          </tr>
-                          <tr>
-                            <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Country</td>
-                            <td className="p-2.5">{eduItem.country || "-"}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-        </div>
-
-        </div>
-
-        {/* Page 2 Content Block */}
-        <div>
-          {/* Verification Status & History Timeline */}
-          <div className="mb-8">
-            <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#5b21b6] border-b border-slate-200 pb-1 mb-3">Education Verification Summary</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <span className="text-sm font-bold text-slate-800">Verification Result Log History</span>
-                  <span className="text-xs text-slate-500 font-semibold">
-                    Overall Verdict: <span className={`font-bold ${statusColor}`}>{verification.status}</span>
+        {/* Education Information Table(s) with Per-Institution Attempt History */}
+        <div className="mb-8">
+          <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#5b21b6] mb-3 print-avoid-break">
+            Candidate Submitted Academic Details ({educationsList.length} Institution{educationsList.length > 1 ? "s" : ""})
+          </h3>
+          <div className="space-y-6">
+            {educationsList.map((eduItem: any, idx: number) => (
+              <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs p-4 bg-white mb-6">
+                <div className="bg-slate-100/90 px-3.5 py-2.5 border-b border-slate-200 flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-[#5b21b6] uppercase tracking-wide">
+                    {idx + 1}. {eduItem.institutionName || eduItem.boardUniversity || `Institution #${idx + 1}`}
+                    {idx === 0 ? " (Primary / Most Recent)" : " (Additional Academic Record)"}
                   </span>
+                  {eduItem.country && (
+                    <span className="text-[10px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                      {eduItem.country}
+                    </span>
+                  )}
                 </div>
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                      <th className="p-2.5 border-r border-slate-200 w-1/2">Academic Field</th>
+                      <th className="p-2.5">Response Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold bg-white">
+                    {Boolean(eduItem.degreeType) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Degree Category</td>
+                        <td className="p-2.5 font-bold text-slate-900">{eduItem.degreeType}</td>
+                      </tr>
+                    )}
+                    {Boolean(eduItem.courseName) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Course / Degree Name</td>
+                        <td className="p-2.5 font-bold text-slate-900">{eduItem.courseName}</td>
+                      </tr>
+                    )}
+                    {Boolean(eduItem.boardUniversity) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Board / University</td>
+                        <td className="p-2.5">{eduItem.boardUniversity}</td>
+                      </tr>
+                    )}
+                    {Boolean(eduItem.institutionName) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">School / College Name</td>
+                        <td className="p-2.5">{eduItem.institutionName}</td>
+                      </tr>
+                    )}
+                    {Boolean(eduItem.rollNumber) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Roll / Registration No.</td>
+                        <td className="p-2.5 font-mono">{eduItem.rollNumber}</td>
+                      </tr>
+                    )}
+                    {Boolean(eduItem.passingYear) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Passing Year</td>
+                        <td className="p-2.5 font-mono">{eduItem.passingYear}</td>
+                      </tr>
+                    )}
+                    {Boolean(eduItem.country) && (
+                      <tr>
+                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/50">Country</td>
+                        <td className="p-2.5">{eduItem.country}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
 
-                {/* Audit Attempt History Log */}
-                <div className="print-avoid-break">
-                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                          <th className="p-2.5 border-r border-slate-200 w-1/4">Date &amp; Time</th>
-                          <th className="p-2.5 border-r border-slate-200 w-1/6">Status</th>
-                          <th className="p-2.5 border-r border-slate-200 w-1/6">Mode</th>
-                          <th className="p-2.5">Attempt Details</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold bg-white">
-                        {attempts && attempts.length > 0 ? (
-                          attempts.map((att: any, idx: number) => {
-                            const attOutcome = att.result || att.status || "In Progress";
-                            return (
-                              <tr key={idx} className="hover:bg-slate-50/30">
-                                <td className="p-2.5 border-r border-slate-200 font-mono text-[10px] bg-slate-50/30">{att.date}</td>
-                                <td className="p-2.5 border-r border-slate-200">
-                                  <span className={`inline-block font-bold px-1.5 py-0.5 rounded text-[8px] uppercase border ${
-                                    attOutcome === "Verified" || attOutcome === "Completed"
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                      : attOutcome === "In Progress" || attOutcome === "Processing"
-                                      ? "bg-blue-50 text-blue-700 border-blue-200"
-                                      : "bg-rose-50 text-rose-700 border-rose-200"
-                                  }`}>
-                                    {attOutcome}
-                                  </span>
-                                </td>
-                                <td className="p-2.5 border-r border-slate-200 font-medium text-slate-700 capitalize">{att.verificationMode || "Manual"}</td>
-                                <td className="p-2.5 text-[10px] text-slate-665 font-medium leading-normal">
-                                  {att.comment && <div className="font-bold text-slate-800">Comment: {att.comment}</div>}
-                                  {att.respondentName && <div className="mt-1">Respondent: {att.respondentName} {att.respondentEmail ? `(${att.respondentEmail})` : ""}</div>}
-                                  {att.respondentComment && <div className="italic text-slate-500">Respondent Comment: "{att.respondentComment}"</div>}
-                                  <div className="text-[9px] text-slate-400 mt-1">Logged by: {formatVerifierName(att.loggedBy || generatedBy)}</div>
-                                </td>
+                {/* Per-Education Verification Result Log History */}
+                {(() => {
+                  const orgAttempts = (attempts || []).filter((att: any) => {
+                    if (!att.targetOrg || att.targetOrg === "All / General") {
+                      return idx === 0;
+                    }
+                    const orgPrefix = `${idx + 1}.`;
+                    return att.targetOrg.startsWith(orgPrefix);
+                  });
+
+                  return (
+                    <div className="mt-4 pt-3 border-t border-slate-200">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-bold text-[#5b21b6] uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-sm">history</span>
+                          Verification Result Log History for {eduItem.institutionName || eduItem.boardUniversity || `Institution #${idx + 1}`} ({orgAttempts.length})
+                        </span>
+                      </div>
+                      <div className="print-avoid-break">
+                        <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                                <th className="p-2.5 border-r border-slate-200 w-1/4">Date &amp; Time</th>
+                                <th className="p-2.5 border-r border-slate-200 w-1/6">Status</th>
+                                <th className="p-2.5 border-r border-slate-200 w-1/6">Mode</th>
+                                <th className="p-2.5">Attempt Details</th>
                               </tr>
-                            );
-                          })
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="p-4 text-center text-slate-400">No attempts logged in timeline.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 text-slate-800 font-semibold bg-white">
+                              {orgAttempts.length > 0 ? (
+                                orgAttempts.slice().reverse().map((att: any, attIdx: number) => {
+                                  const attOutcome = att.result || att.status || "In Progress";
+                                  return (
+                                    <tr key={attIdx} className="hover:bg-slate-50/30">
+                                      <td className="p-2.5 border-r border-slate-200 font-mono text-[10px] bg-slate-50/30">{att.date}</td>
+                                      <td className="p-2.5 border-r border-slate-200">
+                                        <span className={`inline-block font-bold px-1.5 py-0.5 rounded text-[8px] uppercase border ${
+                                          attOutcome === "Verified" || attOutcome === "Completed"
+                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                            : attOutcome === "In Progress" || attOutcome === "Processing"
+                                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                                            : "bg-rose-50 text-rose-700 border-rose-200"
+                                        }`}>
+                                          {attOutcome}
+                                        </span>
+                                      </td>
+                                      <td className="p-2.5 border-r border-slate-200 font-medium text-slate-700 capitalize">{att.verificationMode || "Manual"}</td>
+                                      <td className="p-2.5 text-[10px] text-slate-665 font-medium leading-normal">
+                                        {att.comment && <div className="font-bold text-slate-800">Comment: {att.comment}</div>}
+                                        {att.respondentName && <div className="mt-1">Respondent: {att.respondentName} {att.respondentEmail ? `(${att.respondentEmail})` : ""}</div>}
+                                        {att.respondentComment && <div className="italic text-slate-500">Respondent Comment: &quot;{att.respondentComment}&quot;</div>}
+                                        <div className="text-[9px] text-slate-400 mt-1">Logged by: {formatVerifierName(att.loggedBy || generatedBy)}</div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              ) : (
+                                <tr>
+                                  <td colSpan={4} className="p-3 text-center text-slate-400 text-[11px] italic">No verification attempt logs recorded for this institution.</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-            </div>
+            ))}
           </div>
+        </div>
+
+        {/* Sign-off & Disclaimer Section */}
+        <div>
 
           {/* Sign-Off & Disclaimer — pushed to bottom of last page */}
           <div className="report-sign-off mt-10 print:mt-auto">
@@ -547,6 +562,7 @@ function EducationReportContent() {
             </div>
           </div>
           </div>
+        </div>
         </div>
 
         {/* Appendix: Verification Evidence */}

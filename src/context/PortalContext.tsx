@@ -12,7 +12,11 @@ export interface Verification {
   orgName: string;
   requestingOrgName?: string;
   date: string;
-  status: "Completed" | "Processing" | "Needs Attention" | "Verified" | "Discrepancy";
+  status: "Completed" | "Processing" | "Needs Attention" | "Verified" | "Discrepancy" | "Halted";
+  candidateForename?: string;
+  candidateSurname?: string;
+  candidateIdNumber?: string;
+  provinceCity?: string;
   verifier: string | null;
   reportDetails?: string;
   notes?: string;
@@ -62,7 +66,7 @@ export interface Verification {
   reportGeneratedAt?: string;
   reportGeneratedBy?: string;
   // Verification type & Interpol fields
-  type?: "identity" | "court_record" | "employment" | "education" | "interpol" | "passport";
+  type?: "identity" | "court_record" | "employment" | "education" | "interpol" | "passport" | "digital_address" | "rednotice_worldwide" | "saflii_court" | "saps_wanted" | "uk_court" | "malaysia_court";
   createdAt?: string;
   country?: string;
   perCheckRate?: number;
@@ -74,6 +78,49 @@ export interface Verification {
   interpolHasRecords?: boolean;
   interpolMatches?: any[];
   interpolCompletedAt?: string;
+  rednoticeWorldwideHasRecords?: boolean;
+  rednoticeWorldwideMatches?: any[];
+  rednoticeWorldwideCompletedAt?: string;
+  sapsWantedHasRecords?: boolean;
+  sapsWantedMatches?: any[];
+  sapsWantedStatus?: "verifying_with_attorney" | "cleared_by_attorney" | "confirmed_wanted" | "completed";
+  sapsWantedCompletedAt?: string;
+  attorneyResolution?: {
+    verdict: "cleared" | "confirmed_wanted";
+    notes: string;
+    resolvedBy: string;
+    resolvedAt: string;
+  };
+  // UK Court Check fields
+  ukCourtHasRecords?: boolean;
+  ukCourtStatus?: "searching" | "completed" | "error";
+  ukCourtResults?: any[];
+  ukCourtTotalResults?: number;
+  ukCourtCompletedAt?: string;
+
+  // Malaysia Court Check fields
+  courtCategory?: string;
+  courtLocation?: string;
+  caseType?: string;
+  dateOfDecisionFrom?: string;
+  dateOfDecisionTo?: string;
+  dateOfAPFrom?: string;
+  dateOfAPTo?: string;
+  judgeName?: string;
+  malaysiaCourtHasRecords?: boolean;
+  malaysiaCourtStatus?: "searching" | "completed" | "error";
+  malaysiaCourtResults?: any[];
+  malaysiaCourtTotalResults?: number;
+  malaysiaCourtTotalAvailable?: number;
+  malaysiaCourtCompletedAt?: string;
+
+  // SAFLII Court Check fields
+  safliiCourtHasRecords?: boolean;
+  safliiCourtStatus?: "searching" | "completed" | "error";
+  safliiCourtResults?: any[];
+  safliiCourtTotalResults?: number;
+  safliiCourtCompletedAt?: string;
+
   candidateDob?: string;
   candidateFatherName?: string;
   candidateMotherName?: string;
@@ -273,6 +320,11 @@ export interface Organisation {
   interpolEnabled?: boolean;
   passportEnabled?: boolean;
   digitalAddressEnabled?: boolean;
+  rednoticeWorldwideEnabled?: boolean;
+  sapsWantedEnabled?: boolean;
+  safliiCourtEnabled?: boolean;
+  ukCourtEnabled?: boolean;
+  malaysiaCourtEnabled?: boolean;
   identityRate?: number;
   courtRecordRate?: number;
   employmentRate?: number;
@@ -280,6 +332,11 @@ export interface Organisation {
   interpolRate?: number;
   passportRate?: number;
   digitalAddressRate?: number;
+  rednoticeWorldwideRate?: number;
+  sapsWantedRate?: number;
+  safliiCourtRate?: number;
+  ukCourtRate?: number;
+  malaysiaCourtRate?: number;
   employmentRates?: Record<string, number>;
   educationRates?: Record<string, number>;
   serviceTats?: Record<string, string>;
@@ -392,6 +449,7 @@ interface PortalContextType {
   saveReportData: (verificationId: string, reportData: Record<string, unknown>) => Promise<any>;
   deleteEmploymentAttempt: (verificationId: string, attemptIndex: number) => Promise<any>;
   logEducationAttempt: (verificationId: string, attempt: {
+    targetOrg?: string;
     verificationMode: string;
     result: string;
     comment?: string;
@@ -1027,6 +1085,10 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         rate = rate * (v.itemCount || 1);
       } else if (verType === "interpol") {
         rate = org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate;
+      } else if (verType === "rednotice_worldwide") {
+        rate = org.rednoticeWorldwideRate !== undefined ? org.rednoticeWorldwideRate : 15;
+      } else if (verType === "saps_wanted") {
+        rate = org.sapsWantedRate !== undefined ? org.sapsWantedRate : 15;
       } else if (verType === "passport") {
         rate = org.passportRate !== undefined ? org.passportRate : 8;
       } else {
@@ -1272,6 +1334,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const logEducationAttempt = async (verificationId: string, attempt: {
+    targetOrg?: string;
     verificationMode: string;
     result: string;
     comment?: string;
@@ -1283,6 +1346,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     markAsPaid?: boolean;
     askCustomerApproval?: boolean;
     screenshot?: string;
+    screenshotCaption?: string;
     sendEmail?: boolean;
   }) => {
     try {

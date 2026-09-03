@@ -26,7 +26,8 @@ export default function CandidatesPage() {
   const [selectedDetail, setSelectedDetail] = useState<Verification | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
-  // Employment Log Attempt state
+  // Employment / Education Log Attempt state
+  const [empAttemptTargetOrg, setEmpAttemptTargetOrg] = useState("");
   const [empAttemptMode, setEmpAttemptMode] = useState("Manual");
   const [empAttemptResult, setEmpAttemptResult] = useState("In Progress");
   const [empAttemptComment, setEmpAttemptComment] = useState("");
@@ -122,7 +123,14 @@ export default function CandidatesPage() {
       (typeFilter === "education" && v.type === "education") ||
       (typeFilter === "identity" && (!v.type || v.type === "identity")) ||
       (typeFilter === "court_record" && v.type === "court_record") ||
-      (typeFilter === "interpol" && v.type === "interpol");
+      (typeFilter === "interpol" && v.type === "interpol") ||
+      (typeFilter === "passport" && v.type === "passport") ||
+      (typeFilter === "digital_address" && v.type === "digital_address") ||
+      (typeFilter === "rednotice_worldwide" && v.type === "rednotice_worldwide") ||
+      (typeFilter === "saflii_court" && v.type === "saflii_court") ||
+      (typeFilter === "saps_wanted" && v.type === "saps_wanted") ||
+      (typeFilter === "uk_court" && v.type === "uk_court") ||
+      (typeFilter === "malaysia_court" && v.type === "malaysia_court");
 
     const matchesSearch =
       !searchQuery ||
@@ -293,6 +301,13 @@ export default function CandidatesPage() {
             <option value="employment">Employment</option>
             <option value="education">Education</option>
             <option value="interpol">Interpol Check</option>
+            <option value="passport">Passport Check</option>
+            <option value="digital_address">Digital Address</option>
+            <option value="rednotice_worldwide">Red Notice Worldwide</option>
+            <option value="saflii_court">South African Court</option>
+            <option value="saps_wanted">SAPS Wanted</option>
+            <option value="uk_court">UK Court Check</option>
+            <option value="malaysia_court">Malaysia Court Check</option>
           </select>
         </div>
 
@@ -373,6 +388,20 @@ export default function CandidatesPage() {
                                 ? ((c.educationData?.courseName && `${c.educationData.courseName} @ ${c.educationData.boardUniversity}`) || c.email)
                                 : c.type === "interpol"
                                 ? (c.interpolHasRecords ? `${c.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
+                                : (c.type as string) === "rednotice_worldwide"
+                                ? (c.rednoticeWorldwideHasRecords ? `${c.rednoticeWorldwideMatches?.length || 0} Record Match(es)` : "Clean Record")
+                                : (c.type as string) === "saps_wanted"
+                                ? (c.status === "Halted" ? `Halted — Flagged for Attorney (${c.sapsWantedMatches?.length || 0} match)` : c.sapsWantedHasRecords ? `${c.sapsWantedMatches?.length || 0} Wanted Match(es)` : "Clean SAPS Record")
+                                : (c.type as string) === "saflii_court"
+                                ? (c.safliiCourtHasRecords ? `${c.safliiCourtResults?.length || 0} Legal Record(s) Found` : "Clean Court Record")
+                                : (c.type as string) === "uk_court"
+                                ? (c.ukCourtHasRecords ? `${c.ukCourtResults?.length || 0} Court Judgment(s) Found` : "Clean Court Record")
+                                : (c.type as string) === "malaysia_court"
+                                ? (c.malaysiaCourtHasRecords ? `${c.malaysiaCourtResults?.length || 0} Mahkamah Case(s) Found` : "Clean Court Record")
+                                : (c.type as string) === "passport"
+                                ? `File No: ${(c as any).passportData?.fileNumber || "—"}`
+                                : (c.type as string) === "digital_address"
+                                ? `${(c as any).candidateAddress ? `${(c as any).candidateAddress} | ` : ""}${c.email}`
                                 : c.email}
                             </span>
                           </div>
@@ -402,6 +431,34 @@ export default function CandidatesPage() {
                           ) : c.type === "interpol" ? (
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-indigo-500/10 text-indigo-700 border-indigo-500/15">
                               Interpol
+                            </span>
+                          ) : (c.type as string) === "rednotice_worldwide" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-rose-500/10 text-rose-700 border-rose-500/15">
+                              Red Notice
+                            </span>
+                          ) : (c.type as string) === "saps_wanted" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-blue-900/10 text-blue-900 border-blue-900/15">
+                              SAPS Wanted
+                            </span>
+                          ) : (c.type as string) === "saflii_court" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-emerald-600/10 text-emerald-800 border-emerald-600/15">
+                              SA Court
+                            </span>
+                          ) : (c.type as string) === "uk_court" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-indigo-600/10 text-indigo-800 border-indigo-600/15">
+                              UK Court
+                            </span>
+                          ) : (c.type as string) === "malaysia_court" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-teal-600/10 text-teal-800 border-teal-600/15">
+                              Malaysia Court
+                            </span>
+                          ) : (c.type as string) === "passport" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-sky-500/10 text-sky-700 border-sky-500/15">
+                              Passport
+                            </span>
+                          ) : (c.type as string) === "digital_address" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-cyan-500/10 text-cyan-700 border-cyan-500/15">
+                              Digital Address
                             </span>
                           ) : isVerified ? (
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-emerald-500/10 text-emerald-600 border-emerald-500/15">
@@ -562,6 +619,34 @@ export default function CandidatesPage() {
                     ) : c.type === "interpol" ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-indigo-500/10 text-indigo-700 border-indigo-500/15 mt-1">
                         Interpol
+                      </span>
+                    ) : (c.type as string) === "rednotice_worldwide" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-rose-500/10 text-rose-700 border-rose-500/15 mt-1">
+                        Red Notice
+                      </span>
+                    ) : (c.type as string) === "saps_wanted" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-blue-900/10 text-blue-900 border-blue-900/15 mt-1">
+                        SAPS Wanted
+                      </span>
+                    ) : (c.type as string) === "saflii_court" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-emerald-600/10 text-emerald-800 border-emerald-600/15 mt-1">
+                        SA Court
+                      </span>
+                    ) : (c.type as string) === "uk_court" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-indigo-600/10 text-indigo-800 border-indigo-600/15 mt-1">
+                        UK Court
+                      </span>
+                    ) : (c.type as string) === "malaysia_court" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-teal-600/10 text-teal-800 border-teal-600/15 mt-1">
+                        Malaysia Court
+                      </span>
+                    ) : (c.type as string) === "passport" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-sky-500/10 text-sky-700 border-sky-500/15 mt-1">
+                        Passport
+                      </span>
+                    ) : (c.type as string) === "digital_address" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-cyan-500/10 text-cyan-700 border-cyan-500/15 mt-1">
+                        Digital Address
                       </span>
                     ) : c.type === "employment" ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-blue-500/10 text-blue-700 border-blue-500/15 mt-1">
@@ -1078,77 +1163,114 @@ export default function CandidatesPage() {
                     </div>
 
                     {/* ═══ EDUCATION CHECK TABLE ═══ */}
-                    {displayCandidate.type === "education" && displayCandidate.educationData && (
-                      <div className="flex flex-col gap-2">
-                        <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                          <span className="material-symbols-outlined text-sm">school</span>
-                          Education Details
-                        </h5>
-                        <div className="overflow-x-auto border border-slate-200/60 rounded-xl mb-4">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-                                <th className="p-2.5 border-r border-slate-200 w-2/5">Academic Field</th>
-                                <th className="p-2.5">Candidate Input Value</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
-                              {Boolean(displayCandidate.educationData.degreeType) && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree Category</td>
-                                  <td className="p-2.5">{displayCandidate.educationData.degreeType || "-"}</td>
-                                </tr>
-                              )}
-                              {Boolean(displayCandidate.educationData.courseName) && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Course / Degree Name</td>
-                                  <td className="p-2.5 font-bold text-slate-900">{displayCandidate.educationData.courseName || "-"}</td>
-                                </tr>
-                              )}
-                              {Boolean(displayCandidate.educationData.boardUniversity) && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Board / University</td>
-                                  <td className="p-2.5">{displayCandidate.educationData.boardUniversity || "-"}</td>
-                                </tr>
-                              )}
-                              {Boolean(displayCandidate.educationData.institutionName) && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">School / College Name</td>
-                                  <td className="p-2.5">{displayCandidate.educationData.institutionName || "-"}</td>
-                                </tr>
-                              )}
-                              {Boolean(displayCandidate.educationData.rollNumber) && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Roll / Registration No.</td>
-                                  <td className="p-2.5 font-mono">{displayCandidate.educationData.rollNumber || "-"}</td>
-                                </tr>
-                              )}
-                              {Boolean(displayCandidate.educationData.passingYear) && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Passing Year</td>
-                                  <td className="p-2.5 font-mono">{displayCandidate.educationData.passingYear || "-"}</td>
-                                </tr>
-                              )}
-                              {displayCandidate.educationData.certificateFile && (
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree / Marksheet Proof</td>
-                                  <td className="p-2.5">
-                                    <a
-                                      href={displayCandidate.educationData.certificateFile}
-                                      download={displayCandidate.educationData.certificateFileName || `certificate-${displayCandidate.id}.png`}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-650 text-white rounded-lg hover:bg-purple-800 transition-colors font-bold text-[10px] uppercase tracking-wider cursor-pointer shadow-xs"
-                                    >
-                                      <span className="material-symbols-outlined text-[13px]">download</span>
-                                      Download Certificate
-                                    </a>
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
+                    {(() => {
+                      if (displayCandidate?.type !== "education") return null;
+                      const cand = displayCandidate as any;
+                      const allEdusList: any[] = Array.isArray(cand.educationList) && cand.educationList.length > 0
+                        ? cand.educationList
+                        : (Array.isArray(cand.educations) && cand.educations.length > 0
+                            ? cand.educations
+                            : (Array.isArray(cand.educationData?.educations) && cand.educationData.educations.length > 0
+                                ? cand.educationData.educations
+                                : (Array.isArray(cand.educationData?.educationList) && cand.educationData.educationList.length > 0
+                                    ? cand.educationData.educationList
+                                    : (cand.educationData ? [cand.educationData] : []))));
+
+                      if (allEdusList.length === 0) return null;
+
+                      return (
+                        <div className="flex flex-col gap-4">
+                          <h5 className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold flex items-center gap-2 border-b border-slate-100 pb-1.5">
+                            <span className="material-symbols-outlined text-sm">school</span>
+                            Education Check ({allEdusList.length} Institution{allEdusList.length > 1 ? "s" : ""})
+                          </h5>
+                          {allEdusList.map((eduObj: any, idx: number) => (
+                            <div key={idx} className="flex flex-col gap-1 border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
+                              <div className="bg-slate-100/80 px-3 py-2 border-b border-slate-200/80 flex items-center justify-between">
+                                <span className="font-bold text-xs text-[#5b21b6] uppercase tracking-wide">
+                                  {idx + 1}. {eduObj.institutionName || eduObj.boardUniversity || `Institution #${idx + 1}`}
+                                  {idx === 0 ? " (Primary / Most Recent)" : " (Additional Academic Record)"}
+                                </span>
+                                {eduObj.country && (
+                                  <span className="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                    {eduObj.country}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs border-collapse">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                                      <th className="p-2.5 border-r border-slate-200 w-2/5">Academic Field</th>
+                                      <th className="p-2.5">Candidate Input Value</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
+                                    {Boolean(eduObj.degreeType) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree Category</td>
+                                        <td className="p-2.5">{eduObj.degreeType || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(eduObj.courseName) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Course / Degree Name</td>
+                                        <td className="p-2.5 font-bold text-slate-900">{eduObj.courseName || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(eduObj.boardUniversity) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Board / University</td>
+                                        <td className="p-2.5">{eduObj.boardUniversity || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(eduObj.institutionName) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">School / College Name</td>
+                                        <td className="p-2.5">{eduObj.institutionName || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(eduObj.rollNumber) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Roll / Registration No.</td>
+                                        <td className="p-2.5 font-mono">{eduObj.rollNumber || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(eduObj.passingYear) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Passing Year</td>
+                                        <td className="p-2.5 font-mono">{eduObj.passingYear || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {Boolean(eduObj.country) && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Country</td>
+                                        <td className="p-2.5">{eduObj.country || "-"}</td>
+                                      </tr>
+                                    )}
+                                    {eduObj.certificateFile && (
+                                      <tr className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-2.5 border-r border-slate-200 bg-slate-50/30 text-slate-600">Degree / Marksheet Proof</td>
+                                        <td className="p-2.5">
+                                          <a
+                                            href={eduObj.certificateFile}
+                                            download={eduObj.certificateFileName || `certificate-${displayCandidate?.id}-${idx + 1}.png`}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-650 text-white rounded-lg hover:bg-purple-800 transition-colors font-bold text-[10px] uppercase tracking-wider cursor-pointer shadow-xs"
+                                          >
+                                            <span className="material-symbols-outlined text-[13px]">download</span>
+                                            Download Certificate
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* ═══ EMPLOYMENT CHECK TABLE ═══ */}
                     {(() => {
@@ -1355,6 +1477,36 @@ export default function CandidatesPage() {
 
                   {showLogAttemptForm && (
                     <div className="bg-slate-50/60 border border-slate-200/60 rounded-2xl p-5 flex flex-col gap-4 animate-fade-in">
+                      {/* Target Organisation / Institution selector if multiple items exist */}
+                      {(() => {
+                        if (!displayCandidate) return null;
+                        const cand = displayCandidate as any;
+                        const items: string[] = displayCandidate.type === "employment"
+                          ? (Array.isArray(cand.employments) && cand.employments.length > 0 ? cand.employments : Array.isArray(cand.pastOrganisations) && cand.pastOrganisations.length > 0 ? cand.pastOrganisations : (cand.employmentData?.employments || cand.employmentData?.pastOrganisations || [])).map((e: any, i: number) => `${i + 1}. ${e.companyName || `Organisation #${i + 1}`}`)
+                          : displayCandidate.type === "education"
+                          ? (Array.isArray(cand.educationList) && cand.educationList.length > 0 ? cand.educationList : Array.isArray(cand.educations) && cand.educations.length > 0 ? cand.educations : (cand.educationData?.educations || cand.educationData?.educationList || [])).map((e: any, i: number) => `${i + 1}. ${e.institutionName || e.boardUniversity || `Institution #${i + 1}`}`)
+                          : [];
+
+                        if (items.length <= 1) return null;
+
+                        return (
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              Target {displayCandidate.type === "education" ? "Institution" : "Organisation"}
+                            </label>
+                            <select
+                              value={empAttemptTargetOrg || items[0]}
+                              onChange={e => setEmpAttemptTargetOrg(e.target.value)}
+                              className="border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 focus:border-[#016e1c] transition-all cursor-pointer"
+                            >
+                              {items.map((it, idx) => (
+                                <option key={idx} value={it}>{it}</option>
+                              ))}
+                            </select>
+                          </div>
+                        );
+                      })()}
+
                       {/* Row 1: Mode + Result */}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5">
@@ -1486,8 +1638,17 @@ export default function CandidatesPage() {
                             setEmpAttemptError("");
                             setEmpAttemptSuccess("");
                             try {
+                              const cand = displayCandidate as any;
+                              const defaultTarget = displayCandidate.type === "employment"
+                                ? `1. ${((cand.employments?.[0] || cand.pastOrganisations?.[0] || cand.employmentData?.employments?.[0] || cand.employmentData?.pastOrganisations?.[0] || cand.employmentData || {}).companyName || 'Organisation #1')}`
+                                : displayCandidate.type === "education"
+                                ? `1. ${((cand.educationList?.[0] || cand.educations?.[0] || cand.educationData?.educations?.[0] || cand.educationData?.educationList?.[0] || cand.educationData || {}).institutionName || (cand.educationList?.[0] || cand.educations?.[0] || cand.educationData?.educations?.[0] || cand.educationData?.educationList?.[0] || cand.educationData || {}).boardUniversity || 'Institution #1')}`
+                                : "";
+                              const selectedTarget = empAttemptTargetOrg || defaultTarget;
+
                               if (displayCandidate.type === "employment") {
                                 await logEmploymentAttempt(displayCandidate.id, {
+                                  targetOrg: selectedTarget,
                                   verificationMode: empAttemptMode,
                                   result: empAttemptResult,
                                   comment: empAttemptComment,
@@ -1504,6 +1665,7 @@ export default function CandidatesPage() {
                                 });
                               } else if (displayCandidate.type === "education") {
                                 await logEducationAttempt(displayCandidate.id, {
+                                  targetOrg: selectedTarget,
                                   verificationMode: empAttemptMode,
                                   result: empAttemptResult,
                                   comment: empAttemptComment,
@@ -1536,7 +1698,7 @@ export default function CandidatesPage() {
                               }
                               setEmpAttemptSuccess("Attempt logged successfully!");
                               // Reset form
-                              setEmpAttemptComment(""); setEmpAttemptVerifierNote("");
+                              setEmpAttemptTargetOrg(""); setEmpAttemptComment(""); setEmpAttemptVerifierNote("");
                               setEmpAttemptRespondentName(""); setEmpAttemptRespondentEmail("");
                               setEmpAttemptRespondentComment(""); setEmpAttemptScreenshot(""); setEmpAttemptScreenshotCaption("");
                               setEmpAttemptExtraPayment(false); setEmpAttemptMarkAsPaid(false);
@@ -1619,6 +1781,7 @@ export default function CandidatesPage() {
                               </div>
 
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs font-semibold text-slate-700 border-t border-slate-100 pt-2">
+                                {att.targetOrg && <div><span className="text-slate-400 font-medium">Target:</span> <span className="font-bold text-[#5b21b6]">{att.targetOrg}</span></div>}
                                 <div><span className="text-slate-400 font-medium">Mode:</span> {att.verificationMode || "Manual"}</div>
                                 <div><span className="text-slate-400 font-medium">Verifier:</span> {att.loggedBy || displayCandidate.verifier || "Prabir Kumar"}</div>
                                 <div><span className="text-slate-400 font-medium">Manager:</span> {displayCandidate.verifier || "Prabir Kumar"}</div>
@@ -1756,7 +1919,7 @@ export default function CandidatesPage() {
                 >
                   Close Inspector
                 </button>
-                {(displayCandidate?.status === "Completed" || (displayCandidate?.status as string) === "Verified" || displayCandidate?.type === "interpol") && (
+                {(displayCandidate?.status === "Completed" || (displayCandidate?.status as string) === "Verified" || displayCandidate?.type === "interpol" || displayCandidate?.type === "rednotice_worldwide" || (displayCandidate?.type as string) === "saps_wanted" || (displayCandidate?.type as string) === "saflii_court" || (displayCandidate?.type as string) === "uk_court" || (displayCandidate?.type as string) === "malaysia_court") && (
                   <button
                     onClick={() => {
                       if (!displayCandidate) return;
@@ -1768,6 +1931,20 @@ export default function CandidatesPage() {
                         ? `/admin/education-report?id=${displayCandidate.id}`
                         : displayCandidate.type === "interpol"
                         ? `/admin/interpol-report?id=${displayCandidate.id}`
+                        : displayCandidate.type === "rednotice_worldwide"
+                        ? `/admin/rednotice-worldwide-report?id=${displayCandidate.id}`
+                        : (displayCandidate.type as string) === "saps_wanted"
+                        ? `/admin/saps-wanted-report?id=${displayCandidate.id}`
+                        : (displayCandidate.type as string) === "saflii_court"
+                        ? `/admin/saflii-court-report?id=${displayCandidate.id}`
+                        : (displayCandidate.type as string) === "uk_court"
+                        ? `/admin/uk-court-report?id=${displayCandidate.id}`
+                        : (displayCandidate.type as string) === "malaysia_court"
+                        ? `/admin/malaysia-court-report?id=${displayCandidate.id}`
+                        : (displayCandidate.type as string) === "passport"
+                        ? `/admin/passport-report?id=${displayCandidate.id}`
+                        : (displayCandidate.type as string) === "digital_address"
+                        ? `/admin/digital-address-report?id=${displayCandidate.id}`
                         : `/admin/report?id=${displayCandidate.id}`;
                       window.open(reportPath, "_blank");
                     }}

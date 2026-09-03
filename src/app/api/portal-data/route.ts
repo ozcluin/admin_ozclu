@@ -468,8 +468,20 @@ export async function POST(req: NextRequest) {
               rate = org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate;
             } else if (verType === "interpol") {
               rate = org.interpolRate !== undefined ? org.interpolRate : org.monthlyRate;
+            } else if (verType === "rednotice_worldwide") {
+              rate = org.rednoticeWorldwideRate !== undefined ? org.rednoticeWorldwideRate : 15;
             } else if (verType === "passport") {
               rate = org.passportRate !== undefined ? org.passportRate : 8;
+            } else if (verType === "digital_address") {
+              rate = org.digitalAddressRate !== undefined ? org.digitalAddressRate : 5;
+            } else if (verType === "saflii_court") {
+              rate = org.safliiCourtRate !== undefined ? org.safliiCourtRate : 15;
+            } else if (verType === "saps_wanted") {
+              rate = org.sapsWantedRate !== undefined ? org.sapsWantedRate : 15;
+            } else if (verType === "uk_court") {
+              rate = org.ukCourtRate !== undefined ? org.ukCourtRate : 25;
+            } else if (verType === "malaysia_court") {
+              rate = org.malaysiaCourtRate !== undefined ? org.malaysiaCourtRate : 20;
             } else if (verType === "employment") {
               const c = verification.country || verification.employmentData?.country || "";
               if (c && org.employmentRates && org.employmentRates[c] !== undefined) {
@@ -1717,9 +1729,9 @@ export async function POST(req: NextRequest) {
       }
       case "logEducationAttempt": {
         const {
-          verificationId, verificationMode, result, comment, verifierNote,
+          verificationId, targetOrg, verificationMode, result, comment, verifierNote,
           respondentName, respondentEmail, respondentComment,
-          extraPayment, markAsPaid, askCustomerApproval, screenshot, sendEmail
+          extraPayment, markAsPaid, askCustomerApproval, screenshot, sendEmail, screenshotCaption, caption
         } = payload;
 
         if (!verificationId) {
@@ -1728,6 +1740,7 @@ export async function POST(req: NextRequest) {
 
         const attemptEntry = {
           date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true }).replace(/\u202f/g, " ").toLowerCase(),
+          targetOrg: targetOrg || "",
           verificationMode: verificationMode || "Manual",
           result: result || "In Progress",
           comment: comment || "",
@@ -1739,6 +1752,7 @@ export async function POST(req: NextRequest) {
           markAsPaid: !!markAsPaid,
           askCustomerApproval: !!askCustomerApproval,
           screenshot: screenshot || "",
+          screenshotCaption: screenshotCaption || caption || "",
           sendEmail: !!sendEmail,
           loggedBy: user.email
         };
@@ -1979,6 +1993,311 @@ export async function POST(req: NextRequest) {
           interpolMatches: matches, 
           interpolHasRecords: hasRecords, 
           status 
+        });
+      }
+      case "delete_rednotice_worldwide_match":
+      case "deleteRednoticeWorldwideMatch": {
+        const { verificationId, matchIndex, noticeId, reason, deleteFromDatabase } = payload || {};
+        
+        if (!verificationId) {
+          return NextResponse.json({ error: "Verification ID is required" }, { status: 400 });
+        }
+
+        const verification = await db.collection("verifications").findOne({ id: verificationId });
+
+        if (!verification) {
+          return NextResponse.json({ error: "Verification record not found" }, { status: 404 });
+        }
+
+        let matches: any[] = Array.isArray(verification.rednoticeWorldwideMatches) ? [...verification.rednoticeWorldwideMatches] : [];
+
+        if (typeof matchIndex === "number" && matchIndex >= 0 && matchIndex < matches.length) {
+          matches.splice(matchIndex, 1);
+        } else if (noticeId) {
+          matches = matches.filter((m: any) => (m.noticeId || m.entityId || m.details?.entity_id) !== noticeId);
+        } else {
+          return NextResponse.json({ error: "Valid matchIndex or noticeId is required" }, { status: 400 });
+        }
+
+        const hasRecords = matches.length > 0;
+        const status = hasRecords ? "Needs Attention" : "Completed";
+        const reevalNote = reason?.trim() || "Reevaluated: Potential match cleared after manual admin review.";
+        const updatedNotes = hasRecords
+          ? `Potential match removed after reevaluation (${reevalNote}). ${matches.length} record(s) remaining.`
+          : `Reevaluated: All potential worldwide database match(es) cleared as false positive(s) (${reevalNote}).`;
+
+        const newAttempt = {
+          date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+          verifier: user?.email || "Admin",
+          status: status,
+          notes: `Match deleted after re-evaluation: ${reevalNote}`
+        };
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          {
+            $set: {
+              rednoticeWorldwideMatches: matches,
+              rednoticeWorldwideHasRecords: hasRecords,
+              status: status,
+              notes: updatedNotes,
+              updatedAt: new Date().toISOString()
+            },
+            $push: { attempts: newAttempt } as any
+          }
+        );
+
+        if (deleteFromDatabase && noticeId) {
+          try {
+            await db.collection("rednotices_worldwide").deleteMany({
+              $or: [
+                { noticeId: noticeId },
+                { entityId: noticeId },
+                { "details.entity_id": noticeId },
+                { "details.notice_id": noticeId }
+              ]
+            });
+
+            const fs = await import("fs");
+            const path = await import("path");
+            const dbPath = path.resolve(process.cwd(), "..", "rednotices_worldwide.json");
+            const altDbPath = path.resolve(process.cwd(), "rednotices_worldwide.json");
+            const targetDbPath = fs.existsSync(dbPath) ? dbPath : fs.existsSync(altDbPath) ? altDbPath : null;
+
+            if (targetDbPath) {
+              const raw = fs.readFileSync(targetDbPath, "utf-8");
+              const dbObj = JSON.parse(raw);
+              if (Array.isArray(dbObj.records)) {
+                const initLen = dbObj.records.length;
+                dbObj.records = dbObj.records.filter((item: any) => item.noticeId !== noticeId && item.entityId !== noticeId && item.details?.entity_id !== noticeId);
+                if (dbObj.records.length !== initLen) {
+                  dbObj.count = dbObj.records.length;
+                  fs.writeFileSync(targetDbPath, JSON.stringify(dbObj, null, 2), "utf-8");
+                }
+              }
+            }
+          } catch (dbErr) {
+            console.error("[DATA] Error deleting red notice worldwide from DB/file:", dbErr);
+          }
+        }
+
+        await logAuditEvent(db, {
+          actorUserId: user?.id || "admin",
+          actorEmail: user?.email || "admin",
+          actorRole: user?.role || "admin",
+          portal: "admin",
+          action: "delete_rednotice_worldwide_match",
+          targetType: "verification",
+          targetId: verificationId,
+          ip,
+          userAgent,
+          outcome: "success"
+        });
+
+        return NextResponse.json({ 
+          success: true, 
+          rednoticeWorldwideMatches: matches, 
+          rednoticeWorldwideHasRecords: hasRecords, 
+          status 
+        });
+      }
+      case "resolveSapsWantedVerification": {
+        const { verificationId, verdict, notes } = payload || {};
+
+        if (!verificationId) {
+          return NextResponse.json({ error: "Verification ID is required" }, { status: 400 });
+        }
+        if (!verdict || (verdict !== "cleared" && verdict !== "confirmed_wanted")) {
+          return NextResponse.json({ error: "Valid verdict ('cleared' or 'confirmed_wanted') is required" }, { status: 400 });
+        }
+
+        const verification = await db.collection("verifications").findOne({ id: verificationId });
+        if (!verification) {
+          return NextResponse.json({ error: "Verification record not found" }, { status: 404 });
+        }
+
+        const isCleared = verdict === "cleared";
+        const hasRecords = !isCleared;
+        const status = "Completed";
+        const sapsWantedStatus = isCleared ? "cleared_by_attorney" : "confirmed_wanted";
+        const attorneyNotes = notes?.trim() || (isCleared
+          ? "Identity reviewed by legal counsel and verified as false positive similarity match. Candidate cleared."
+          : "Active South African Police Service wanted person match confirmed by legal counsel.");
+
+        const attorneyResolution = {
+          verdict,
+          notes: attorneyNotes,
+          resolvedBy: user?.email || "Attorney / Admin",
+          resolvedAt: new Date().toISOString()
+        };
+
+        const resolutionAttempt = {
+          date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+          verifier: user?.email || "Attorney",
+          status: status,
+          notes: `Attorney determination (${verdict}): ${attorneyNotes}`
+        };
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          {
+            $set: {
+              status: status,
+              sapsWantedStatus: sapsWantedStatus,
+              sapsWantedHasRecords: hasRecords,
+              sendToCustomer: true,
+              attorneyResolution: attorneyResolution,
+              sapsWantedCompletedAt: new Date().toISOString(),
+              notes: isCleared
+                ? `Cleared by Attorney: ${attorneyNotes}`
+                : `Confirmed Wanted Person Record: ${attorneyNotes}`,
+              updatedAt: new Date().toISOString()
+            },
+            $push: { attempts: resolutionAttempt } as any
+          }
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "saps_wanted_attorney_resolved",
+          targetType: "verification",
+          targetId: verificationId,
+          ip,
+          userAgent,
+          outcome: "success"
+        });
+
+        return NextResponse.json({
+          success: true,
+          status: status,
+          sapsWantedStatus: sapsWantedStatus,
+          sapsWantedHasRecords: hasRecords,
+          attorneyResolution: attorneyResolution,
+          sendToCustomer: true
+        });
+      }
+      case "delete_saps_wanted_match":
+      case "deleteSapsWantedMatch": {
+        const { verificationId, matchIndex, bid, reason } = payload || {};
+
+        if (!verificationId) {
+          return NextResponse.json({ error: "Verification ID is required" }, { status: 400 });
+        }
+
+        const verification = await db.collection("verifications").findOne({ id: verificationId });
+        if (!verification) {
+          return NextResponse.json({ error: "Verification record not found" }, { status: 404 });
+        }
+
+        let matches: any[] = Array.isArray(verification.sapsWantedMatches) ? [...verification.sapsWantedMatches] : [];
+
+        if (typeof matchIndex === "number" && matchIndex >= 0 && matchIndex < matches.length) {
+          matches.splice(matchIndex, 1);
+        } else if (bid) {
+          matches = matches.filter((m: any) => (m.bid || m.sapsBid) !== bid);
+        } else {
+          return NextResponse.json({ error: "Valid matchIndex or bid is required" }, { status: 400 });
+        }
+
+        const hasRecords = matches.length > 0;
+        const status = hasRecords ? "Halted" : "Completed";
+        const sapsWantedStatus = hasRecords ? "verifying_with_attorney" : "cleared_by_attorney";
+        const sendToCustomer = !hasRecords;
+
+        const reevalNote = reason?.trim() || "Match removed after attorney reevaluation.";
+        const updatedNotes = hasRecords
+          ? `Potential match removed (${reevalNote}). ${matches.length} match(es) pending review.`
+          : `All SAPS wanted match(es) cleared as false positive (${reevalNote}). Clean record verified.`;
+
+        const newAttempt = {
+          date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+          verifier: user?.email || "Admin",
+          status: status,
+          notes: `SAPS match removed: ${reevalNote}`
+        };
+
+        await db.collection("verifications").updateOne(
+          { id: verificationId },
+          {
+            $set: {
+              sapsWantedMatches: matches,
+              sapsWantedHasRecords: hasRecords,
+              status: status,
+              sapsWantedStatus: sapsWantedStatus,
+              sendToCustomer: sendToCustomer,
+              notes: updatedNotes,
+              updatedAt: new Date().toISOString()
+            },
+            $push: { attempts: newAttempt } as any
+          }
+        );
+
+        if (payload?.deleteFromDatabase && bid) {
+          try {
+            await db.collection("saps_wanted").deleteMany({
+              $or: [{ sapsBid: bid }, { bid: bid }, { id: `SAPS-${bid}` }]
+            });
+
+            const fs = await import("fs");
+            const path = await import("path");
+
+            // Sync saps_wanted.json
+            const sapsPaths = [
+              path.resolve(process.cwd(), "..", "saps_wanted.json"),
+              path.resolve(process.cwd(), "saps_wanted.json")
+            ];
+            for (const sp of sapsPaths) {
+              if (fs.existsSync(sp)) {
+                const raw = fs.readFileSync(sp, "utf-8");
+                const sapsObj = JSON.parse(raw);
+                if (Array.isArray(sapsObj.records)) {
+                  const initLen = sapsObj.records.length;
+                  sapsObj.records = sapsObj.records.filter((item: any) => (item.sapsBid || item.bid) !== bid);
+                  if (sapsObj.records.length !== initLen) {
+                    sapsObj.count = sapsObj.records.length;
+                    fs.writeFileSync(sp, JSON.stringify(sapsObj, null, 2), "utf-8");
+                  }
+                }
+              }
+            }
+
+            // Sync database.json
+            const dbPaths = [
+              path.resolve(process.cwd(), "..", "database.json"),
+              path.resolve(process.cwd(), "database.json")
+            ];
+            for (const dp of dbPaths) {
+              if (fs.existsSync(dp)) {
+                const raw = fs.readFileSync(dp, "utf-8");
+                const masterDb = JSON.parse(raw);
+                if (Array.isArray(masterDb.saps_wanted)) {
+                  const initLen = masterDb.saps_wanted.length;
+                  masterDb.saps_wanted = masterDb.saps_wanted.filter((item: any) => (item.sapsBid || item.bid) !== bid);
+                  if (masterDb.saps_wanted.length !== initLen) {
+                    masterDb.saps_wanted_count = masterDb.saps_wanted.length;
+                    if (masterDb._database_meta?.datasets?.saps_wanted) {
+                      masterDb._database_meta.datasets.saps_wanted.count = masterDb.saps_wanted.length;
+                    }
+                    fs.writeFileSync(dp, JSON.stringify(masterDb, null, 2), "utf-8");
+                  }
+                }
+              }
+            }
+          } catch (dbErr) {
+            console.error("[DATA] Error deleting SAPS record from DB/file:", dbErr);
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          sapsWantedMatches: matches,
+          sapsWantedHasRecords: hasRecords,
+          status: status,
+          sapsWantedStatus: sapsWantedStatus,
+          sendToCustomer: sendToCustomer
         });
       }
       default:

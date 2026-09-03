@@ -106,6 +106,7 @@ export default function VerificationRosterPage() {
       (typeFilter === "identity" && (!v.type || v.type === "identity")) ||
       (typeFilter === "court_record" && v.type === "court_record") ||
       (typeFilter === "interpol" && v.type === "interpol") ||
+      (typeFilter === "rednotice_worldwide" && (v.type as string) === "rednotice_worldwide") ||
       (typeFilter === "passport" && (v.type as string) === "passport");
     const matchesSearch =
       v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -261,7 +262,12 @@ export default function VerificationRosterPage() {
             <option value="employment">Employment Check</option>
             <option value="education">Education Check</option>
             <option value="interpol">Interpol Check</option>
+            <option value="rednotice_worldwide">Red Notice Worldwide</option>
             <option value="passport">Passport Check</option>
+            <option value="saflii_court">South African Court Check</option>
+            <option value="saps_wanted">SAPS Wanted Check</option>
+            <option value="uk_court">UK Court Check</option>
+            <option value="malaysia_court">Malaysia Court Check</option>
           </select>
         </div>
 
@@ -411,13 +417,23 @@ export default function VerificationRosterPage() {
                           ? "bg-purple-550/10 text-purple-700 border-purple-550/15"
                           : v.type === "interpol"
                           ? "bg-indigo-500/10 text-indigo-700 border-indigo-500/15"
+                          : (v.type as string) === "rednotice_worldwide"
+                          ? "bg-rose-500/10 text-rose-700 border-rose-500/15"
                           : (v.type as string) === "passport"
                           ? "bg-sky-500/10 text-sky-700 border-sky-500/15"
                           : (v.type as string) === "digital_address"
                           ? "bg-cyan-500/10 text-cyan-700 border-cyan-500/15"
+                          : (v.type as string) === "saps_wanted"
+                          ? "bg-blue-900/10 text-blue-900 border-blue-900/15"
+                          : (v.type as string) === "saflii_court"
+                          ? "bg-emerald-600/10 text-emerald-800 border-emerald-600/15"
+                          : (v.type as string) === "uk_court"
+                          ? "bg-indigo-600/10 text-indigo-800 border-indigo-600/15"
+                          : (v.type as string) === "malaysia_court"
+                          ? "bg-teal-600/10 text-teal-800 border-teal-600/15"
                           : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                       }`}>
-                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : "Identity"}
+                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "rednotice_worldwide" ? "Red Notice Worldwide" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : (v.type as string) === "saps_wanted" ? "SAPS Wanted" : (v.type as string) === "saflii_court" ? "SA Court" : (v.type as string) === "uk_court" ? "UK Court" : (v.type as string) === "malaysia_court" ? "Malaysia Court" : "Identity"}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-slate-800">
@@ -432,6 +448,16 @@ export default function VerificationRosterPage() {
                             ? ((v.educationData?.courseName && `${v.educationData.courseName} @ ${v.educationData.boardUniversity}`) || v.email)
                             : v.type === "interpol"
                             ? (v.interpolHasRecords ? `${v.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
+                            : (v.type as string) === "rednotice_worldwide"
+                            ? (v.rednoticeWorldwideHasRecords ? `${v.rednoticeWorldwideMatches?.length || 0} Record Match(es)` : "Clean Record")
+                            : (v.type as string) === "saps_wanted"
+                            ? (v.status === "Halted" ? `Halted — Flagged for Attorney (${v.sapsWantedMatches?.length || 0} match)` : v.sapsWantedHasRecords ? `${v.sapsWantedMatches?.length || 0} Wanted Match(es)` : "Clean SAPS Record")
+                            : (v.type as string) === "saflii_court"
+                            ? (v.safliiCourtHasRecords ? `${v.safliiCourtResults?.length || 0} Legal Record(s) Found` : "Clean Court Record")
+                            : (v.type as string) === "uk_court"
+                            ? (v.ukCourtHasRecords ? `${v.ukCourtResults?.length || 0} Court Judgment(s) Found` : "Clean Court Record")
+                            : (v.type as string) === "malaysia_court"
+                            ? (v.malaysiaCourtHasRecords ? `${v.malaysiaCourtResults?.length || 0} Mahkamah Case(s) Found` : "Clean Court Record")
                             : (v.type as string) === "passport"
                             ? `File No: ${(v as any).passportData?.fileNumber || "—"}`
                             : (v.type as string) === "digital_address"
@@ -458,7 +484,9 @@ export default function VerificationRosterPage() {
                     <td className="py-4 px-6">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border ${
-                          v.status === "Completed"
+                          v.status === "Halted" || ((v.type as string) === "saps_wanted" && v.sapsWantedStatus === "verifying_with_attorney")
+                            ? "bg-amber-500/10 text-amber-700 border-amber-500/20 font-extrabold"
+                            : v.status === "Completed"
                             ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                             : (v.type === "court_record" && v.courtRecordStatus === "admin_review")
                             ? "bg-rose-500/10 text-rose-600 border-rose-500/15"
@@ -470,7 +498,9 @@ export default function VerificationRosterPage() {
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          v.status === "Completed"
+                          v.status === "Halted" || ((v.type as string) === "saps_wanted" && v.sapsWantedStatus === "verifying_with_attorney")
+                            ? "bg-amber-500 animate-ping"
+                            : v.status === "Completed"
                             ? "bg-emerald-500"
                             : (v.type === "court_record" && v.courtRecordStatus === "admin_review")
                             ? "bg-rose-500 animate-pulse"
@@ -480,7 +510,15 @@ export default function VerificationRosterPage() {
                             ? "bg-[#016e1c]"
                             : "bg-red-500"
                         }`}></span>
-                        {(v.type === "court_record" && v.courtRecordStatus === "admin_review") ? "Review" : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry") ? "In Progress" : v.status === "Needs Attention" ? "Reviewing with attorney" : v.status}
+                        {v.status === "Halted" || ((v.type as string) === "saps_wanted" && v.sapsWantedStatus === "verifying_with_attorney")
+                          ? "Halted — Attorney Review"
+                          : (v.type === "court_record" && v.courtRecordStatus === "admin_review")
+                          ? "Review"
+                          : (v.type === "court_record" && v.courtRecordStatus === "needs_admin_retry")
+                          ? "In Progress"
+                          : v.status === "Needs Attention"
+                          ? "Reviewing with attorney"
+                          : v.status}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
@@ -560,13 +598,23 @@ export default function VerificationRosterPage() {
                         ? "bg-purple-550/10 text-purple-700 border-purple-550/15"
                         : v.type === "interpol"
                         ? "bg-indigo-500/10 text-indigo-700 border-indigo-500/15"
+                        : (v.type as string) === "rednotice_worldwide"
+                        ? "bg-rose-500/10 text-rose-700 border-rose-500/15"
                         : (v.type as string) === "passport"
                         ? "bg-sky-500/10 text-sky-700 border-sky-500/15"
                         : (v.type as string) === "digital_address"
                         ? "bg-cyan-500/10 text-cyan-700 border-cyan-500/15"
+                        : (v.type as string) === "saps_wanted"
+                        ? "bg-blue-900/10 text-blue-900 border-blue-900/15"
+                        : (v.type as string) === "saflii_court"
+                        ? "bg-emerald-600/10 text-emerald-800 border-emerald-600/15"
+                        : (v.type as string) === "uk_court"
+                        ? "bg-indigo-600/10 text-indigo-800 border-indigo-600/15"
+                        : (v.type as string) === "malaysia_court"
+                        ? "bg-teal-600/10 text-teal-800 border-teal-600/15"
                         : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                     }`}>
-                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : "Identity"}
+                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "rednotice_worldwide" ? "Red Notice Worldwide" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : (v.type as string) === "saps_wanted" ? "SAPS Wanted" : (v.type as string) === "saflii_court" ? "SA Court" : (v.type as string) === "uk_court" ? "UK Court" : (v.type as string) === "malaysia_court" ? "Malaysia Court" : "Identity"}
                     </span>
                     <h4 className="font-bold text-slate-900 text-sm">{v.name}</h4>
                   </div>
@@ -579,6 +627,16 @@ export default function VerificationRosterPage() {
                       ? ((v.educationData?.courseName && `${v.educationData.courseName} @ ${v.educationData.boardUniversity}`) || v.email)
                       : v.type === "interpol"
                       ? (v.interpolHasRecords ? `${v.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
+                      : (v.type as string) === "rednotice_worldwide"
+                      ? (v.rednoticeWorldwideHasRecords ? `${v.rednoticeWorldwideMatches?.length || 0} Record Match(es)` : "Clean Record")
+                      : (v.type as string) === "saps_wanted"
+                      ? (v.status === "Halted" ? `Halted — Flagged for Attorney (${v.sapsWantedMatches?.length || 0} match)` : v.sapsWantedHasRecords ? `${v.sapsWantedMatches?.length || 0} Wanted Match(es)` : "Clean SAPS Record")
+                      : (v.type as string) === "saflii_court"
+                      ? (v.safliiCourtHasRecords ? `${v.safliiCourtResults?.length || 0} Legal Record(s) Found` : "Clean Court Record")
+                      : (v.type as string) === "uk_court"
+                      ? (v.ukCourtHasRecords ? `${v.ukCourtResults?.length || 0} Court Judgment(s) Found` : "Clean Court Record")
+                      : (v.type as string) === "malaysia_court"
+                      ? (v.malaysiaCourtHasRecords ? `${v.malaysiaCourtResults?.length || 0} Mahkamah Case(s) Found` : "Clean Court Record")
                       : (v.type as string) === "passport"
                       ? `File No: ${(v as any).passportData?.fileNumber || "—"}`
                       : (v.type as string) === "digital_address"

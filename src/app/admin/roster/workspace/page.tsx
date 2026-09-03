@@ -55,6 +55,11 @@ function WorkspaceContent() {
   const [showLogAttemptForm, setShowLogAttemptForm] = useState(false);
   const [activeLogOrgIndex, setActiveLogOrgIndex] = useState<number | null>(null);
 
+  // ─── SAPS Wanted Attorney Resolution States ───
+  const [sapsVerdict, setSapsVerdict] = useState<"cleared" | "confirmed_wanted">("cleared");
+  const [sapsAttorneyNotes, setSapsAttorneyNotes] = useState("");
+  const [sapsResolving, setSapsResolving] = useState(false);
+
   // Load details
   const loadDetail = useCallback(async () => {
     if (!id) {
@@ -97,7 +102,7 @@ function WorkspaceContent() {
         setDisplayVerification((prev: any) => {
           if (!prev) return live;
           // Merge details
-          return { ...live, ...prev, status: live.status, notes: live.notes, interpolMatches: live.interpolMatches, interpolHasRecords: live.interpolHasRecords };
+          return { ...live, ...prev, status: live.status, notes: live.notes, interpolMatches: live.interpolMatches, interpolHasRecords: live.interpolHasRecords, rednoticeWorldwideMatches: live.rednoticeWorldwideMatches, rednoticeWorldwideHasRecords: live.rednoticeWorldwideHasRecords, sapsWantedMatches: live.sapsWantedMatches, sapsWantedHasRecords: live.sapsWantedHasRecords, sapsWantedStatus: live.sapsWantedStatus, attorneyResolution: live.attorneyResolution };
         });
       }
     }
@@ -125,15 +130,22 @@ function WorkspaceContent() {
   const handleGenerateAndSendReport = async () => {
     if (!displayVerification) return;
 
-    const interpolNoticeCount = displayVerification.type === "interpol" && displayVerification.interpolHasRecords
+    const interpolNoticeCount = ((displayVerification.type === "interpol" && displayVerification.interpolHasRecords)
       ? (displayVerification.interpolMatches?.length || 0)
-      : 0;
+      : (displayVerification.type === "rednotice_worldwide" && displayVerification.rednoticeWorldwideHasRecords)
+      ? (displayVerification.rednoticeWorldwideMatches?.length || 0)
+      : (displayVerification.type === "saps_wanted" && displayVerification.sapsWantedHasRecords)
+      ? (displayVerification.sapsWantedMatches?.length || 0)
+      : 0);
 
     const hasCourtReview = displayVerification.type === "court_record" && displayVerification.courtRecordStatus === "admin_review";
+    const isSapsHalted = displayVerification.type === "saps_wanted" && displayVerification.status === "Halted";
 
     let confirmMessage = "";
-    if (interpolNoticeCount > 0) {
-      confirmMessage = `⚠️ Attention: Candidate "${displayVerification.name}" has ${interpolNoticeCount} active Interpol notice match(es) remaining.\n\nAre you sure you want to generate the final report and send it to the client with these active notices?`;
+    if (isSapsHalted) {
+      confirmMessage = `⚠️ Attention: Candidate "${displayVerification.name}" has an unresolved SAPS Wanted match awaiting attorney resolution.\n\nAre you sure you want to generate and release the report now?`;
+    } else if (interpolNoticeCount > 0) {
+      confirmMessage = `⚠️ Attention: Candidate "${displayVerification.name}" has ${interpolNoticeCount} active Red Notice/Interpol notice match(es) remaining.\n\nAre you sure you want to generate the final report and send it to the client with these active notices?`;
     } else if (hasCourtReview) {
       confirmMessage = `⚠️ Attention: Court record review is currently pending for candidate "${displayVerification.name}".\n\nAre you sure you want to generate and send the report to the client now?`;
     } else {
@@ -142,7 +154,7 @@ function WorkspaceContent() {
 
     if (!window.confirm(confirmMessage)) return;
 
-    const reportPath = displayVerification.type === "court_record"
+      const reportPath = displayVerification.type === "court_record"
       ? `/admin/court-record-report?id=${displayVerification.id}`
       : displayVerification.type === "employment"
       ? `/admin/employment-report?id=${displayVerification.id}`
@@ -150,6 +162,18 @@ function WorkspaceContent() {
       ? `/admin/education-report?id=${displayVerification.id}`
       : displayVerification.type === "interpol"
       ? `/admin/interpol-report?id=${displayVerification.id}`
+      : displayVerification.type === "rednotice_worldwide"
+      ? `/admin/rednotice-worldwide-report?id=${displayVerification.id}`
+      : (displayVerification.type as string) === "saps_wanted"
+      ? `/admin/saps-wanted-report?id=${displayVerification.id}`
+      : (displayVerification.type as string) === "saflii_court"
+      ? `/admin/saflii-court-report?id=${displayVerification.id}`
+      : (displayVerification.type as string) === "uk_court"
+      ? `/admin/uk-court-report?id=${displayVerification.id}`
+      : (displayVerification.type as string) === "malaysia_court"
+      ? `/admin/malaysia-court-report?id=${displayVerification.id}`
+      : (displayVerification.type as string) === "passport"
+      ? `/admin/passport-report?id=${displayVerification.id}`
       : (displayVerification.type as string) === "digital_address"
       ? `/admin/digital-address-report?id=${displayVerification.id}`
       : `/admin/report?id=${displayVerification.id}`;
@@ -261,6 +285,7 @@ function WorkspaceContent() {
               : displayVerification.type === "employment" ? "bg-gradient-to-br from-blue-500/10 to-indigo-600/20 text-blue-700 border-blue-500/20 shadow-blue-500/10"
               : displayVerification.type === "education" ? "bg-gradient-to-br from-purple-500/10 to-pink-600/20 text-purple-700 border-purple-500/20 shadow-purple-500/10"
               : displayVerification.type === "interpol" ? "bg-gradient-to-br from-indigo-600/15 via-blue-600/10 to-sky-500/15 text-indigo-700 border-indigo-500/25 shadow-indigo-500/15"
+              : (displayVerification.type as string) === "saps_wanted" ? "bg-gradient-to-br from-blue-900/15 via-indigo-800/10 to-blue-950/20 text-blue-900 border-blue-900/25 shadow-blue-900/15"
               : "bg-gradient-to-br from-emerald-500/10 to-teal-600/20 text-emerald-700 border-emerald-500/20 shadow-emerald-500/10"
           }`}>
             <span className="material-symbols-outlined text-3xl font-light">
@@ -268,6 +293,7 @@ function WorkspaceContent() {
                 : displayVerification.type === "employment" ? "work"
                 : displayVerification.type === "education" ? "school"
                 : displayVerification.type === "interpol" ? "shield_locked"
+                : (displayVerification.type as string) === "saps_wanted" ? "local_police"
                 : "fingerprint"}
             </span>
           </div>
@@ -337,6 +363,20 @@ function WorkspaceContent() {
                 ? `/admin/education-report?id=${displayVerification.id}`
                 : displayVerification.type === "interpol"
                 ? `/admin/interpol-report?id=${displayVerification.id}`
+                : displayVerification.type === "rednotice_worldwide"
+                ? `/admin/rednotice-worldwide-report?id=${displayVerification.id}`
+                : (displayVerification.type as string) === "saps_wanted"
+                ? `/admin/saps-wanted-report?id=${displayVerification.id}`
+                : (displayVerification.type as string) === "saflii_court"
+                ? `/admin/saflii-court-report?id=${displayVerification.id}`
+                : (displayVerification.type as string) === "uk_court"
+                ? `/admin/uk-court-report?id=${displayVerification.id}`
+                : (displayVerification.type as string) === "malaysia_court"
+                ? `/admin/malaysia-court-report?id=${displayVerification.id}`
+                : (displayVerification.type as string) === "passport"
+                ? `/admin/passport-report?id=${displayVerification.id}`
+                : (displayVerification.type as string) === "digital_address"
+                ? `/admin/digital-address-report?id=${displayVerification.id}`
                 : `/admin/report?id=${displayVerification.id}`;
               const win = window.open(reportPath, "_blank");
               if (!win || win.closed || typeof win.closed === "undefined") {
@@ -1894,6 +1934,369 @@ function WorkspaceContent() {
                 <span className="font-label-caps text-slate-400 text-[10px] uppercase tracking-wider font-bold block mb-1 select-none">Status Notes</span>
                 <p className="text-rose-800 font-semibold pl-3 border-l-2 border-rose-400 text-xs italic">
                   {displayVerification.notes}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (displayVerification?.type as string) === "saps_wanted" ? (
+          /* ======================================================== */
+          /* SOUTH AFRICAN POLICE SERVICE (SAPS) WANTED WORKSPACE     */
+          /* ======================================================== */
+          <div className="flex flex-col gap-6">
+            {/* Status Header Banner */}
+            <div className={`border rounded-2xl p-5 flex items-center gap-4 ${
+              displayVerification.status === "Halted"
+                ? "bg-amber-500/10 border-amber-500/25"
+                : displayVerification.sapsWantedHasRecords
+                ? "bg-rose-500/10 border-rose-500/25"
+                : "bg-emerald-500/10 border-emerald-500/25"
+            }`}>
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
+                displayVerification.status === "Halted"
+                  ? "bg-amber-500/15 border-amber-500/30 text-amber-600 shadow-amber-500/10"
+                  : displayVerification.sapsWantedHasRecords
+                  ? "bg-rose-500/15 border-rose-500/30 text-rose-600 shadow-rose-500/10"
+                  : "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 shadow-emerald-500/10"
+              }`}>
+                <span className="material-symbols-outlined text-2xl font-bold">
+                  {displayVerification.status === "Halted" ? "gavel" : displayVerification.sapsWantedHasRecords ? "warning" : "verified_user"}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`font-extrabold text-base tracking-tight ${
+                    displayVerification.status === "Halted"
+                      ? "text-amber-900"
+                      : displayVerification.sapsWantedHasRecords
+                      ? "text-rose-950"
+                      : "text-emerald-950"
+                  }`}>
+                    {displayVerification.status === "Halted"
+                      ? `Halted — Verifying with Attorney (${displayVerification.sapsWantedMatches?.length || 0} Similarity Match Found)`
+                      : displayVerification.sapsWantedHasRecords
+                      ? `Adverse Finding Confirmed — Active SAPS Wanted Record`
+                      : "Clean Record — No Active SAPS Wanted Records Found"}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold uppercase border ${
+                    displayVerification.status === "Halted"
+                      ? "bg-amber-100 text-amber-800 border-amber-300"
+                      : displayVerification.sapsWantedHasRecords
+                      ? "bg-rose-100 text-rose-800 border-rose-300"
+                      : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                  }`}>
+                    {displayVerification.status === "Halted" ? "Awaiting Resolution" : "Resolved & Published"}
+                  </span>
+                </div>
+                <span className="text-xs text-slate-500 font-semibold mt-1">
+                  Verified against the official South African Police Service (SAPS) Crime Stop Registry
+                </span>
+              </div>
+            </div>
+
+            {/* Candidate Search Query Details */}
+            <div className="flex flex-col gap-3">
+              <h5 className="font-label-caps text-slate-400 text-[10.5px] uppercase tracking-wider font-extrabold flex items-center gap-2 border-b border-slate-100 pb-2 select-none">
+                <span className="material-symbols-outlined text-base text-slate-500">person</span>
+                Candidate Profile &amp; Query Details
+              </h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
+                {renderDetailField("Candidate Full Name", displayVerification.name, false, "badge")}
+                {renderDetailField("Candidate Forename", displayVerification.candidateForename || "—", false, "badge")}
+                {renderDetailField("Candidate Surname", displayVerification.candidateSurname || "—", false, "badge")}
+                {renderDetailField("Date of Birth", displayVerification.candidateDob || "—", false, "cake")}
+                {renderDetailField("SA ID / Passport Number", displayVerification.candidateIdNumber || "—", false, "fingerprint")}
+                {renderDetailField("Province / Target Region", displayVerification.provinceCity || "National (All Provinces)", false, "location_city")}
+                {renderDetailField("Requesting Organization", displayVerification.requestingOrgName || displayVerification.orgName, false, "business")}
+                {renderDetailField("Verification Date", displayVerification.date, false, "calendar_today")}
+              </div>
+            </div>
+
+            {/* Attorney Resolution Desk (Interactive Panel) */}
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-xl border border-slate-800 flex flex-col gap-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div className="flex justify-between items-start flex-wrap gap-2 border-b border-slate-700/60 pb-3">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-indigo-300 font-extrabold flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm">balance</span>
+                    Attorney Review &amp; Resolution Desk
+                  </span>
+                  <h4 className="text-base font-extrabold text-white mt-0.5">
+                    {displayVerification.status === "Halted" ? "Take Legal Resolution on Halted File" : "Attorney Determination On Record"}
+                  </h4>
+                </div>
+                {displayVerification.attorneyResolution && (
+                  <span className="text-xs font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full font-bold">
+                    Resolved by {displayVerification.attorneyResolution.resolvedBy || "Legal Officer"} on {new Date(displayVerification.attorneyResolution.resolvedAt).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+
+              {displayVerification.attorneyResolution && (
+                <div className="bg-white/10 rounded-xl p-4 border border-white/10 flex flex-col gap-1">
+                  <span className="text-[10px] uppercase font-mono text-indigo-200 font-bold">Current Resolution:</span>
+                  <div className="flex items-center gap-2 font-bold text-sm">
+                    <span className={`w-2 h-2 rounded-full ${displayVerification.attorneyResolution.verdict === "cleared" ? "bg-emerald-400" : "bg-rose-400"}`}></span>
+                    <span className="capitalize">{displayVerification.attorneyResolution.verdict === "cleared" ? "Cleared / False Positive" : "Confirmed Wanted Record"}</span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-1 font-sans italic">
+                    &quot;{displayVerification.attorneyResolution.notes}&quot;
+                  </p>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3">
+                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider font-label-caps">
+                  {displayVerification.status === "Halted" ? "Select Attorney Verdict & Determination" : "Update / Re-resolve Verdict"}
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSapsVerdict("cleared")}
+                    className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
+                      sapsVerdict === "cleared"
+                        ? "bg-emerald-500/20 border-emerald-400 text-white shadow-lg"
+                        : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      sapsVerdict === "cleared" ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-400"
+                    }`}>
+                      <span className="material-symbols-outlined text-xl">check_circle</span>
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-sm">Dismiss Match (Cleared)</div>
+                      <div className="text-[10px] text-slate-300 mt-0.5">Candidate is not the wanted suspect. False positive cleared.</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSapsVerdict("confirmed_wanted")}
+                    className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
+                      sapsVerdict === "confirmed_wanted"
+                        ? "bg-rose-500/20 border-rose-400 text-white shadow-lg"
+                        : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      sapsVerdict === "confirmed_wanted" ? "bg-rose-500 text-white" : "bg-slate-700 text-slate-400"
+                    }`}>
+                      <span className="material-symbols-outlined text-xl">warning</span>
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-sm">Confirm Wanted Match</div>
+                      <div className="text-[10px] text-slate-300 mt-0.5">Active warrant match verified. Publish adverse finding.</div>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-1.5 mt-2">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider font-label-caps">
+                    Attorney / Verifier Legal Justification Notes
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={sapsAttorneyNotes}
+                    onChange={(e) => setSapsAttorneyNotes(e.target.value)}
+                    placeholder="Enter formal legal review findings (e.g. Identity verified against national ID registry; suspect photo and age do not correlate. Candidate cleared.)..."
+                    className="w-full bg-slate-800/80 border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  disabled={sapsResolving}
+                  onClick={async () => {
+                    const confirmText = sapsVerdict === "cleared"
+                      ? `Confirm clearing candidate "${displayVerification.name}" and publishing the clean report to the client?`
+                      : `CONFIRM ADVERSE MATCH: Candidate "${displayVerification.name}" will be flagged with active SAPS wanted record and published to client. Proceed?`;
+                    if (!window.confirm(confirmText)) return;
+
+                    setSapsResolving(true);
+                    try {
+                      const res = await fetch("/api/portal-data", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          action: "resolveSapsWantedVerification",
+                          payload: {
+                            verificationId: displayVerification.id,
+                            verdict: sapsVerdict,
+                            notes: sapsAttorneyNotes
+                          }
+                        })
+                      });
+                      const json = await res.json();
+                      if (json.success) {
+                        alert("SAPS Wanted verification successfully resolved & published to client!");
+                        setDisplayVerification((prev: any) => prev ? {
+                          ...prev,
+                          status: json.status,
+                          sapsWantedStatus: json.sapsWantedStatus,
+                          sapsWantedHasRecords: json.sapsWantedHasRecords,
+                          attorneyResolution: json.attorneyResolution,
+                          sendToCustomer: true
+                        } : null);
+                        refreshData();
+                      } else {
+                        alert(json.error || "Failed to resolve verification");
+                      }
+                    } catch (err: any) {
+                      alert("Error resolving verification: " + err.message);
+                    } finally {
+                      setSapsResolving(false);
+                    }
+                  }}
+                  className="mt-2 py-3 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer disabled:opacity-50 active:scale-98"
+                >
+                  <span className="material-symbols-outlined text-base">gavel</span>
+                  <span>{sapsResolving ? "Resolving & Publishing..." : "Resolve & Release Report to Client"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Matched SAPS Wanted Persons List */}
+            {displayVerification.sapsWantedMatches && displayVerification.sapsWantedMatches.length > 0 ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center border-b border-rose-200/60 pb-2.5">
+                  <h5 className="font-label-caps text-rose-700 text-xs uppercase tracking-wider font-extrabold flex items-center gap-2 select-none">
+                    <span className="material-symbols-outlined text-base text-rose-600">report_problem</span>
+                    Matched SAPS Wanted Profiles ({displayVerification.sapsWantedMatches.length})
+                  </h5>
+                  <span className="text-[11px] font-bold text-rose-600 bg-rose-100/80 px-2.5 py-0.5 rounded-full border border-rose-200">
+                    SAPS Registry Match
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  {displayVerification.sapsWantedMatches.map((suspect: any, idx: number) => (
+                    <div key={idx} className="bg-gradient-to-b from-rose-50/70 via-white to-rose-50/30 border-2 border-rose-200/80 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row gap-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                      <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-900 to-rose-600"></div>
+
+                      {suspect.imageUrl && (
+                        <div className="relative shrink-0">
+                          <img
+                            src={suspect.imageUrl}
+                            alt={suspect.name || suspect.surname}
+                            className="w-28 h-32 object-cover rounded-xl border border-slate-200/80 shadow-xs bg-slate-100"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                          <span className="absolute bottom-1 right-1 bg-blue-950/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded font-bold backdrop-blur-xs">
+                            SAPS #{suspect.bid || idx + 1}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex justify-between items-start flex-wrap gap-2 pb-3 border-b border-rose-100">
+                          <div>
+                            <span className="text-[10px] uppercase font-mono font-extrabold text-blue-900 tracking-wider">
+                              Record #{idx + 1} • SAPS BID: {suspect.bid || "N/A"}
+                            </span>
+                            <h6 className="font-extrabold text-slate-900 text-lg mt-0.5 break-words">
+                              {suspect.name || `${suspect.forename} ${suspect.surname}`}
+                            </h6>
+                            <span className="inline-flex items-center gap-1 mt-1 text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                              <span className="material-symbols-outlined text-xs">warning</span>
+                              Crime: {suspect.crime || "Wanted Offender"}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={async () => {
+                              if (!window.confirm(`Delete match "${suspect.name}" from this verification?`)) return;
+                              try {
+                                const res = await fetch("/api/portal-data", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    action: "delete_saps_wanted_match",
+                                    payload: {
+                                      verificationId: displayVerification.id,
+                                      matchIndex: idx,
+                                      bid: suspect.bid,
+                                      reason: "Removed by Admin/Attorney"
+                                    }
+                                  })
+                                });
+                                const json = await res.json();
+                                if (json.success) {
+                                  alert("Match removed!");
+                                  setDisplayVerification((prev: any) => prev ? {
+                                    ...prev,
+                                    sapsWantedMatches: json.sapsWantedMatches,
+                                    sapsWantedHasRecords: json.sapsWantedHasRecords,
+                                    status: json.status,
+                                    sapsWantedStatus: json.sapsWantedStatus
+                                  } : null);
+                                  refreshData();
+                                } else {
+                                  alert(json.error || "Failed to remove match");
+                                }
+                              } catch (err: any) {
+                                alert("Error: " + err.message);
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-white hover:bg-rose-600 hover:text-white text-rose-700 font-extrabold border border-rose-300 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
+                          >
+                            <span className="material-symbols-outlined text-sm">delete</span>
+                            <span>Remove Match</span>
+                          </button>
+                        </div>
+
+                        {/* Suspect Specific Warrant & Case Details */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-3 text-xs">
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[9px] uppercase font-mono">Station</span>
+                            <span className="text-slate-800 font-bold">{suspect.station || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[9px] uppercase font-mono">Case Number</span>
+                            <span className="text-slate-800 font-mono font-bold">{suspect.caseNumber || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[9px] uppercase font-mono">Crime Date</span>
+                            <span className="text-slate-800 font-bold">{suspect.crimeDate || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[9px] uppercase font-mono">Investigating Officer</span>
+                            <span className="text-slate-800 font-bold">{suspect.investigatingOfficer || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[9px] uppercase font-mono">Station Phone</span>
+                            <span className="text-slate-800 font-mono font-bold">{suspect.stationTelephone || suspect.contactNumber || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[9px] uppercase font-mono">Officer Email</span>
+                            <span className="text-slate-800 font-bold">{suspect.email || "—"}</span>
+                          </div>
+                        </div>
+
+                        {suspect.circumstances && (
+                          <div className="mt-3 bg-white/90 border border-slate-200/80 rounded-xl p-3.5 flex flex-col gap-1 shadow-2xs">
+                            <span className="text-[9.5px] uppercase font-extrabold text-blue-900 tracking-wider font-mono flex items-center gap-1">
+                              <span className="material-symbols-outlined text-xs">description</span>
+                              Circumstances of Crime &amp; Warrant Description:
+                            </span>
+                            <p className="text-xs text-slate-700 leading-relaxed break-words font-medium">
+                              {suspect.circumstances}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-2xl p-6 text-center flex flex-col items-center gap-2">
+                <span className="material-symbols-outlined text-3xl text-emerald-600">verified</span>
+                <span className="font-extrabold text-emerald-950 text-sm">No SAPS Wanted Persons Records Found</span>
+                <p className="text-xs text-slate-500 max-w-md">
+                  Candidate does not match any current wanted notices published by the South African Police Service.
                 </p>
               </div>
             )}

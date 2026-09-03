@@ -68,6 +68,16 @@ function BillableSummaryContent() {
       ? (organisation?.passportRate !== undefined ? organisation.passportRate : 8)
       : verType === "digital_address"
       ? (organisation?.digitalAddressRate !== undefined ? organisation.digitalAddressRate : 5)
+      : verType === "rednotice_worldwide"
+      ? (organisation?.rednoticeWorldwideRate !== undefined ? organisation.rednoticeWorldwideRate : 15)
+      : verType === "saflii_court"
+      ? (organisation?.safliiCourtRate !== undefined ? organisation.safliiCourtRate : 15)
+      : verType === "saps_wanted"
+      ? (organisation?.sapsWantedRate !== undefined ? organisation.sapsWantedRate : 15)
+      : verType === "uk_court"
+      ? (organisation?.ukCourtRate !== undefined ? organisation.ukCourtRate : 25)
+      : verType === "malaysia_court"
+      ? (organisation?.malaysiaCourtRate !== undefined ? organisation.malaysiaCourtRate : 20)
       : verType === "interpol"
       ? (organisation?.interpolRate !== undefined ? organisation.interpolRate : 10)
       : verType === "employment"
@@ -286,6 +296,16 @@ function BillableSummaryContent() {
                     ? "Passport Check"
                     : verType === "digital_address"
                     ? "Digital Address Check"
+                    : verType === "rednotice_worldwide"
+                    ? "Red Notice Worldwide"
+                    : verType === "saflii_court"
+                    ? "South African Court Check"
+                    : verType === "saps_wanted"
+                    ? "SAPS Wanted Persons Check"
+                    : verType === "uk_court"
+                    ? "UK Court Check"
+                    : verType === "malaysia_court"
+                    ? "Malaysia Court Check"
                     : verType === "employment"
                     ? "Employment Check"
                     : verType === "education"
@@ -297,6 +317,16 @@ function BillableSummaryContent() {
                     ? (organisation?.passportRate !== undefined ? organisation.passportRate : 8)
                     : verType === "digital_address"
                     ? (organisation?.digitalAddressRate !== undefined ? organisation.digitalAddressRate : 5)
+                    : verType === "rednotice_worldwide"
+                    ? (organisation?.rednoticeWorldwideRate !== undefined ? organisation.rednoticeWorldwideRate : 15)
+                    : verType === "saflii_court"
+                    ? (organisation?.safliiCourtRate !== undefined ? organisation.safliiCourtRate : 15)
+                    : verType === "saps_wanted"
+                    ? (organisation?.sapsWantedRate !== undefined ? organisation.sapsWantedRate : 15)
+                    : verType === "uk_court"
+                    ? (organisation?.ukCourtRate !== undefined ? organisation.ukCourtRate : 25)
+                    : verType === "malaysia_court"
+                    ? (organisation?.malaysiaCourtRate !== undefined ? organisation.malaysiaCourtRate : 20)
                     : verType === "interpol"
                     ? (organisation?.interpolRate !== undefined ? organisation.interpolRate : 10)
                     : verType === "employment"
