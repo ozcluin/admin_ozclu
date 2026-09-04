@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { usePortal } from "src/context/PortalContext";
 import type { Organisation, Verifier, Invoice, InvoiceActivity } from "src/context/PortalContext";
 import { useAuth } from "src/context/AuthContext";
@@ -25,6 +26,10 @@ export default function ManageInvoicesPage() {
     invoices,
     verifications,
     allSettings,
+    apiKeys,
+    apiUsageLogs,
+    generateApiKey,
+    revokeApiKey,
     addOrganisation,
     updateOrganisation,
     deleteOrganisation,
@@ -172,7 +177,11 @@ export default function ManageInvoicesPage() {
   const [entContactEmail, setEntContactEmail] = useState("");
 
   // ── Detail panel active tab ──
-  const [activeTab, setActiveTab] = useState<"overview" | "payment" | "verifiers" | "invoices">("overview");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"overview" | "payment" | "verifiers" | "invoices" | "api">("overview");
+  const [newlyGeneratedOrgKey, setNewlyGeneratedOrgKey] = useState<string | null>(null);
+  const [orgKeyCopied, setOrgKeyCopied] = useState(false);
+  const [isGeneratingOrgKey, setIsGeneratingOrgKey] = useState(false);
 
   // ── Delete organisation modal ──
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -1308,9 +1317,9 @@ export default function ManageInvoicesPage() {
             {/* Segmented control tabs */}
             <div className="px-6 py-3 border-b border-slate-100 bg-slate-50/20 shrink-0">
               <div className="flex bg-slate-100/70 border border-slate-200/50 rounded-xl p-1 max-w-2xl">
-                {(["overview", "payment", "verifiers", "invoices"] as const).map((tab) => {
-                  const icons = { overview: "dashboard", payment: "account_balance", verifiers: "badge", invoices: "receipt_long" };
-                  const labels = { overview: "Overview", payment: "Payment details", verifiers: "Verifier Accounts", invoices: "Monthly Invoices" };
+                {(["overview", "payment", "verifiers", "invoices", "api"] as const).map((tab) => {
+                  const icons = { overview: "dashboard", payment: "account_balance", verifiers: "badge", invoices: "receipt_long", api: "api" };
+                  const labels = { overview: "Overview", payment: "Payment details", verifiers: "Verifier Accounts", invoices: "Monthly Invoices", api: "API Integration" };
                   return (
                     <button
                       key={tab}
@@ -3384,6 +3393,241 @@ export default function ManageInvoicesPage() {
                   </div>
                 </div>
               )}
+
+              {/* ──── API INTEGRATION TAB ──── */}
+              {activeTab === "api" && (() => {
+                const orgKeys = apiKeys.filter((k) => k.orgId === selectedOrg.id || k.orgName === selectedOrg.name);
+                const activeOrgKeys = orgKeys.filter((k) => k.status === "active");
+
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+                const orgLogs = apiUsageLogs.filter(
+                  (l) => (l.orgId === selectedOrg.id || l.orgName === selectedOrg.name) &&
+                    l.timestamp && new Date(l.timestamp).getTime() >= startOfMonth
+                );
+                const totalCallsThisMonth = orgLogs.length;
+                const totalCostThisMonth = orgLogs.reduce((sum, l) => sum + (Number(l.cost) || 0), 0);
+
+                const handleToggleApiEnabled = async () => {
+                  const current = selectedOrg.apiEnabled !== false;
+                  await updateOrganisation(selectedOrg.id, { apiEnabled: !current });
+                };
+
+                const handleQuickGenerateKey = async () => {
+                  setIsGeneratingOrgKey(true);
+                  try {
+                    const res = await generateApiKey(selectedOrg.id, ["*"], 100);
+                    if (res?.fullKey) {
+                      setNewlyGeneratedOrgKey(res.fullKey);
+                    }
+                  } catch (err: any) {
+                    alert(err.message || "Failed to generate key");
+                  } finally {
+                    setIsGeneratingOrgKey(false);
+                  }
+                };
+
+                const handleRevoke = async (apiKeyId: string) => {
+                  if (!confirm("Are you sure you want to revoke this API key? Applications using it will stop working immediately.")) return;
+                  try {
+                    await revokeApiKey(apiKeyId);
+                  } catch (err: any) {
+                    alert(err.message || "Failed to revoke key");
+                  }
+                };
+
+                return (
+                  <div className="animate-fade-in flex flex-col gap-6">
+                    {/* Header & Status Card */}
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <span className="material-symbols-outlined text-[#016e1c]">api</span>
+                          <h4 className="text-sm font-bold text-slate-900">External REST API Access</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            selectedOrg.apiEnabled !== false
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-rose-50 text-rose-700 border border-rose-200"
+                          }`}>
+                            {selectedOrg.apiEnabled !== false ? "API Enabled" : "API Disabled"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Enables {selectedOrg.name} to submit verification requests and fetch reports programmatically.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleToggleApiEnabled}
+                          className={`px-3.5 py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                            selectedOrg.apiEnabled !== false
+                              ? "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                              : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                          }`}
+                        >
+                          {selectedOrg.apiEnabled !== false ? "Disable API Access" : "Enable API Access"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleQuickGenerateKey}
+                          disabled={isGeneratingOrgKey}
+                          className="px-4 py-2 text-xs font-semibold rounded-xl bg-[#016e1c] text-white hover:bg-[#015816] shadow-sm transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-sm">add</span>
+                          {isGeneratingOrgKey ? "Generating..." : "Generate New Key"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Newly Generated Key Banner */}
+                    {newlyGeneratedOrgKey && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                            New API Key Created — Provide this securely to {selectedOrg.name}:
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setNewlyGeneratedOrgKey(null)}
+                            className="text-xs text-slate-400 hover:text-slate-600 font-bold"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={newlyGeneratedOrgKey}
+                            className="w-full font-mono text-xs bg-white border border-emerald-300 rounded-xl px-3 py-2 text-slate-900 select-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(newlyGeneratedOrgKey);
+                              setOrgKeyCopied(true);
+                              setTimeout(() => setOrgKeyCopied(false), 2000);
+                            }}
+                            className="px-3 py-2 bg-[#016e1c] text-white text-xs font-semibold rounded-xl shrink-0 hover:bg-[#015816] cursor-pointer"
+                          >
+                            {orgKeyCopied ? "Copied!" : "Copy"}
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-emerald-700">
+                          This key will only be shown once. Only its hash is stored in the database.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="bg-slate-50/70 border border-slate-200/60 rounded-2xl p-4">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Keys</span>
+                        <div className="text-2xl font-bold text-slate-900 mt-2">{activeOrgKeys.length}</div>
+                        <span className="text-[11px] text-slate-400">Total keys: {orgKeys.length}</span>
+                      </div>
+
+                      <div className="bg-slate-50/70 border border-slate-200/60 rounded-2xl p-4">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">API Calls This Month</span>
+                        <div className="text-2xl font-bold text-slate-900 mt-2">{totalCallsThisMonth}</div>
+                        <span className="text-[11px] text-slate-400">Since 1st of current month</span>
+                      </div>
+
+                      <div className="bg-slate-50/70 border border-slate-200/60 rounded-2xl p-4">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Estimated API Revenue</span>
+                        <div className="text-2xl font-bold text-slate-900 mt-2">
+                          {getCurrencySymbol(selectedOrg.currency)}{totalCostThisMonth.toFixed(2)}
+                        </div>
+                        <span className="text-[11px] text-slate-400">Included on monthly invoice</span>
+                      </div>
+                    </div>
+
+                    {/* Keys Table */}
+                    <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
+                      <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                        <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Issued API Keys</h5>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedOrgId(null);
+                            router.push("/admin/api-usage");
+                          }}
+                          className="text-xs text-[#016e1c] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          View Full Traffic in API Console
+                          <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                        </button>
+                      </div>
+
+                      {orgKeys.length === 0 ? (
+                        <div className="p-8 text-center text-xs text-slate-400">
+                          No API keys issued to this organisation yet. Click "Generate New Key" above.
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+                              <tr>
+                                <th className="px-4 py-2.5">Key Token</th>
+                                <th className="px-4 py-2.5">Status</th>
+                                <th className="px-4 py-2.5">Rate Limit</th>
+                                <th className="px-4 py-2.5">Created</th>
+                                <th className="px-4 py-2.5">Last Used</th>
+                                <th className="px-4 py-2.5 text-right">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                              {orgKeys.map((k) => (
+                                <tr key={k._id} className="hover:bg-slate-50/50">
+                                  <td className="px-4 py-3 font-mono">
+                                    {k.keyPrefix || "sk_live_"}••••••••••••••••••••••••••••{k.keySuffix}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    {k.status === "active" ? (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        Active
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                                        Revoked
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3 font-mono text-slate-500">
+                                    {k.rateLimit || 100} req/min
+                                  </td>
+                                  <td className="px-4 py-3 text-slate-500">
+                                    {k.createdAt ? new Date(k.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "—"}
+                                  </td>
+                                  <td className="px-4 py-3 text-slate-500">
+                                    {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "Never"}
+                                  </td>
+                                  <td className="px-4 py-3 text-right">
+                                    {k.status === "active" ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRevoke(k._id)}
+                                        className="px-2.5 py-1 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                      >
+                                        Revoke
+                                      </button>
+                                    ) : (
+                                      <span className="text-slate-400 italic">Revoked</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

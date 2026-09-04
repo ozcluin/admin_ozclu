@@ -261,6 +261,7 @@ function BillableSummaryContent() {
                 <th className="py-2 px-2">Requesting Organisation</th>
                 <th className="py-2 px-2 whitespace-nowrap">Status</th>
                 <th className="py-2 px-2">Service</th>
+                <th className="py-2 px-2 whitespace-nowrap">Source</th>
                 <th className="py-2 px-2">Verification Origin</th>
                 <th className="py-2 px-2 whitespace-nowrap">Price Currency</th>
                 <th className="py-2 px-2 text-right whitespace-nowrap">Price (Excl. GST)</th>
@@ -270,7 +271,7 @@ function BillableSummaryContent() {
             <tbody className="divide-y divide-slate-100 bg-white">
               {filteredVerifications.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-10 text-center text-slate-400 font-semibold">
+                  <td colSpan={12} className="py-10 text-center text-slate-400 font-semibold">
                     No billable requests completed for {activeMonthName} {year}.
                   </td>
                 </tr>
@@ -345,6 +346,17 @@ function BillableSummaryContent() {
                       <td className="py-2 px-2">{v.requestingOrgName || orgName}</td>
                       <td className="py-2 px-2 font-bold text-emerald-700 whitespace-nowrap">Verified</td>
                       <td className="py-2 px-2">{serviceName}</td>
+                      <td className="py-2 px-2 whitespace-nowrap">
+                        {v.source === "api" ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                            API
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            Portal
+                          </span>
+                        )}
+                      </td>
                       <td className="py-2 px-2">India</td>
                       <td className="py-2 px-2 whitespace-nowrap">{organisation?.currency || "USD"}</td>
                       <td className="py-2 px-2 text-right font-mono whitespace-nowrap">{getCurrencySymbol(organisation?.currency)}{rate.toFixed(2)}</td>
@@ -355,6 +367,16 @@ function BillableSummaryContent() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Source Breakdown Summary */}
+        <div className="flex items-center justify-between text-xs text-slate-500 mb-4 px-1">
+          <span>Total Records: <strong className="text-slate-800">{filteredVerifications.length}</strong></span>
+          <div className="flex items-center gap-3">
+            <span>Portal Requests: <strong className="text-slate-800">{filteredVerifications.filter(v => v.source !== "api").length}</strong></span>
+            <span>•</span>
+            <span>API Requests: <strong className="text-blue-700">{filteredVerifications.filter(v => v.source === "api").length}</strong></span>
+          </div>
         </div>
 
         {/* Subtotal / GST / Total Table */}

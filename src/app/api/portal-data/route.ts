@@ -11,6 +11,7 @@ import { connectToDatabase } from "src/lib/mongodb";
 import { getClientIp, getUserAgent, logAuditEvent } from "shared/audit";
 import { softDeleteOne, softDeleteMany, notDeleted } from "shared/softDelete";
 import { ObjectId } from "mongodb";
+import { generateApiKey } from "shared/apiKeys";
 
 export async function GET(req: NextRequest) {
   try {
@@ -80,6 +81,35 @@ export async function GET(req: NextRequest) {
     const cleanOrganisations = organisations.map(o => ({ ...o, _id: o._id.toString() }));
     const cleanSuggestions = suggestions.map(s => ({ ...s, _id: s._id.toString() }));
 
+    // Fetch API keys (masking keyHash)
+    const apiKeys = await db.collection("api_keys").find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 }).toArray();
+    const cleanApiKeys = apiKeys.map(k => ({
+      _id: k._id.toString(),
+      orgId: k.orgId,
+      orgName: k.orgName,
+      keySuffix: k.keySuffix,
+      keyPrefix: k.keyPrefix || "sk_live_",
+      permissions: k.permissions || ["*"],
+      rateLimit: k.rateLimit || 100,
+      status: k.status || "active",
+      createdBy: k.createdBy || "",
+      createdAt: k.createdAt || "",
+      lastUsedAt: k.lastUsedAt || null,
+      revokedAt: k.revokedAt || null,
+    }));
+
+    // Recent API usage logs (last 500)
+    const apiUsageLogs = await db.collection("api_usage_logs")
+      .find({})
+      .sort({ timestamp: -1 })
+      .limit(500)
+      .toArray();
+    const cleanApiUsageLogs = apiUsageLogs.map(l => ({
+      ...l,
+      _id: l._id.toString(),
+      timestamp: l.timestamp ? (l.timestamp instanceof Date ? l.timestamp.toISOString() : l.timestamp) : null,
+    }));
+
     return NextResponse.json({
       settings: cleanSettings,
       allSettings: cleanAllSettings,
@@ -87,7 +117,9 @@ export async function GET(req: NextRequest) {
       invoices: cleanInvoices,
       verifiers: cleanVerifiers,
       organisations: cleanOrganisations,
-      suggestions: cleanSuggestions
+      suggestions: cleanSuggestions,
+      apiKeys: cleanApiKeys,
+      apiUsageLogs: cleanApiUsageLogs,
     });
   } catch (error: any) {
     console.error("[DATA] Admin portal GET error:", error.message);
@@ -240,7 +272,9 @@ export async function POST(req: NextRequest) {
           onboardingStatus: "active",
           tempPassword,
           attempts: [initialAttempt],
-          setupUrl
+          setupUrl,
+          source: "portal",
+          createdAt: new Date().toISOString()
         });
 
         if (requestingOrgName && requestingOrgName.trim()) {
@@ -773,6 +807,7 @@ export async function POST(req: NextRequest) {
           itemCount,
           serviceCharge,
           employments: employmentsWithCountry,
+          source: "portal",
           createdAt: new Date().toISOString()
         };
 
@@ -846,6 +881,7 @@ export async function POST(req: NextRequest) {
           itemCount,
           serviceCharge,
           educationList: educationWithCountry,
+          source: "portal",
           createdAt: new Date().toISOString()
         };
 
@@ -2306,6 +2342,128 @@ export async function POST(req: NextRequest) {
           sapsWantedStatus: sapsWantedStatus,
           sendToCustomer: sendToCustomer
         });
+      }
+      case "generateApiKey": {
+        const { orgId, permissions, rateLimit } = payload || {};
+        if (!orgId) {
+          return NextResponse.json({ error: "orgId is required" }, { status: 400 });
+        }
+
+        const org = await db.collection("organisations").findOne({
+          $or: [
+            { id: orgId },
+            ...(ObjectId.isValid(orgId) ? [{ _id: new ObjectId(orgId) }] : [])
+          ],
+          isDeleted: { $ne: true }
+        });
+
+        if (!org) {
+          return NextResponse.json({ error: "Organisation not found" }, { status: 404 });
+        }
+
+        const { fullKey, keyHash, keySuffix, keyPrefix } = generateApiKey();
+
+        const newKeyDoc = {
+          orgId: org.id || org._id.toString(),
+          orgName: org.name,
+          keyHash,
+          keySuffix,
+          keyPrefix,
+          permissions: permissions && permissions.length > 0 ? permissions : ["*"],
+          rateLimit: rateLimit && rateLimit > 0 ? Number(rateLimit) : 100,
+          status: "active",
+          createdBy: user.email,
+          createdAt: new Date().toISOString(),
+          lastUsedAt: null,
+          revokedAt: null,
+          isDeleted: false
+        };
+
+        const insertResult = await db.collection("api_keys").insertOne(newKeyDoc);
+
+        await db.collection("organisations").updateOne(
+          { _id: org._id },
+          { $set: { apiEnabled: true, updatedAt: new Date().toISOString() } }
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "generate_api_key",
+          targetType: "api_key",
+          targetId: insertResult.insertedId.toString(),
+          metadata: { orgName: org.name, keySuffix },
+          ip,
+          userAgent,
+          outcome: "success"
+        });
+
+        return NextResponse.json({
+          success: true,
+          apiKey: {
+            _id: insertResult.insertedId.toString(),
+            fullKey,
+            keySuffix,
+            keyPrefix,
+            orgId: newKeyDoc.orgId,
+            orgName: newKeyDoc.orgName,
+            permissions: newKeyDoc.permissions,
+            rateLimit: newKeyDoc.rateLimit,
+            status: newKeyDoc.status,
+            createdAt: newKeyDoc.createdAt
+          }
+        });
+      }
+      case "revokeApiKey": {
+        const { apiKeyId } = payload || {};
+        if (!apiKeyId) {
+          return NextResponse.json({ error: "apiKeyId is required" }, { status: 400 });
+        }
+
+        const query = ObjectId.isValid(apiKeyId) ? { _id: new ObjectId(apiKeyId) } : { _id: apiKeyId };
+        const targetKey = await db.collection("api_keys").findOne(query);
+
+        if (!targetKey) {
+          return NextResponse.json({ error: "API key not found" }, { status: 404 });
+        }
+
+        await db.collection("api_keys").updateOne(
+          query,
+          { $set: { status: "revoked", revokedAt: new Date().toISOString(), revokedBy: user.email } }
+        );
+
+        await logAuditEvent(db, {
+          actorUserId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          portal: "admin",
+          action: "revoke_api_key",
+          targetType: "api_key",
+          targetId: apiKeyId,
+          metadata: { orgName: targetKey.orgName, keySuffix: targetKey.keySuffix },
+          ip,
+          userAgent,
+          outcome: "success"
+        });
+
+        return NextResponse.json({ success: true });
+      }
+      case "updateApiKeyPermissions": {
+        const { apiKeyId, permissions, rateLimit } = payload || {};
+        if (!apiKeyId) {
+          return NextResponse.json({ error: "apiKeyId is required" }, { status: 400 });
+        }
+
+        const query = ObjectId.isValid(apiKeyId) ? { _id: new ObjectId(apiKeyId) } : { _id: apiKeyId };
+        const updateFields: any = { updatedAt: new Date().toISOString() };
+        if (Array.isArray(permissions)) updateFields.permissions = permissions;
+        if (rateLimit !== undefined && rateLimit > 0) updateFields.rateLimit = Number(rateLimit);
+
+        await db.collection("api_keys").updateOne(query, { $set: updateFields });
+
+        return NextResponse.json({ success: true });
       }
       default:
         return NextResponse.json({ error: `Unsupported action: ${action}` }, { status: 400 });

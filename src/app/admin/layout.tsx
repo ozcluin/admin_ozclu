@@ -70,6 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Candidate Database", path: "/admin/candidates", icon: "folder_shared" },
     { name: "Manage Invoices", path: "/admin/invoices", icon: "account_balance_wallet" },
     { name: "Rates & Grievances", path: "/admin/suggestions", icon: "rate_review" },
+    { name: "API Usage", path: "/admin/api-usage", icon: "api" },
     { name: "Admin Profile", path: "/admin/profile", icon: "settings" },
   ];
 
