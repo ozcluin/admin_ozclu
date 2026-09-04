@@ -294,13 +294,20 @@ function AdminRednoticeWorldwideReportContent() {
                   Global Background Screening &amp; International Risk Solutions
                 </span>
               </div>
-              <div className="text-right">
-                <h1 className="text-xl md:text-2xl font-black text-rose-950 tracking-tight uppercase">
-                  RED NOTICE WORLDWIDE<br />CHECK REPORT
-                </h1>
-                <div className="text-xs text-slate-500 mt-1 font-mono">
-                  <div>Report ID: <span className="font-bold text-slate-800">{reportNo}</span></div>
-                  <div>Date: <span className="text-slate-900">{formatDate(verification.rednoticeWorldwideCompletedAt || verification.date)}</span></div>
+              <div className="flex items-center gap-4">
+                <img 
+                  src="/interpol-rednotice-banner.jpg" 
+                  alt="Interpol Red Notice" 
+                  className="h-14 w-auto rounded-lg shadow-sm border border-rose-300 object-contain hidden sm:block" 
+                />
+                <div className="text-right">
+                  <h1 className="text-xl md:text-2xl font-black text-rose-950 tracking-tight uppercase">
+                    RED NOTICE WORLDWIDE<br />CHECK REPORT
+                  </h1>
+                  <div className="text-xs text-slate-500 mt-1 font-mono">
+                    <div>Report ID: <span className="font-bold text-slate-800">{reportNo}</span></div>
+                    <div>Date: <span className="text-slate-900">{formatDate(verification.rednoticeWorldwideCompletedAt || verification.date)}</span></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -351,9 +358,16 @@ function AdminRednoticeWorldwideReportContent() {
                     </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Verification Method</span>
-                  <span className="text-xs font-bold text-slate-700">Official Red Notices API &amp; Central Registry</span>
+                <div className="flex items-center gap-3 text-right">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Verification Method</span>
+                    <span className="text-xs font-bold text-slate-700">Official Red Notices API &amp; Central Registry</span>
+                  </div>
+                  <img 
+                    src="/interpol-rednotice-banner.jpg" 
+                    alt="Interpol Red Notice" 
+                    className="h-10 w-auto rounded shadow-2xs border border-rose-200 object-contain" 
+                  />
                 </div>
               </div>
             </div>

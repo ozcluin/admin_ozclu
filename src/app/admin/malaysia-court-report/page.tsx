@@ -166,14 +166,8 @@ function MalaysiaCourtReportContent() {
         {/* Header Section */}
         <div className="p-8 sm:p-10 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-gradient-to-b from-slate-50/70 to-white">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-800 to-teal-900 flex items-center justify-center text-white shadow-md shadow-emerald-950/15 border border-emerald-700/50">
-              <svg className="w-8 h-8 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A48.24 48.24 0 0012 9.75c-2.551 0-5.056.2-7.5.583V21"
-                />
-              </svg>
+            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200/90 flex items-center justify-center shadow-xs p-1.5 shrink-0">
+              <img src="/malaysia-court-logo.png" alt="Mahkamah Malaysia" className="h-11 w-11 object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -251,7 +245,8 @@ function MalaysiaCourtReportContent() {
                 </div>
               </div>
 
-              <div className="shrink-0 flex items-center gap-2">
+              <div className="shrink-0 flex items-center gap-3">
+                <img src="/malaysia-court-logo.png" alt="Mahkamah Malaysia" className="h-9 w-9 object-contain hidden sm:block opacity-90 drop-shadow-xs" />
                 <span
                   className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wider uppercase border shadow-sm ${
                     hasRecords

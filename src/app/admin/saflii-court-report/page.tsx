@@ -291,9 +291,12 @@ function SafliiCourtReportContent() {
                 )}
               </div>
             </div>
-            <h1 className="text-center font-sans text-[#166534] text-lg sm:text-xl font-extrabold tracking-widest uppercase mt-2 leading-tight">
-              SOUTH AFRICAN COURT<br />CHECK REPORT
-            </h1>
+            <div className="flex flex-col items-center text-center">
+              <img src="/sa-judiciary-logo.png" alt="The South African Judiciary" className="h-9 sm:h-10 w-auto object-contain mb-1" />
+              <h1 className="font-sans text-[#166534] text-base sm:text-lg font-extrabold tracking-widest uppercase leading-tight">
+                SOUTH AFRICAN COURT<br />CHECK REPORT
+              </h1>
+            </div>
             <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">
               <div>Report #: <span className="font-mono text-slate-900">{reportNo}</span></div>
               <div>Date: <span className="text-slate-900">{formatDate(verification.safliiCourtCompletedAt || verification.date)}</span></div>
@@ -361,12 +364,8 @@ function SafliiCourtReportContent() {
               </div>
 
               <div className="shrink-0 flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
-                <div className="w-14 h-14 flex items-center justify-center bg-emerald-50 rounded-full border border-emerald-200">
-                  <svg className="w-8 h-8 text-[#166534]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971z" />
-                  </svg>
-                </div>
-                <span className="text-[9px] font-extrabold text-[#166534] uppercase tracking-wider mt-1">SAFLII Database</span>
+                <img src="/saflii-logo.png" alt="SAFLII Database" className="h-9 max-w-[140px] object-contain" />
+                <span className="text-[9px] font-extrabold text-[#166534] uppercase tracking-wider mt-1">SAFLII Certified</span>
               </div>
             </div>
           </div>
