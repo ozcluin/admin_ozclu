@@ -561,6 +561,7 @@ export async function POST(req: NextRequest) {
                     date: generatedDate,
                     dueDate,
                     amount: rate,
+                    currency: org?.currency || "USD",
                     status: "Unpaid",
                     month: currentMonth,
                     year: currentYear,
@@ -618,7 +619,7 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "addOrganisation": {
-        const { id, name, paymentPlan, monthlyRate, billingDay, createdAt, ownerEmail, ownerName, ownerPassword, maxVerifiers, orgNumber, courtRecordRate, identityEnabled, courtRecordEnabled } = payload;
+        const { id, name, paymentPlan, monthlyRate, currency, billingDay, createdAt, ownerEmail, ownerName, ownerPassword, maxVerifiers, orgNumber, courtRecordRate, identityEnabled, courtRecordEnabled } = payload;
         // If orgNumber was provided by the client, use it; otherwise compute from DB
         let finalOrgNumber = orgNumber;
         if (!finalOrgNumber) {
@@ -626,7 +627,9 @@ export async function POST(req: NextRequest) {
           finalOrgNumber = (maxDoc.length > 0 && maxDoc[0].orgNumber ? maxDoc[0].orgNumber : 0) + 1;
         }
         await db.collection("organisations").insertOne({
-          id, name, orgNumber: finalOrgNumber, paymentPlan, monthlyRate, billingDay, createdAt, status: "Active",
+          id, name, orgNumber: finalOrgNumber, paymentPlan, monthlyRate,
+          currency: currency || "USD",
+          billingDay, createdAt, status: "Active",
           courtRecordRate: courtRecordRate ?? monthlyRate,
           identityEnabled: identityEnabled ?? true,
           courtRecordEnabled: courtRecordEnabled ?? true,
@@ -676,6 +679,7 @@ export async function POST(req: NextRequest) {
               id: name.replace(/\s+/g, "").toLowerCase(),
               companyName: name,
               contactEmail: ownerEmailClean,
+              currency: currency || "USD",
               address: "",
               city: "",
               postalCode: "",
@@ -1240,7 +1244,7 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "generateMonthlyInvoice": {
-        const { id, orgName, organisationId, date, dueDate, amount, status, month, year, generationType } = payload;
+        const { id, orgName, organisationId, date, dueDate, amount, currency, status, month, year, generationType } = payload;
         // Soft-delete existing non-paid invoices for same org/month/year
         // Match by BOTH organisationId AND orgName to catch auto-generated invoices
         if (month && year) {
@@ -1260,7 +1264,9 @@ export async function POST(req: NextRequest) {
           }
         }
         await db.collection("invoices").insertOne({
-          id, orgName, organisationId, date, dueDate, amount, status, month, year, generationType: generationType || "Manual"
+          id, orgName, organisationId, date, dueDate, amount,
+          currency: currency || "USD",
+          status, month, year, generationType: generationType || "Manual"
         });
 
         await logAuditEvent(db, {
@@ -1417,6 +1423,7 @@ export async function POST(req: NextRequest) {
                   date: generatedDate,
                   dueDate,
                   amount: rate,
+                  currency: org?.currency || "USD",
                   status: "Unpaid",
                   month: currentMonth,
                   year: currentYear,

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePortal } from "src/context/PortalContext";
+import { getCurrencySymbol } from "src/lib/currencies";
 import OzcluLogo from "../../components/OzcluLogo";
 
 function BillableSummaryContent() {
@@ -345,9 +346,9 @@ function BillableSummaryContent() {
                       <td className="py-2 px-2 font-bold text-emerald-700 whitespace-nowrap">Verified</td>
                       <td className="py-2 px-2">{serviceName}</td>
                       <td className="py-2 px-2">India</td>
-                      <td className="py-2 px-2 whitespace-nowrap">USD</td>
-                      <td className="py-2 px-2 text-right font-mono whitespace-nowrap">${rate.toFixed(2)}</td>
-                      <td className="py-2 px-2 text-right font-mono whitespace-nowrap">${rate.toFixed(2)}</td>
+                      <td className="py-2 px-2 whitespace-nowrap">{organisation?.currency || "USD"}</td>
+                      <td className="py-2 px-2 text-right font-mono whitespace-nowrap">{getCurrencySymbol(organisation?.currency)}{rate.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right font-mono whitespace-nowrap">{getCurrencySymbol(organisation?.currency)}{rate.toFixed(2)}</td>
                     </tr>
                   );
                 })
@@ -369,10 +370,10 @@ function BillableSummaryContent() {
             </thead>
             <tbody className="bg-white">
               <tr>
-                <td className="py-3.5 px-3 font-bold text-slate-900">USD</td>
-                <td className="py-3.5 px-3 text-right font-bold text-slate-900 font-mono">${subTotal.toFixed(2)}</td>
+                <td className="py-3.5 px-3 font-bold text-slate-900">{organisation?.currency || "USD"}</td>
+                <td className="py-3.5 px-3 text-right font-bold text-slate-900 font-mono">{getCurrencySymbol(organisation?.currency)}{subTotal.toFixed(2)}</td>
                 <td className="py-3.5 px-3 text-right font-semibold text-slate-400 font-mono">—</td>
-                <td className="py-3.5 px-3 text-right font-extrabold text-[#8C1D40] font-mono text-sm">${subTotal.toFixed(2)}</td>
+                <td className="py-3.5 px-3 text-right font-extrabold text-[#8C1D40] font-mono text-sm">{getCurrencySymbol(organisation?.currency)}{subTotal.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { usePortal } from "src/context/PortalContext";
 import type { Organisation, Verifier, Invoice, InvoiceActivity } from "src/context/PortalContext";
 import { useAuth } from "src/context/AuthContext";
+import { SUPPORTED_CURRENCIES, getCurrencySymbol, formatCurrencyAmount } from "src/lib/currencies";
 
 // ── Month names for selectors ──
 const MONTHS = [
@@ -43,6 +44,7 @@ export default function ManageInvoicesPage() {
 
   // ── Create Organisation form ──
   const [newOrgName, setNewOrgName] = useState("");
+  const [newOrgCurrency, setNewOrgCurrency] = useState("USD");
   const [newOrgRate, setNewOrgRate] = useState("");
   const [newOwnerName, setNewOwnerName] = useState("");
   const [newOwnerEmail, setNewOwnerEmail] = useState("");
@@ -71,6 +73,7 @@ export default function ManageInvoicesPage() {
 
   // ── Payment Plan editing ──
   const [editingPlan, setEditingPlan] = useState(false);
+  const [planCurrency, setPlanCurrency] = useState("USD");
   const [planRate, setPlanRate] = useState("");
   const [planCourtRate, setPlanCourtRate] = useState("");
   const [planEmploymentRate, setPlanEmploymentRate] = useState("");
@@ -410,10 +413,10 @@ export default function ManageInvoicesPage() {
     if (!newOwnerPassword.trim() || newOwnerPassword.length < 6) { setOrgError("Owner password must be at least 6 characters"); return; }
     const maxV = parseInt(newMaxVerifiers) || 5;
 
-    await addOrganisation(newOrgName.trim(), rate, newOwnerName.trim(), newOwnerEmail.trim(), newOwnerPassword, maxV);
+    await addOrganisation(newOrgName.trim(), rate, newOwnerName.trim(), newOwnerEmail.trim(), newOwnerPassword, maxV, undefined, true, true, newOrgCurrency);
     setOrgSuccess(`Organisation "${newOrgName.trim()}" created with owner account ${newOwnerEmail.trim()}!`);
     setCreateOrgOpen(false);
-    setNewOrgName(""); setNewOrgRate(""); setNewOwnerName(""); setNewOwnerEmail(""); setNewOwnerPassword(""); setNewMaxVerifiers("5");
+    setNewOrgName(""); setNewOrgCurrency("USD"); setNewOrgRate(""); setNewOwnerName(""); setNewOwnerEmail(""); setNewOwnerPassword(""); setNewMaxVerifiers("5");
     setTimeout(() => setOrgSuccess(""), 4000);
   };
 
@@ -437,6 +440,7 @@ export default function ManageInvoicesPage() {
   };
 
   const openPlanEdit = (org: Organisation) => {
+    setPlanCurrency(org.currency || "USD");
     setPlanRate(String(org.monthlyRate || 0));
     setPlanCourtRate(String(org.courtRecordRate !== undefined ? org.courtRecordRate : org.monthlyRate));
     setPlanEmploymentRate(String(org.employmentRate !== undefined ? org.employmentRate : 5));
@@ -521,6 +525,7 @@ export default function ManageInvoicesPage() {
     });
 
     await updateOrganisation(selectedOrgId, {
+      currency: planCurrency,
       monthlyRate: parseFloat(planRate) || 0,
       courtRecordRate: parseFloat(planCourtRate) || 0,
       employmentRate: parseFloat(planEmploymentRate) || 5,
@@ -798,6 +803,7 @@ export default function ManageInvoicesPage() {
                 setCreateOrgOpen(true);
                 // Reset form fields
                 setNewOrgName("");
+                setNewOrgCurrency("USD");
                 setNewOrgRate("1");
                 setNewMaxVerifiers("5");
                 setNewOwnerName("");
@@ -966,13 +972,13 @@ export default function ManageInvoicesPage() {
                         </span>
                       )}
                       <span className="font-body-sm font-extrabold text-slate-800">
-                        ${org.monthlyRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">ID</span>
+                        {getCurrencySymbol(org.currency)}{org.monthlyRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">ID</span>
                         {org.courtRecordRate !== undefined && org.courtRecordRate !== org.monthlyRate && (
-                          <> · ${org.courtRecordRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">CR</span></>
+                          <> · {getCurrencySymbol(org.currency)}{org.courtRecordRate.toLocaleString("en-US")} <span className="text-[10px] font-medium text-slate-400">CR</span></>
                         )}
                       </span>
                       
-                      <span className="font-body-sm font-bold text-[#00450e] bg-[#eaf0e4]/40 border border-[#bfcab9]/30 px-2 py-0.5 rounded-md text-[10px] ml-auto">Dues: ${totalDues.toFixed(2)}</span>
+                      <span className="font-body-sm font-bold text-[#00450e] bg-[#eaf0e4]/40 border border-[#bfcab9]/30 px-2 py-0.5 rounded-md text-[10px] ml-auto">Dues: {getCurrencySymbol(org.currency)}{totalDues.toFixed(2)}</span>
                     </div>
 
                     {/* Stats row */}
@@ -1066,14 +1072,39 @@ export default function ManageInvoicesPage() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
+                    <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold flex items-center justify-between">
+                      <span>Billing Currency</span>
+                      <span className="text-[9px] font-bold text-[#00450e] bg-[#eaf0e4]/80 px-1.5 py-0.5 rounded border border-[#bfcab9]/40">
+                        {newOrgCurrency} ({getCurrencySymbol(newOrgCurrency)})
+                      </span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={newOrgCurrency}
+                        onChange={(e) => setNewOrgCurrency(e.target.value)}
+                        className="w-full border border-slate-200/80 rounded-xl p-3 font-body-sm text-slate-800 bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-[#016e1c]/10 focus:border-[#016e1c] focus:bg-white transition-all text-xs font-semibold appearance-none cursor-pointer pr-10"
+                      >
+                        {SUPPORTED_CURRENCIES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.code} ({c.symbol}) — {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                        <span className="material-symbols-outlined text-sm">expand_more</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
                     <label className="font-label-caps text-slate-500 uppercase tracking-wider text-[10px] font-bold">
-                      Rate per Verification ($)
+                      Rate per Verification ({getCurrencySymbol(newOrgCurrency)})
                     </label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
-                      placeholder="e.g. 50"
+                      placeholder={newOrgCurrency === "INR" ? "e.g. 500" : "e.g. 50"}
                       value={newOrgRate}
                       onChange={(e) => setNewOrgRate(e.target.value)}
                       required
@@ -1221,6 +1252,9 @@ export default function ManageInvoicesPage() {
                         Active
                       </span>
                     )}
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#eaf0e4]/80 text-[#00450e] border border-[#bfcab9]/40 tracking-wide leading-none">
+                      {selectedOrg.currency || "USD"} ({getCurrencySymbol(selectedOrg.currency)})
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="font-mono text-[10px] text-slate-400 font-bold">{String(selectedOrg.orgNumber || 0).padStart(3, "0")}</span>
@@ -1439,7 +1473,7 @@ export default function ManageInvoicesPage() {
                                     Identity Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.identityEnabled !== false ? `$${selectedOrg.monthlyRate.toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.identityEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${selectedOrg.monthlyRate.toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
 
@@ -1449,7 +1483,7 @@ export default function ManageInvoicesPage() {
                                     Court Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.courtRecordEnabled !== false ? `$${(selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.courtRecordEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.courtRecordRate !== undefined ? selectedOrg.courtRecordRate : selectedOrg.monthlyRate).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
 
@@ -1482,7 +1516,7 @@ export default function ManageInvoicesPage() {
                                         </button>
                                       )}
                                       <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                        {selectedOrg.employmentEnabled !== false ? `$${(selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                        {selectedOrg.employmentEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.employmentRate !== undefined ? selectedOrg.employmentRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                       </span>
                                     </div>
                                   </div>
@@ -1493,7 +1527,7 @@ export default function ManageInvoicesPage() {
                                           <div key={cntry} className="flex items-center justify-between text-slate-600 font-normal">
                                             <span>{cntry}:</span>
                                             <div className="flex items-center gap-0.5">
-                                              <span className="text-[9px] text-slate-400 font-medium">$</span>
+                                              <span className="text-[9px] text-slate-400 font-medium">{getCurrencySymbol(selectedOrg.currency)}</span>
                                               <input
                                                 type="number"
                                                 min="0"
@@ -1547,7 +1581,7 @@ export default function ManageInvoicesPage() {
                                         </button>
                                       )}
                                       <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                        {selectedOrg.educationEnabled !== false ? `$${(selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                        {selectedOrg.educationEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.educationRate !== undefined ? selectedOrg.educationRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                       </span>
                                     </div>
                                   </div>
@@ -1558,7 +1592,7 @@ export default function ManageInvoicesPage() {
                                           <div key={cntry} className="flex items-center justify-between text-slate-600 font-normal">
                                             <span>{cntry}:</span>
                                             <div className="flex items-center gap-0.5">
-                                              <span className="text-[9px] text-slate-400 font-medium">$</span>
+                                              <span className="text-[9px] text-slate-400 font-medium">{getCurrencySymbol(selectedOrg.currency)}</span>
                                               <input
                                                 type="number"
                                                 min="0"
@@ -1589,7 +1623,7 @@ export default function ManageInvoicesPage() {
                                     Interpol Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.interpolEnabled !== false ? `$${(selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : 10).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.interpolEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.interpolRate !== undefined ? selectedOrg.interpolRate : 10).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
@@ -1598,7 +1632,7 @@ export default function ManageInvoicesPage() {
                                     Passport Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.passportEnabled !== false ? `$${(selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.passportEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.passportRate !== undefined ? selectedOrg.passportRate : 8).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
@@ -1607,7 +1641,7 @@ export default function ManageInvoicesPage() {
                                     Digital Address Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.digitalAddressEnabled !== false ? `$${(selectedOrg.digitalAddressRate !== undefined ? selectedOrg.digitalAddressRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.digitalAddressEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.digitalAddressRate !== undefined ? selectedOrg.digitalAddressRate : 5).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
@@ -1616,7 +1650,7 @@ export default function ManageInvoicesPage() {
                                     Red Notice Worldwide
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.rednoticeWorldwideEnabled !== false ? `$${(selectedOrg.rednoticeWorldwideRate !== undefined ? selectedOrg.rednoticeWorldwideRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.rednoticeWorldwideEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.rednoticeWorldwideRate !== undefined ? selectedOrg.rednoticeWorldwideRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
@@ -1625,7 +1659,7 @@ export default function ManageInvoicesPage() {
                                     SAPS Wanted Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.sapsWantedEnabled !== false ? `$${(selectedOrg.sapsWantedRate !== undefined ? selectedOrg.sapsWantedRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.sapsWantedEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.sapsWantedRate !== undefined ? selectedOrg.sapsWantedRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
@@ -1634,7 +1668,7 @@ export default function ManageInvoicesPage() {
                                     SA Court Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.safliiCourtEnabled !== false ? `$${(selectedOrg.safliiCourtRate !== undefined ? selectedOrg.safliiCourtRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.safliiCourtEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.safliiCourtRate !== undefined ? selectedOrg.safliiCourtRate : 15).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
@@ -1643,7 +1677,7 @@ export default function ManageInvoicesPage() {
                                     UK Court Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.ukCourtEnabled !== false ? `$${(selectedOrg.ukCourtRate !== undefined ? selectedOrg.ukCourtRate : 25).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.ukCourtEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.ukCourtRate !== undefined ? selectedOrg.ukCourtRate : 25).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
@@ -1652,7 +1686,7 @@ export default function ManageInvoicesPage() {
                                     Malaysia Court Check
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
-                                    {selectedOrg.malaysiaCourtEnabled !== false ? `$${(selectedOrg.malaysiaCourtRate !== undefined ? selectedOrg.malaysiaCourtRate : 20).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                    {selectedOrg.malaysiaCourtEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.malaysiaCourtRate !== undefined ? selectedOrg.malaysiaCourtRate : 20).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                               </div>
@@ -1684,6 +1718,28 @@ export default function ManageInvoicesPage() {
                             </div>
                             
                             <div className="flex flex-col gap-1 max-h-[480px] overflow-y-auto pr-1.5 scrollbar-thin">
+                              {/* Billing Currency Selector */}
+                              <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50/90 border border-slate-200/80 mb-2 shrink-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="material-symbols-outlined text-[17px] text-[#00450e]">currency_exchange</span>
+                                  <div>
+                                    <span className="text-[11px] font-bold text-slate-800">Billing Currency</span>
+                                    <p className="text-[9px] text-slate-400">All portfolio rates will be billed in this currency</p>
+                                  </div>
+                                </div>
+                                <select
+                                  value={planCurrency}
+                                  onChange={(e) => setPlanCurrency(e.target.value)}
+                                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#016e1c]/20 cursor-pointer shadow-2xs"
+                                >
+                                  {SUPPORTED_CURRENCIES.map((c) => (
+                                    <option key={c.code} value={c.code}>
+                                      {c.code} ({c.symbol}) — {c.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
                                {/* Identity Check Toggle */}
                                <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
                                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
@@ -1712,7 +1768,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -1754,7 +1810,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -1809,7 +1865,7 @@ export default function ManageInvoicesPage() {
                                        />
                                      </div>
                                      <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                       <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                       <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                        <input
                                          type="number"
                                          min="0"
@@ -1824,13 +1880,13 @@ export default function ManageInvoicesPage() {
                                  </div>
                                  {showEmpCountryRatesEdit && planEmploymentEnabled && (
                                    <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/60 my-1 animate-fade-in text-[10px]">
-                                     <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Employment Rates per Country ($ USD)</p>
+                                     <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Employment Rates per Country ({getCurrencySymbol(planCurrency)})</p>
                                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                        {STANDARD_RATE_COUNTRIES.map((cntry) => (
                                          <div key={cntry} className="flex items-center justify-between text-[11px] bg-white p-1.5 rounded-lg border border-slate-200/60 shadow-2xs">
                                            <span className="text-slate-600 font-normal">{cntry}:</span>
                                            <div className="flex items-center gap-0.5">
-                                             <span className="text-[10px] text-slate-400 font-medium">$</span>
+                                             <span className="text-[10px] text-slate-400 font-medium">{getCurrencySymbol(planCurrency)}</span>
                                              <input
                                                type="number"
                                                min="0"
@@ -1888,7 +1944,7 @@ export default function ManageInvoicesPage() {
                                        />
                                      </div>
                                      <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                       <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                       <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                        <input
                                          type="number"
                                          min="0"
@@ -1903,13 +1959,13 @@ export default function ManageInvoicesPage() {
                                  </div>
                                  {showEduCountryRatesEdit && planEducationEnabled && (
                                    <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/60 my-1 animate-fade-in text-[10px]">
-                                     <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Education Rates per Country ($ USD)</p>
+                                     <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Education Rates per Country ({getCurrencySymbol(planCurrency)})</p>
                                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                        {STANDARD_RATE_COUNTRIES.map((cntry) => (
                                          <div key={cntry} className="flex items-center justify-between text-[11px] bg-white p-1.5 rounded-lg border border-slate-200/60 shadow-2xs">
                                            <span className="text-slate-600 font-normal">{cntry}:</span>
                                            <div className="flex items-center gap-0.5">
-                                             <span className="text-[10px] text-slate-400 font-medium">$</span>
+                                             <span className="text-[10px] text-slate-400 font-medium">{getCurrencySymbol(planCurrency)}</span>
                                              <input
                                                type="number"
                                                min="0"
@@ -1954,7 +2010,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -1996,7 +2052,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -2038,7 +2094,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -2080,7 +2136,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -2122,7 +2178,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -2164,7 +2220,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -2206,7 +2262,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -2248,7 +2304,7 @@ export default function ManageInvoicesPage() {
                                      />
                                    </div>
                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
-                                     <span className="text-[11px] font-medium text-slate-400 select-none">$</span>
+                                     <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
                                      <input
                                        type="number"
                                        min="0"
@@ -2943,7 +2999,7 @@ export default function ManageInvoicesPage() {
                               <div className="flex justify-between items-start">
                                 <div>
                                   <p className="font-bold text-slate-800 font-mono">{inv.id}</p>
-                                  <p className="text-xs text-slate-500 mt-1 font-medium">Amount Due: <strong className="text-slate-900 font-black">${inv.amount.toLocaleString("en-US")}</strong></p>
+                                  <p className="text-xs text-slate-500 mt-1 font-medium">Amount Due: <strong className="text-slate-900 font-black">{getCurrencySymbol(inv.currency || selectedOrg?.currency)}{inv.amount.toLocaleString("en-US")}</strong></p>
                                   {inv.paymentProofDate && (
                                     <p className="text-[10px] text-slate-400 font-medium mt-1">Submitted: {new Date(inv.paymentProofDate).toLocaleString()}</p>
                                   )}
@@ -3073,7 +3129,7 @@ export default function ManageInvoicesPage() {
                                 <td className="py-3.5 px-4 text-slate-700 font-medium">{inv.month ? `${inv.month} ${inv.year}` : "—"}</td>
                                 <td className="py-3.5 px-4 text-slate-500 font-medium">{inv.date}</td>
                                 <td className="py-3.5 px-4 text-slate-500 font-medium">{inv.dueDate}</td>
-                                <td className="py-3.5 px-4 font-black text-slate-900">${inv.amount.toLocaleString("en-US")}</td>
+                                <td className="py-3.5 px-4 font-black text-slate-900">{getCurrencySymbol(inv.currency || selectedOrg?.currency)}{inv.amount.toLocaleString("en-US")}</td>
                                 <td className="py-3.5 px-4">{statusBadge(inv.status)}</td>
                                 <td className="py-3.5 px-4">
                                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${
@@ -3635,7 +3691,7 @@ export default function ManageInvoicesPage() {
                     </div>
                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Amount Due</span>
-                      <span className="text-xs font-black text-slate-900 mt-1">${detailInvoice.amount.toLocaleString("en-US")}</span>
+                      <span className="text-xs font-black text-slate-900 mt-1">{getCurrencySymbol(detailInvoice.currency || selectedOrg?.currency)}{detailInvoice.amount.toLocaleString("en-US")}</span>
                     </div>
                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">Status</span>
@@ -3713,7 +3769,7 @@ export default function ManageInvoicesPage() {
                                   <td className="py-2.5 px-3 text-xs text-slate-500 font-mono">{v.email}</td>
                                   <td className="py-2.5 px-3 text-xs text-slate-600 font-medium">{completedDateStr}</td>
                                   <td className="py-2.5 px-3 text-xs font-black text-slate-900 text-right">
-                                    ${(rowRate || 0).toLocaleString("en-US")}
+                                    {getCurrencySymbol(detailInvoice.currency || selectedOrg?.currency)}{(rowRate || 0).toLocaleString("en-US")}
                                   </td>
                                 </tr>
                               );

@@ -269,6 +269,7 @@ export interface Invoice {
   date: string;
   dueDate: string;
   amount: number;
+  currency?: string;
   status: "Paid" | "Unpaid" | "Overdue" | "Pending";
   month?: string;
   year?: number;
@@ -302,6 +303,7 @@ export interface Organisation {
   orgNumber?: number;
   paymentPlan: "monthly" | "pay_as_you_go";
   monthlyRate: number;
+  currency?: string;
   billingDay: number;
   bankName?: string;
   accountNumber?: string;
@@ -401,7 +403,7 @@ interface PortalContextType {
   addInvoice: (orgName: string, amount: number, dueDate: string) => Promise<void>;
   assignVerifier: (verificationId: string, verifierName: string | null) => Promise<void>;
   updateVerificationStatus: (verificationId: string, status: "Completed" | "Processing" | "Needs Attention", notes?: string) => Promise<void>;
-  addOrganisation: (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number, courtRecordRate?: number, identityEnabled?: boolean, courtRecordEnabled?: boolean) => Promise<void>;
+  addOrganisation: (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number, courtRecordRate?: number, identityEnabled?: boolean, courtRecordEnabled?: boolean, currency?: string) => Promise<void>;
   updateOrganisation: (id: string, updates: Partial<Organisation>) => Promise<void>;
   updateOrganisationServiceRates: (orgId: string, updates: Partial<Organisation>) => Promise<void>;
   deleteOrganisation: (id: string) => Promise<void>;
@@ -907,7 +909,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // ── Organisation CRUD ──
 
-  const addOrganisation = async (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number, courtRecordRate?: number, identityEnabled?: boolean, courtRecordEnabled?: boolean) => {
+  const addOrganisation = async (name: string, monthlyRate: number, ownerName?: string, ownerEmail?: string, ownerPassword?: string, maxVerifiers?: number, courtRecordRate?: number, identityEnabled?: boolean, courtRecordEnabled?: boolean, currency?: string) => {
     const newId = `ORG-${Math.floor(1000 + Math.random() * 9000)}`;
     // Compute next sequential org number
     const maxExisting = organisations.reduce((max, o) => Math.max(max, o.orgNumber || 0), 0);
@@ -918,6 +920,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       orgNumber: nextOrgNumber,
       paymentPlan: "monthly",
       monthlyRate,
+      currency: currency || "USD",
       courtRecordRate: courtRecordRate ?? monthlyRate,
       identityEnabled: identityEnabled ?? true,
       courtRecordEnabled: courtRecordEnabled ?? true,
@@ -1114,6 +1117,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       date: generatedDate,
       dueDate,
       amount,
+      currency: org.currency || "USD",
       status: "Unpaid",
       month,
       year,

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { usePortal, ClientSuggestion, Organisation } from "src/context/PortalContext";
+import { getCurrencySymbol } from "src/lib/currencies";
 
 export default function AdminSuggestionsPage() {
   const { suggestions, updateSuggestion, organisations, updateOrganisationRates } = usePortal();
@@ -424,7 +425,7 @@ export default function AdminSuggestionsPage() {
           <div className="bg-white border border-[#bfcab9]/30 rounded-2xl p-5 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <h3 className="font-bold text-lg text-slate-900">Registered Organisation Rates &amp; Service Toggles</h3>
-              <p className="text-xs text-slate-500 font-medium">Configure individual per-check rates ($) and enable/disable services for each client organisation.</p>
+              <p className="text-xs text-slate-500 font-medium">Configure individual per-check rates and enable/disable services for each client organisation.</p>
             </div>
           </div>
 
@@ -438,7 +439,7 @@ export default function AdminSuggestionsPage() {
                       <span className="text-[10px] text-slate-400 font-mono">ID: {org.id}</span>
                     </div>
                     <span className="bg-[#eaf0e4] text-[#00450e] text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      {org.paymentPlan || "Enterprise"}
+                      {org.currency || "USD"} ({getCurrencySymbol(org.currency)}) · {org.paymentPlan || "Enterprise"}
                     </span>
                   </div>
 
@@ -446,51 +447,51 @@ export default function AdminSuggestionsPage() {
                   <div className="space-y-2 text-xs font-semibold text-slate-700 my-4">
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">badge</span> Identity Verification</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.identityRate ?? org.monthlyRate ?? 10).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.identityRate ?? org.monthlyRate ?? 10).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">gavel</span> Court Record Search</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.courtRecordRate ?? org.monthlyRate ?? 15).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.courtRecordRate ?? org.monthlyRate ?? 15).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">work</span> Employment Verification</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.employmentRate ?? 5).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.employmentRate ?? 5).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">school</span> Education Verification</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.educationRate ?? 5).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.educationRate ?? 5).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">travel_explore</span> Interpol Clearance</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.interpolRate ?? 10).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.interpolRate ?? 10).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">public</span> Red Notice Worldwide</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.rednoticeWorldwideRate ?? 15).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.rednoticeWorldwideRate ?? 15).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">assignment_ind</span> Passport Check</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.passportRate ?? 8).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.passportRate ?? 8).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">location_on</span> Digital Address</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.digitalAddressRate ?? 5).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.digitalAddressRate ?? 5).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">local_police</span> SAPS Wanted</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.sapsWantedRate ?? 15).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.sapsWantedRate ?? 15).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">account_balance</span> SA Court Check</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.safliiCourtRate ?? 15).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.safliiCourtRate ?? 15).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">gavel</span> UK Court Check</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.ukCourtRate ?? 25).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.ukCourtRate ?? 25).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-emerald-600">balance</span> Malaysia Court Check</span>
-                      <span className="font-extrabold text-[#016e1c]">${(org.malaysiaCourtRate ?? 20).toFixed(2)}</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.malaysiaCourtRate ?? 20).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -624,7 +625,7 @@ export default function AdminSuggestionsPage() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
               <div>
                 <h3 className="font-extrabold text-lg text-slate-900">Configure Service Rates &amp; Access</h3>
-                <p className="text-xs text-slate-500 font-medium">Organisation: <strong>{editingOrg.name}</strong></p>
+                <p className="text-xs text-slate-500 font-medium">Organisation: <strong>{editingOrg.name}</strong> ({editingOrg.currency || "USD"})</p>
               </div>
               <button onClick={() => setEditingOrg(null)} className="p-1 rounded-full hover:bg-slate-100 text-slate-400 cursor-pointer">
                 <span className="material-symbols-outlined">close</span>
@@ -651,7 +652,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -680,7 +681,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -709,7 +710,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -738,7 +739,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -767,7 +768,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -796,7 +797,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -825,7 +826,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -854,7 +855,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -883,7 +884,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -912,7 +913,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -941,7 +942,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
@@ -970,7 +971,7 @@ export default function AdminSuggestionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold">$</span>
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
                     <input
                       type="number"
                       step="0.5"
