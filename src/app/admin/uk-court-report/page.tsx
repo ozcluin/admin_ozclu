@@ -226,7 +226,7 @@ function UkCourtReportContent() {
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
               <rect x="6" y="14" width="12" height="8"></rect>
             </svg>
-            <span>Print Certificate</span>
+            <span>Print Report</span>
           </button>
           <button
             onClick={() => window.close()}
@@ -342,30 +342,6 @@ function UkCourtReportContent() {
               </div>
             </div>
           </div>
-
-          {/* Certificate Display if CLEAN */}
-          {!hasRecords && (
-            <div className="mb-8 p-6 sm:p-8 border-2 border-indigo-200 bg-gradient-to-b from-indigo-50/30 to-white rounded-2xl print-avoid-break relative overflow-hidden text-center shadow-xs">
-              <h3 className="text-lg font-extrabold uppercase tracking-wide text-slate-900 mb-1">
-                {verification.name || "CANDIDATE NAME"}
-              </h3>
-
-              <p className="text-xs text-slate-600 font-semibold mb-4">
-                with Date of Birth <span className="font-bold text-slate-800">{verification.candidateDob || "Not Provided"}</span>.
-              </p>
-
-              <div className="my-6 max-w-[620px] mx-auto">
-                <p className="text-xs text-slate-700 italic font-medium leading-relaxed bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs">
-                  &ldquo;This verification certifies that an automated query was performed across the official Courts and Tribunals Judiciary of England & Wales database (judiciary.uk), spanning the High Court, Court of Appeal, Crown Court, King&apos;s Bench, Commercial Court, Tribunals, and associated divisions. No court judgments, sentencing remarks, committals, or court orders matching the candidate name were identified.&rdquo;
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-indigo-100 pt-4 text-[10px] font-extrabold uppercase tracking-wider">
-                <div className="text-indigo-900">STATUS: <span className="text-indigo-900 font-extrabold">CLEAN / NO RECORDS FOUND</span></div>
-                <div className="text-slate-700">ISSUED BY: <span className="text-[#1e1b4b] font-extrabold">OZCLU VERIFY</span></div>
-              </div>
-            </div>
-          )}
 
           {hasRecords && (
             /* Court Records List */
