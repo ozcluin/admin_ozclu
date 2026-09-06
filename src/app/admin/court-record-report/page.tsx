@@ -149,7 +149,7 @@ function AdminCourtRecordReportContent() {
           }
           .print-page-block {
             border: 5px double #1B365D !important;
-            padding: 22px 26px !important;
+            padding: 16px 18px !important;
             margin-bottom: 0 !important;
             box-sizing: border-box !important;
             break-inside: avoid !important;
@@ -212,7 +212,7 @@ function AdminCourtRecordReportContent() {
       `}</style>
 
       {/* Print Control Toolbar */}
-      <div className="no-print print:hidden w-full max-w-[800px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
+      <div className="no-print print:hidden w-full max-w-[700px] bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-800">Court Record Report (Admin View)</span>
           <span className="text-xs text-slate-500">Ready to save or export as official A4 PDF document.</span>
@@ -235,38 +235,53 @@ function AdminCourtRecordReportContent() {
       </div>
 
       {/* Main Report Container */}
-      <div className="print-card w-full max-w-[800px] bg-white border-[6px] border-double border-[#1B365D] p-8 sm:p-10 shadow-lg relative my-0 mx-auto print:shadow-none print:p-8 print:max-w-full print:w-full">
+      <div className="print-card w-full max-w-[700px] bg-white border-[6px] border-double border-[#1B365D] p-6 sm:p-8 shadow-lg relative my-0 mx-auto print:shadow-none print:p-6 print:max-w-full print:w-full">
 
         {/* Page 1 Content Block */}
         <div className="print-page-block">
-          {/* Header */}
-          <div className="grid grid-cols-3 items-center gap-4 mb-8">
-            <div className="flex justify-start">
-              <div className="flex items-center gap-2">
-                {settings && settings.logo ? (
-                  <div className="w-28 h-14 sm:w-36 sm:h-16 flex items-center justify-start shrink-0">
-                    <img src={settings.logo} alt="Company Logo" className="object-contain max-h-full max-w-full" />
-                  </div>
-                ) : (
-                  <div className="w-24 h-12 sm:w-28 sm:h-14 flex items-center justify-start shrink-0">
-                    <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="object-contain max-h-full" />
-                  </div>
-                )}
+          {/* Header Top Row: Left Ozclu logo (smaller), Middle Court logo (smaller), Right Report Number */}
+          <div className="flex items-center justify-between gap-4 mb-6 border-b-2 border-slate-100 pb-5">
+            {/* Top Left: Ozclu / Company Logo (smaller) */}
+            <div className="flex justify-start items-center shrink-0 w-1/3">
+              {settings && settings.logo ? (
+                <div className="h-9 sm:h-11 max-w-[180px] flex items-center justify-start">
+                  <img src={settings.logo} alt="Company Logo" className="object-contain max-h-full max-w-full" />
+                </div>
+              ) : (
+                <div className="h-9 sm:h-11 flex items-center justify-start">
+                  <img src="/ozclu-logo-long-default.svg" alt="Ozclu Logo" className="h-8 sm:h-10 w-auto object-contain" />
+                </div>
+              )}
+            </div>
+
+            {/* Top Middle: Court Logo (20% larger) */}
+            <div className="flex justify-center items-center w-1/3 text-center">
+              <img
+                src="/ecourts-logo.png"
+                alt="eCourts Services"
+                className="h-10 sm:h-12 w-auto max-w-[190px] object-contain drop-shadow-xs"
+              />
+            </div>
+
+            {/* Top Right: Report Number & Date */}
+            <div className="flex justify-end items-center shrink-0 w-1/3">
+              <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">
+                <div>Report #: <span className="font-mono text-slate-900">{reportNo}</span></div>
+                <div>Date: <span className="text-slate-900">{formatDate(verification.courtRecordCompletedAt || verification.date)}</span></div>
               </div>
             </div>
-            <h1 className="text-center font-sans text-[#1B365D] text-xl sm:text-2xl font-extrabold tracking-widest uppercase mt-2">
-              COURT RECORD<br />REPORT
+          </div>
+
+          {/* Report Title */}
+          <div className="flex flex-col items-center text-center mb-6">
+            <h1 className="font-sans text-[#1B365D] text-xl sm:text-2xl font-black tracking-widest uppercase leading-tight">
+              COURT CHECK REPORT
             </h1>
-            <div className="text-right text-[11px] sm:text-xs font-bold text-slate-800 space-y-0.5">
-              <div>Report #: <span className="font-mono text-slate-900">{reportNo}</span></div>
-              <div>Date: <span className="text-slate-900">{formatDate(verification.courtRecordCompletedAt || verification.date)}</span></div>
-            </div>
           </div>
 
           {/* Metadata Card */}
           <div className="border border-slate-200 rounded-xl p-5 bg-slate-50 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-700 mb-6">
             <div className="space-y-1.5">
-              <div>Report Number: <span className="font-mono font-bold text-slate-900">{reportNo}</span></div>
               <div>Request Created: <span className="text-slate-900 font-mono">{verification.date}</span></div>
               <div>Search Status: <span className={`font-bold uppercase ${isSearchComplete ? "text-emerald-600" : "text-amber-500"}`}>
                 {isSearchComplete ? "Completed" : "In Progress"}
@@ -275,32 +290,41 @@ function AdminCourtRecordReportContent() {
             </div>
             <div className="flex items-center justify-between sm:justify-end gap-4 text-left sm:text-right">
               <div className="space-y-1.5">
-                <div>Generated At: <span className="text-slate-900 font-mono">{generatedAtDate}</span></div>
+                <div>Generated At: <span className="text-slate-900 font-mono">{generatedAtDate} (IST)</span></div>
                 <div>Verified By: <span className="text-slate-900">eCourts India (Automated)</span></div>
               </div>
             </div>
           </div>
 
-          {/* Candidate & Company Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-            <div>
-              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2">Candidate Details</h3>
-              <div className="space-y-1.5 text-xs">
+          {/* Details of the Report */}
+          <div className="mb-6 border-b border-slate-100 pb-5">
+            <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2.5">
+              Details of the Report
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 text-[11px]">
+              <div className="space-y-1">
                 <div><span className="text-slate-500 font-semibold">Full Name:</span> <span className="font-bold text-slate-800">{verification.name || "Not Given"}</span></div>
-                <div><span className="text-slate-500 font-semibold">Gender:</span> <span className="font-semibold text-slate-800">{verification.gender || "Not Given"}</span></div>
+                {verification.gender && verification.gender !== "Not Given" && verification.gender !== "Not Provided" && verification.gender !== "Not required" && (
+                  <div><span className="text-slate-500 font-semibold">Gender:</span> <span className="font-semibold text-slate-800">{verification.gender}</span></div>
+                )}
                 <div><span className="text-slate-500 font-semibold">Date of Birth:</span> <span className="font-semibold text-slate-800">{verification.candidateDob || "Not Given"}</span></div>
-                <div><span className="text-slate-500 font-semibold">ID Type:</span> <span className="font-semibold text-slate-800">{verification.idProofType || "Not Given"}</span></div>
-                <div><span className="text-slate-500 font-semibold">ID Number:</span> <span className="font-semibold text-slate-800">{verification.idProofNumber || "Not Given"}</span></div>
                 <div><span className="text-slate-500 font-semibold">Father&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateFatherName || "Not Given"}</span></div>
-                <div><span className="text-slate-500 font-semibold">Mother&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateMotherName || "Not Given"}</span></div>
-                <div><span className="text-slate-500 font-semibold">Husband&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateHusbandName || "Not Given"}</span></div>
+                {verification.candidateMotherName && verification.candidateMotherName !== "Not Given" && verification.candidateMotherName !== "Not Provided" && (
+                  <div><span className="text-slate-500 font-semibold">Mother&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateMotherName}</span></div>
+                )}
+                {verification.candidateHusbandName && verification.candidateHusbandName !== "Not Given" && verification.candidateHusbandName !== "Not Provided" && (
+                  <div><span className="text-slate-500 font-semibold">Husband&apos;s Name:</span> <span className="font-semibold text-slate-800">{verification.candidateHusbandName}</span></div>
+                )}
               </div>
-            </div>
-            <div>
-              <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#1B365D] border-b border-slate-200 pb-1 mb-2">Company Details</h3>
-              <div className="space-y-1.5 text-xs">
+              <div className="space-y-1">
                 <div><span className="text-slate-500 font-semibold">Requesting Org:</span> <span className="font-bold text-slate-800">{verification.requestingOrgName || verification.orgName}</span></div>
                 <div><span className="text-slate-500 font-semibold">Client Org:</span> <span className="font-semibold text-slate-800">{verification.orgName}</span></div>
+                {verification.idProofType && verification.idProofType !== "Not Given" && verification.idProofType !== "Not Provided" && (
+                  <div><span className="text-slate-500 font-semibold">ID Type:</span> <span className="font-semibold text-slate-800">{verification.idProofType}</span></div>
+                )}
+                {verification.idProofNumber && verification.idProofNumber !== "Not Given" && verification.idProofNumber !== "Not Provided" && (
+                  <div><span className="text-slate-500 font-semibold">ID Number:</span> <span className="font-semibold text-slate-800">{verification.idProofNumber}</span></div>
+                )}
               </div>
             </div>
           </div>
@@ -350,7 +374,7 @@ function AdminCourtRecordReportContent() {
                 </p>
               </div>
               <div className="flex-shrink-0 flex flex-col items-center gap-0.5 bg-white border border-slate-200/80 p-2 rounded-lg shadow-sm">
-                <img src="/ecourts-logo.png" alt="eCourts India" className="w-12 h-12 object-contain" />
+                <img src="/ecourts-logo.png" alt="eCourts India" className="w-14 h-14 object-contain" />
                 <span className="text-[8px] font-extrabold uppercase text-[#1B365D] tracking-wider">Verified</span>
               </div>
             </div>

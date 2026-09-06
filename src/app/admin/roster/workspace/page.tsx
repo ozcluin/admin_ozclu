@@ -172,6 +172,10 @@ function WorkspaceContent() {
       ? `/admin/uk-court-report?id=${displayVerification.id}`
       : (displayVerification.type as string) === "malaysia_court"
       ? `/admin/malaysia-court-report?id=${displayVerification.id}`
+      : (displayVerification.type as string) === "singapore_court"
+      ? `/admin/singapore-court-report?id=${displayVerification.id}`
+      : (displayVerification.type as string) === "philippines_court"
+      ? `/admin/philippines-court-report?id=${displayVerification.id}`
       : (displayVerification.type as string) === "passport"
       ? `/admin/passport-report?id=${displayVerification.id}`
       : (displayVerification.type as string) === "digital_address"
@@ -373,6 +377,10 @@ function WorkspaceContent() {
                 ? `/admin/uk-court-report?id=${displayVerification.id}`
                 : (displayVerification.type as string) === "malaysia_court"
                 ? `/admin/malaysia-court-report?id=${displayVerification.id}`
+                : (displayVerification.type as string) === "singapore_court"
+                ? `/admin/singapore-court-report?id=${displayVerification.id}`
+                : (displayVerification.type as string) === "philippines_court"
+                ? `/admin/philippines-court-report?id=${displayVerification.id}`
                 : (displayVerification.type as string) === "passport"
                 ? `/admin/passport-report?id=${displayVerification.id}`
                 : (displayVerification.type as string) === "digital_address"

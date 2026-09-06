@@ -91,6 +91,8 @@ export default function ManageInvoicesPage() {
   const [planSapsWantedRate, setPlanSapsWantedRate] = useState("");
   const [planUkCourtRate, setPlanUkCourtRate] = useState("");
   const [planMalaysiaCourtRate, setPlanMalaysiaCourtRate] = useState("");
+  const [planSingaporeCourtRate, setPlanSingaporeCourtRate] = useState("");
+  const [planPhilippinesCourtRate, setPlanPhilippinesCourtRate] = useState("");
 
   const [planEmploymentRates, setPlanEmploymentRates] = useState<Record<string, string>>({});
   const [planEducationRates, setPlanEducationRates] = useState<Record<string, string>>({});
@@ -115,6 +117,8 @@ export default function ManageInvoicesPage() {
   const [planSapsWantedEnabled, setPlanSapsWantedEnabled] = useState(true);
   const [planUkCourtEnabled, setPlanUkCourtEnabled] = useState(true);
   const [planMalaysiaCourtEnabled, setPlanMalaysiaCourtEnabled] = useState(true);
+  const [planSingaporeCourtEnabled, setPlanSingaporeCourtEnabled] = useState(true);
+  const [planPhilippinesCourtEnabled, setPlanPhilippinesCourtEnabled] = useState(true);
 
   const [planSaving, setPlanSaving] = useState(false);
 
@@ -462,6 +466,8 @@ export default function ManageInvoicesPage() {
     setPlanSapsWantedRate(String(org.sapsWantedRate !== undefined ? org.sapsWantedRate : 15));
     setPlanUkCourtRate(String(org.ukCourtRate !== undefined ? org.ukCourtRate : 25));
     setPlanMalaysiaCourtRate(String(org.malaysiaCourtRate !== undefined ? org.malaysiaCourtRate : 20));
+    setPlanSingaporeCourtRate(String(org.singaporeCourtRate !== undefined ? org.singaporeCourtRate : 20));
+    setPlanPhilippinesCourtRate(String((org as any).philippinesCourtRate !== undefined ? (org as any).philippinesCourtRate : 20));
 
     const defaultEmpRates: Record<string, string> = {
       Singapore: String(org.employmentRates?.["Singapore"] ?? 15),
@@ -499,6 +505,8 @@ export default function ManageInvoicesPage() {
       saps_wanted: org.serviceTats?.saps_wanted ?? "24 Hours",
       uk_court: org.serviceTats?.uk_court ?? "24 Hours",
       malaysia_court: org.serviceTats?.malaysia_court ?? "24 Hours",
+      singapore_court: org.serviceTats?.singapore_court ?? "24 Hours",
+      philippines_court: org.serviceTats?.philippines_court ?? "24 Hours",
     };
     setPlanServiceTats(defaultTats);
 
@@ -514,6 +522,8 @@ export default function ManageInvoicesPage() {
     setPlanSapsWantedEnabled(org.sapsWantedEnabled !== false);
     setPlanUkCourtEnabled(org.ukCourtEnabled !== false);
     setPlanMalaysiaCourtEnabled(org.malaysiaCourtEnabled !== false);
+    setPlanSingaporeCourtEnabled(org.singaporeCourtEnabled !== false);
+    setPlanPhilippinesCourtEnabled((org as any).philippinesCourtEnabled !== false);
     setEditingPlan(true);
   };
 
@@ -547,6 +557,8 @@ export default function ManageInvoicesPage() {
       sapsWantedRate: parseFloat(planSapsWantedRate) || 15,
       ukCourtRate: parseFloat(planUkCourtRate) || 25,
       malaysiaCourtRate: parseFloat(planMalaysiaCourtRate) || 20,
+      singaporeCourtRate: parseFloat(planSingaporeCourtRate) || 20,
+      philippinesCourtRate: parseFloat(planPhilippinesCourtRate) || 20,
 
       employmentRates: parsedEmpRates,
       educationRates: parsedEduRates,
@@ -564,6 +576,8 @@ export default function ManageInvoicesPage() {
       sapsWantedEnabled: planSapsWantedEnabled,
       ukCourtEnabled: planUkCourtEnabled,
       malaysiaCourtEnabled: planMalaysiaCourtEnabled,
+      singaporeCourtEnabled: planSingaporeCourtEnabled,
+      philippinesCourtEnabled: planPhilippinesCourtEnabled,
     });
     setEditingPlan(false);
     setPlanSaving(false);
@@ -912,6 +926,10 @@ export default function ManageInvoicesPage() {
                       rate = org.ukCourtRate !== undefined ? org.ukCourtRate : 25;
                     } else if (verType === "malaysia_court") {
                       rate = org.malaysiaCourtRate !== undefined ? org.malaysiaCourtRate : 20;
+                    } else if (verType === "singapore_court") {
+                      rate = org.singaporeCourtRate !== undefined ? org.singaporeCourtRate : 20;
+                    } else if (verType === "philippines_court") {
+                      rate = (org as any).philippinesCourtRate !== undefined ? (org as any).philippinesCourtRate : 20;
                     } else if (verType === "employment") {
                       const c = v.country || (v as any).employmentData?.country || (v as any).addresses?.[0]?.country || "";
                       if (c && org.employmentRates && org.employmentRates[c] !== undefined) {
@@ -1415,6 +1433,10 @@ export default function ManageInvoicesPage() {
                       rate = selectedOrg.ukCourtRate !== undefined ? selectedOrg.ukCourtRate : 25;
                     } else if (verType === "malaysia_court") {
                       rate = selectedOrg.malaysiaCourtRate !== undefined ? selectedOrg.malaysiaCourtRate : 20;
+                    } else if (verType === "singapore_court") {
+                      rate = selectedOrg.singaporeCourtRate !== undefined ? selectedOrg.singaporeCourtRate : 20;
+                    } else if (verType === "philippines_court") {
+                      rate = (selectedOrg as any).philippinesCourtRate !== undefined ? (selectedOrg as any).philippinesCourtRate : 20;
                     } else if (verType === "employment") {
                       const c = v.country || (v as any).employmentData?.country || (v as any).addresses?.[0]?.country || "";
                       if (c && selectedOrg.employmentRates && selectedOrg.employmentRates[c] !== undefined) {
@@ -1696,6 +1718,24 @@ export default function ManageInvoicesPage() {
                                   </span>
                                   <span className="font-semibold text-slate-900 font-mono text-[11px]">
                                     {selectedOrg.malaysiaCourtEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.malaysiaCourtRate !== undefined ? selectedOrg.malaysiaCourtRate : 20).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedOrg.singaporeCourtEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Singapore Court Check
+                                  </span>
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {selectedOrg.singaporeCourtEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${(selectedOrg.singaporeCourtRate !== undefined ? selectedOrg.singaporeCourtRate : 20).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-slate-100/50 transition-colors text-xs">
+                                  <span className="font-normal text-slate-600 flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${(selectedOrg as any).philippinesCourtEnabled !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    Philippines Court Check
+                                  </span>
+                                  <span className="font-semibold text-slate-900 font-mono text-[11px]">
+                                    {(selectedOrg as any).philippinesCourtEnabled !== false ? `${getCurrencySymbol(selectedOrg.currency)}${((selectedOrg as any).philippinesCourtRate !== undefined ? (selectedOrg as any).philippinesCourtRate : 20).toLocaleString("en-US")}` : <span className="text-slate-400 font-normal">Disabled</span>}
                                   </span>
                                 </div>
                               </div>
@@ -2326,6 +2366,90 @@ export default function ManageInvoicesPage() {
                                    </div>
                                  </div>
                                </div>
+
+                                {/* Singapore Court Check Toggle */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
+                                    <input
+                                      type="checkbox"
+                                      checked={planSingaporeCourtEnabled}
+                                      onChange={(e) => setPlanSingaporeCourtEnabled(e.target.checked)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                    <span className={`text-[12px] font-medium tracking-tight transition-colors ${planSingaporeCourtEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                      Singapore Court Check
+                                    </span>
+                                  </label>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                      <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                      <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
+                                      <input
+                                        type="text"
+                                        placeholder="e.g. 24 Hours"
+                                        value={planServiceTats["singapore_court"] ?? "24 Hours"}
+                                        onChange={(e) => setPlanServiceTats(prev => ({ ...prev, singapore_court: e.target.value }))}
+                                        disabled={!planSingaporeCourtEnabled}
+                                        className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                      <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={planSingaporeCourtRate}
+                                        onChange={(e) => setPlanSingaporeCourtRate(e.target.value)}
+                                        disabled={!planSingaporeCourtEnabled}
+                                        className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Philippines Court Check Toggle */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 px-2 rounded-xl transition-all duration-150 hover:bg-slate-50/80 border border-transparent hover:border-slate-100 gap-2">
+                                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 gap-2.5 min-w-[190px]">
+                                    <input
+                                      type="checkbox"
+                                      checked={planPhilippinesCourtEnabled}
+                                      onChange={(e) => setPlanPhilippinesCourtEnabled(e.target.checked)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:shadow-2xs after:transition-all peer-checked:bg-emerald-600 transition-colors"></div>
+                                    <span className={`text-[12px] font-medium tracking-tight transition-colors ${planPhilippinesCourtEnabled ? "text-slate-800" : "text-slate-400"}`}>
+                                      Philippines Court Check
+                                    </span>
+                                  </label>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                      <span className="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
+                                      <span className="text-[10px] text-slate-400 font-medium select-none">TAT:</span>
+                                      <input
+                                        type="text"
+                                        placeholder="e.g. 24 Hours"
+                                        value={planServiceTats["philippines_court"] ?? "24 Hours"}
+                                        onChange={(e) => setPlanServiceTats(prev => ({ ...prev, philippines_court: e.target.value }))}
+                                        disabled={!planPhilippinesCourtEnabled}
+                                        className="w-32 bg-transparent text-[11px] font-normal text-slate-700 placeholder:text-slate-300 focus:outline-none disabled:opacity-40"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg px-2 py-1 shadow-2xs hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                                      <span className="text-[11px] font-medium text-slate-400 select-none">{getCurrencySymbol(planCurrency)}</span>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={planPhilippinesCourtRate}
+                                        onChange={(e) => setPlanPhilippinesCourtRate(e.target.value)}
+                                        disabled={!planPhilippinesCourtEnabled}
+                                        className="w-14 bg-transparent text-[12px] font-semibold text-slate-900 text-right focus:outline-none disabled:opacity-40"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
                             </div>
 
                             <div className="flex items-center justify-end gap-2.5 mt-3 pt-3 border-t border-slate-100 shrink-0">
@@ -4005,6 +4129,10 @@ export default function ManageInvoicesPage() {
                                 ? (selectedOrg.ukCourtRate !== undefined ? selectedOrg.ukCourtRate : 25)
                                 : verType === "malaysia_court"
                                 ? (selectedOrg.malaysiaCourtRate !== undefined ? selectedOrg.malaysiaCourtRate : 20)
+                                 : verType === "singapore_court"
+                                 ? (selectedOrg.singaporeCourtRate !== undefined ? selectedOrg.singaporeCourtRate : 20)
+                                  : verType === "philippines_court"
+                                  ? ((selectedOrg as any).philippinesCourtRate !== undefined ? (selectedOrg as any).philippinesCourtRate : 20)
                                 : selectedOrg.monthlyRate;
                               return (
                                 <tr key={v.id}>

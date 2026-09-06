@@ -79,6 +79,10 @@ function BillableSummaryContent() {
       ? (organisation?.ukCourtRate !== undefined ? organisation.ukCourtRate : 25)
       : verType === "malaysia_court"
       ? (organisation?.malaysiaCourtRate !== undefined ? organisation.malaysiaCourtRate : 20)
+      : verType === "singapore_court"
+      ? (organisation?.singaporeCourtRate !== undefined ? organisation.singaporeCourtRate : 20)
+      : verType === "philippines_court"
+      ? ((organisation as any)?.philippinesCourtRate !== undefined ? (organisation as any).philippinesCourtRate : 20)
       : verType === "interpol"
       ? (organisation?.interpolRate !== undefined ? organisation.interpolRate : 10)
       : verType === "employment"
@@ -308,6 +312,10 @@ function BillableSummaryContent() {
                     ? "UK Court Check"
                     : verType === "malaysia_court"
                     ? "Malaysia Court Check"
+                    : verType === "singapore_court"
+                    ? "Singapore Court Check"
+                    : verType === "philippines_court"
+                    ? "Philippines Court Check"
                     : verType === "employment"
                     ? "Employment Check"
                     : verType === "education"
@@ -329,6 +337,10 @@ function BillableSummaryContent() {
                     ? (organisation?.ukCourtRate !== undefined ? organisation.ukCourtRate : 25)
                     : verType === "malaysia_court"
                     ? (organisation?.malaysiaCourtRate !== undefined ? organisation.malaysiaCourtRate : 20)
+                    : verType === "singapore_court"
+                    ? (organisation?.singaporeCourtRate !== undefined ? organisation.singaporeCourtRate : 20)
+                    : verType === "philippines_court"
+                    ? ((organisation as any)?.philippinesCourtRate !== undefined ? (organisation as any).philippinesCourtRate : 20)
                     : verType === "interpol"
                     ? (organisation?.interpolRate !== undefined ? organisation.interpolRate : 10)
                     : verType === "employment"

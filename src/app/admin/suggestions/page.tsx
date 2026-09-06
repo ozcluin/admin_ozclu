@@ -38,6 +38,8 @@ export default function AdminSuggestionsPage() {
   const [rateSafliiCourt, setRateSafliiCourt] = useState<number>(15);
   const [rateUkCourt, setRateUkCourt] = useState<number>(25);
   const [rateMalaysiaCourt, setRateMalaysiaCourt] = useState<number>(20);
+  const [rateSingaporeCourt, setRateSingaporeCourt] = useState<number>(20);
+  const [ratePhilippinesCourt, setRatePhilippinesCourt] = useState<number>(20);
 
   const [enableIdentity, setEnableIdentity] = useState<boolean>(true);
   const [enableCourt, setEnableCourt] = useState<boolean>(true);
@@ -51,6 +53,8 @@ export default function AdminSuggestionsPage() {
   const [enableSafliiCourt, setEnableSafliiCourt] = useState<boolean>(true);
   const [enableUkCourt, setEnableUkCourt] = useState<boolean>(true);
   const [enableMalaysiaCourt, setEnableMalaysiaCourt] = useState<boolean>(true);
+  const [enableSingaporeCourt, setEnableSingaporeCourt] = useState<boolean>(true);
+  const [enablePhilippinesCourt, setEnablePhilippinesCourt] = useState<boolean>(true);
 
   const [savingOrgRates, setSavingOrgRates] = useState(false);
   const [orgSuccess, setOrgSuccess] = useState("");
@@ -149,6 +153,8 @@ export default function AdminSuggestionsPage() {
     setRateSafliiCourt(org.safliiCourtRate ?? 15);
     setRateUkCourt(org.ukCourtRate ?? 25);
     setRateMalaysiaCourt(org.malaysiaCourtRate ?? 20);
+    setRateSingaporeCourt(org.singaporeCourtRate ?? 20);
+    setRatePhilippinesCourt((org as any).philippinesCourtRate ?? 20);
 
     setEnableIdentity(org.identityEnabled !== false);
     setEnableCourt(org.courtRecordEnabled !== false);
@@ -162,6 +168,8 @@ export default function AdminSuggestionsPage() {
     setEnableSafliiCourt(org.safliiCourtEnabled !== false);
     setEnableUkCourt(org.ukCourtEnabled !== false);
     setEnableMalaysiaCourt(org.malaysiaCourtEnabled !== false);
+    setEnableSingaporeCourt(org.singaporeCourtEnabled !== false);
+    setEnablePhilippinesCourt((org as any).philippinesCourtEnabled !== false);
 
     setOrgSuccess("");
     setOrgError("");
@@ -189,7 +197,9 @@ export default function AdminSuggestionsPage() {
           sapsWantedRate: rateSapsWanted,
           safliiCourtRate: rateSafliiCourt,
           ukCourtRate: rateUkCourt,
-          malaysiaCourtRate: rateMalaysiaCourt
+          malaysiaCourtRate: rateMalaysiaCourt,
+          singaporeCourtRate: rateSingaporeCourt,
+          philippinesCourtRate: ratePhilippinesCourt
         },
         enabledServices: {
           identityEnabled: enableIdentity,
@@ -203,7 +213,9 @@ export default function AdminSuggestionsPage() {
           sapsWantedEnabled: enableSapsWanted,
           safliiCourtEnabled: enableSafliiCourt,
           ukCourtEnabled: enableUkCourt,
-          malaysiaCourtEnabled: enableMalaysiaCourt
+          malaysiaCourtEnabled: enableMalaysiaCourt,
+          singaporeCourtEnabled: enableSingaporeCourt,
+          philippinesCourtEnabled: enablePhilippinesCourt
         }
       });
       setOrgSuccess("Service rates and access rules updated successfully!");
@@ -489,9 +501,17 @@ export default function AdminSuggestionsPage() {
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-slate-400">gavel</span> UK Court Check</span>
                       <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.ukCourtRate ?? 25).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-1">
+                    <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
                       <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-emerald-600">balance</span> Malaysia Court Check</span>
                       <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.malaysiaCourtRate ?? 20).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-dashed border-slate-100">
+                      <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-sky-600">account_balance</span> Singapore Court Check</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{(org.singaporeCourtRate ?? 20).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-500 flex items-center gap-1.5"><span className="material-symbols-outlined text-sm text-amber-600">gavel</span> Philippines Court Check</span>
+                      <span className="font-extrabold text-[#016e1c]">{getCurrencySymbol(org.currency)}{((org as any).philippinesCourtRate ?? 20).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -985,6 +1005,64 @@ export default function AdminSuggestionsPage() {
                       type="checkbox"
                       checked={enableMalaysiaCourt}
                       onChange={(e) => setEnableMalaysiaCourt(e.target.checked)}
+                      className="w-4 h-4 text-[#016e1c] rounded"
+                    />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Singapore Court Check */}
+              <div className="pt-3 flex items-center justify-between gap-4 border-t border-slate-100">
+                <div>
+                  <span className="font-bold text-slate-900 block">Singapore Court Check</span>
+                  <span className="text-[11px] text-slate-500 font-normal">Singapore Judiciary • Supreme, State &amp; Family Courts</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={rateSingaporeCourt}
+                      onChange={(e) => setRateSingaporeCourt(parseFloat(e.target.value) || 0)}
+                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800"
+                    />
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enableSingaporeCourt}
+                      onChange={(e) => setEnableSingaporeCourt(e.target.checked)}
+                      className="w-4 h-4 text-[#016e1c] rounded"
+                    />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Philippines Court Check */}
+              <div className="pt-3 flex items-center justify-between gap-4 border-t border-slate-100">
+                <div>
+                  <span className="font-bold text-slate-900 block">Philippines Court Check</span>
+                  <span className="text-[11px] text-slate-500 font-normal">Court of Appeals of the Philippines • CSIS 3.0</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400 font-bold">{getCurrencySymbol(editingOrg?.currency)}</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={ratePhilippinesCourt}
+                      onChange={(e) => setRatePhilippinesCourt(parseFloat(e.target.value) || 0)}
+                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800"
+                    />
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enablePhilippinesCourt}
+                      onChange={(e) => setEnablePhilippinesCourt(e.target.checked)}
                       className="w-4 h-4 text-[#016e1c] rounded"
                     />
                     <span className="text-xs">Enabled</span>

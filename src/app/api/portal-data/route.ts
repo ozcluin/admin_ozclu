@@ -516,6 +516,10 @@ export async function POST(req: NextRequest) {
               rate = org.ukCourtRate !== undefined ? org.ukCourtRate : 25;
             } else if (verType === "malaysia_court") {
               rate = org.malaysiaCourtRate !== undefined ? org.malaysiaCourtRate : 20;
+            } else if (verType === "singapore_court") {
+              rate = org.singaporeCourtRate !== undefined ? org.singaporeCourtRate : 20;
+            } else if (verType === "philippines_court") {
+              rate = org.philippinesCourtRate !== undefined ? org.philippinesCourtRate : 20;
             } else if (verType === "employment") {
               const c = verification.country || verification.employmentData?.country || "";
               if (c && org.employmentRates && org.employmentRates[c] !== undefined) {

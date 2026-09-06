@@ -66,7 +66,7 @@ export interface Verification {
   reportGeneratedAt?: string;
   reportGeneratedBy?: string;
   // Verification type & Interpol fields
-  type?: "identity" | "court_record" | "employment" | "education" | "interpol" | "passport" | "digital_address" | "rednotice_worldwide" | "saflii_court" | "saps_wanted" | "uk_court" | "malaysia_court";
+  type?: "identity" | "court_record" | "employment" | "education" | "interpol" | "passport" | "digital_address" | "rednotice_worldwide" | "saflii_court" | "saps_wanted" | "uk_court" | "malaysia_court" | "singapore_court" | "philippines_court";
   source?: "portal" | "api";
   createdAt?: string;
   country?: string;
@@ -114,6 +114,29 @@ export interface Verification {
   malaysiaCourtTotalResults?: number;
   malaysiaCourtTotalAvailable?: number;
   malaysiaCourtCompletedAt?: string;
+
+  // Singapore Court Check fields
+  singaporeCourtPartyName?: string;
+  singaporeCourtCaseNo?: string;
+  singaporeCourtJurisdiction?: string;
+  singaporeCourtHearingType?: string;
+  singaporeCourtDateFrom?: string;
+  singaporeCourtDateTo?: string;
+  singaporeCourtHasRecords?: boolean;
+  singaporeCourtStatus?: "searching" | "completed" | "error";
+  singaporeCourtResults?: any[];
+  singaporeCourtTotalResults?: number;
+  singaporeCourtCompletedAt?: string;
+
+  // Philippines Court Check fields
+  philippinesCourtCandidateName?: string;
+  philippinesCourtCaseNo?: string;
+  philippinesCourtStation?: string;
+  philippinesCourtHasRecords?: boolean;
+  philippinesCourtStatus?: "searching" | "completed" | "error";
+  philippinesCourtResults?: any[];
+  philippinesCourtTotalResults?: number;
+  philippinesCourtCompletedAt?: string;
 
   // SAFLII Court Check fields
   safliiCourtHasRecords?: boolean;
@@ -340,6 +363,10 @@ export interface Organisation {
   safliiCourtRate?: number;
   ukCourtRate?: number;
   malaysiaCourtRate?: number;
+  singaporeCourtRate?: number;
+  singaporeCourtEnabled?: boolean;
+  philippinesCourtRate?: number;
+  philippinesCourtEnabled?: boolean;
   employmentRates?: Record<string, number>;
   educationRates?: Record<string, number>;
   serviceTats?: Record<string, string>;

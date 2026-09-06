@@ -106,7 +106,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     pathname.includes("/admin/saps-wanted-report") ||
     pathname.includes("/admin/saflii-court-report") ||
     pathname.includes("/admin/uk-court-report") ||
-    pathname.includes("/admin/malaysia-court-report")
+    pathname.includes("/admin/malaysia-court-report") ||
+    pathname.includes("/admin/singapore-court-report") ||
+    pathname.includes("/admin/philippines-court-report")
   ) {
     return <>{children}</>;
   }

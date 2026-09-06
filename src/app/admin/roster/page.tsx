@@ -268,6 +268,8 @@ export default function VerificationRosterPage() {
             <option value="saps_wanted">SAPS Wanted Check</option>
             <option value="uk_court">UK Court Check</option>
             <option value="malaysia_court">Malaysia Court Check</option>
+            <option value="singapore_court">Singapore Court Check</option>
+            <option value="philippines_court">Philippines Court Check</option>
           </select>
         </div>
 
@@ -431,9 +433,13 @@ export default function VerificationRosterPage() {
                           ? "bg-indigo-600/10 text-indigo-800 border-indigo-600/15"
                           : (v.type as string) === "malaysia_court"
                           ? "bg-teal-600/10 text-teal-800 border-teal-600/15"
+                          : (v.type as string) === "singapore_court"
+                          ? "bg-sky-600/10 text-sky-800 border-sky-600/15"
+                          : (v.type as string) === "philippines_court"
+                          ? "bg-amber-600/10 text-amber-800 border-amber-600/15"
                           : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                       }`}>
-                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "rednotice_worldwide" ? "Red Notice Worldwide" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : (v.type as string) === "saps_wanted" ? "SAPS Wanted" : (v.type as string) === "saflii_court" ? "SA Court" : (v.type as string) === "uk_court" ? "UK Court" : (v.type as string) === "malaysia_court" ? "Malaysia Court" : "Identity"}
+                        {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "rednotice_worldwide" ? "Red Notice Worldwide" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : (v.type as string) === "saps_wanted" ? "SAPS Wanted" : (v.type as string) === "saflii_court" ? "SA Court" : (v.type as string) === "uk_court" ? "UK Court" : (v.type as string) === "malaysia_court" ? "Malaysia Court" : (v.type as string) === "singapore_court" ? "Singapore Court" : (v.type as string) === "philippines_court" ? "Philippines Court" : "Identity"}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-slate-800">
@@ -458,6 +464,10 @@ export default function VerificationRosterPage() {
                             ? (v.ukCourtHasRecords ? `${v.ukCourtResults?.length || 0} Court Judgment(s) Found` : "Clean Court Record")
                             : (v.type as string) === "malaysia_court"
                             ? (v.malaysiaCourtHasRecords ? `${v.malaysiaCourtResults?.length || 0} Mahkamah Case(s) Found` : "Clean Court Record")
+                            : (v.type as string) === "singapore_court"
+                            ? (v.singaporeCourtHasRecords ? `${v.singaporeCourtResults?.length || 0} Hearing Record(s) Found` : "Clean Court Record")
+                            : (v.type as string) === "philippines_court"
+                            ? (v.philippinesCourtHasRecords ? `${v.philippinesCourtResults?.length || 0} Appellate Record(s) Found` : "Clean Court Record")
                             : (v.type as string) === "passport"
                             ? `File No: ${(v as any).passportData?.fileNumber || "—"}`
                             : (v.type as string) === "digital_address"
@@ -612,9 +622,13 @@ export default function VerificationRosterPage() {
                         ? "bg-indigo-600/10 text-indigo-800 border-indigo-600/15"
                         : (v.type as string) === "malaysia_court"
                         ? "bg-teal-600/10 text-teal-800 border-teal-600/15"
+                        : (v.type as string) === "singapore_court"
+                        ? "bg-sky-600/10 text-sky-800 border-sky-600/15"
+                        : (v.type as string) === "philippines_court"
+                        ? "bg-amber-600/10 text-amber-800 border-amber-600/15"
                         : "bg-emerald-500/10 text-emerald-600 border-emerald-500/15"
                     }`}>
-                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "rednotice_worldwide" ? "Red Notice Worldwide" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : (v.type as string) === "saps_wanted" ? "SAPS Wanted" : (v.type as string) === "saflii_court" ? "SA Court" : (v.type as string) === "uk_court" ? "UK Court" : (v.type as string) === "malaysia_court" ? "Malaysia Court" : "Identity"}
+                      {v.type === "court_record" ? "Court" : v.type === "employment" ? "Employment" : v.type === "education" ? "Education" : v.type === "interpol" ? "Interpol" : (v.type as string) === "rednotice_worldwide" ? "Red Notice Worldwide" : (v.type as string) === "passport" ? "Passport" : (v.type as string) === "digital_address" ? "Digital Address" : (v.type as string) === "saps_wanted" ? "SAPS Wanted" : (v.type as string) === "saflii_court" ? "SA Court" : (v.type as string) === "uk_court" ? "UK Court" : (v.type as string) === "malaysia_court" ? "Malaysia Court" : (v.type as string) === "singapore_court" ? "Singapore Court" : (v.type as string) === "philippines_court" ? "Philippines Court" : "Identity"}
                     </span>
                     <h4 className="font-bold text-slate-900 text-sm">{v.name}</h4>
                   </div>
@@ -637,6 +651,10 @@ export default function VerificationRosterPage() {
                       ? (v.ukCourtHasRecords ? `${v.ukCourtResults?.length || 0} Court Judgment(s) Found` : "Clean Court Record")
                       : (v.type as string) === "malaysia_court"
                       ? (v.malaysiaCourtHasRecords ? `${v.malaysiaCourtResults?.length || 0} Mahkamah Case(s) Found` : "Clean Court Record")
+                      : (v.type as string) === "singapore_court"
+                      ? (v.singaporeCourtHasRecords ? `${v.singaporeCourtResults?.length || 0} Hearing Record(s) Found` : "Clean Court Record")
+                      : (v.type as string) === "philippines_court"
+                      ? (v.philippinesCourtHasRecords ? `${v.philippinesCourtResults?.length || 0} Appellate Record(s) Found` : "Clean Court Record")
                       : (v.type as string) === "passport"
                       ? `File No: ${(v as any).passportData?.fileNumber || "—"}`
                       : (v.type as string) === "digital_address"

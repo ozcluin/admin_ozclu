@@ -300,6 +300,8 @@ export default function AdminApiUsagePage() {
                 <option value="saps_wanted">SAPS Wanted</option>
                 <option value="uk_court">UK Court</option>
                 <option value="malaysia_court">Malaysia Court</option>
+                <option value="singapore_court">Singapore Court</option>
+                <option value="philippines_court">Philippines Court</option>
                 <option value="passport">Passport</option>
                 <option value="digital_address">Digital Address</option>
                 <option value="employment">Employment</option>

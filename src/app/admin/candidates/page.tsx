@@ -130,7 +130,8 @@ export default function CandidatesPage() {
       (typeFilter === "saflii_court" && v.type === "saflii_court") ||
       (typeFilter === "saps_wanted" && v.type === "saps_wanted") ||
       (typeFilter === "uk_court" && v.type === "uk_court") ||
-      (typeFilter === "malaysia_court" && v.type === "malaysia_court");
+      (typeFilter === "malaysia_court" && v.type === "malaysia_court") ||
+      (typeFilter === "singapore_court" && v.type === "singapore_court");
 
     const matchesSearch =
       !searchQuery ||
@@ -308,6 +309,8 @@ export default function CandidatesPage() {
             <option value="saps_wanted">SAPS Wanted</option>
             <option value="uk_court">UK Court Check</option>
             <option value="malaysia_court">Malaysia Court Check</option>
+            <option value="singapore_court">Singapore Court Check</option>
+            <option value="philippines_court">Philippines Court Check</option>
           </select>
         </div>
 
@@ -398,6 +401,8 @@ export default function CandidatesPage() {
                                 ? (c.ukCourtHasRecords ? `${c.ukCourtResults?.length || 0} Court Judgment(s) Found` : "Clean Court Record")
                                 : (c.type as string) === "malaysia_court"
                                 ? (c.malaysiaCourtHasRecords ? `${c.malaysiaCourtResults?.length || 0} Mahkamah Case(s) Found` : "Clean Court Record")
+                                : (c.type as string) === "singapore_court"
+                                ? (c.singaporeCourtHasRecords ? `${c.singaporeCourtResults?.length || 0} Hearing Record(s) Found` : "Clean Court Record")
                                 : (c.type as string) === "passport"
                                 ? `File No: ${(c as any).passportData?.fileNumber || "—"}`
                                 : (c.type as string) === "digital_address"
@@ -451,6 +456,10 @@ export default function CandidatesPage() {
                           ) : (c.type as string) === "malaysia_court" ? (
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-teal-600/10 text-teal-800 border-teal-600/15">
                               Malaysia Court
+                            </span>
+                          ) : (c.type as string) === "singapore_court" ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-sky-600/10 text-sky-800 border-sky-600/15">
+                              Singapore Court
                             </span>
                           ) : (c.type as string) === "passport" ? (
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold tracking-wide uppercase border bg-sky-500/10 text-sky-700 border-sky-500/15">
@@ -591,6 +600,10 @@ export default function CandidatesPage() {
                     ? (c.courtRecordSummary || "Court record search")
                     : c.type === "education"
                     ? ((c.educationData?.courseName && `${c.educationData.courseName} @ ${c.educationData.boardUniversity}`) || c.email)
+                    : (c.type as string) === "singapore_court"
+                    ? (c.singaporeCourtHasRecords ? `${c.singaporeCourtResults?.length || 0} Hearing(s) Found` : "Clean Record")
+                    : (c.type as string) === "philippines_court"
+                    ? (c.philippinesCourtHasRecords ? `${c.philippinesCourtResults?.length || 0} Record(s) Found` : "Clean Record")
                     : c.type === "interpol"
                     ? (c.interpolHasRecords ? `${c.interpolMatches?.length || 0} Record Match(es)` : "Clean Record")
                     : c.email}
@@ -639,6 +652,14 @@ export default function CandidatesPage() {
                     ) : (c.type as string) === "malaysia_court" ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-teal-600/10 text-teal-800 border-teal-600/15 mt-1">
                         Malaysia Court
+                      </span>
+                    ) : (c.type as string) === "singapore_court" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-sky-600/10 text-sky-800 border-sky-600/15 mt-1">
+                        Singapore Court
+                      </span>
+                    ) : (c.type as string) === "philippines_court" ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-amber-600/10 text-amber-800 border-amber-600/15 mt-1">
+                        Philippines Court
                       </span>
                     ) : (c.type as string) === "passport" ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase border bg-sky-500/10 text-sky-700 border-sky-500/15 mt-1">
@@ -1919,7 +1940,7 @@ export default function CandidatesPage() {
                 >
                   Close Inspector
                 </button>
-                {(displayCandidate?.status === "Completed" || (displayCandidate?.status as string) === "Verified" || displayCandidate?.type === "interpol" || displayCandidate?.type === "rednotice_worldwide" || (displayCandidate?.type as string) === "saps_wanted" || (displayCandidate?.type as string) === "saflii_court" || (displayCandidate?.type as string) === "uk_court" || (displayCandidate?.type as string) === "malaysia_court") && (
+                {(displayCandidate?.status === "Completed" || (displayCandidate?.status as string) === "Verified" || displayCandidate?.type === "interpol" || displayCandidate?.type === "rednotice_worldwide" || (displayCandidate?.type as string) === "saps_wanted" || (displayCandidate?.type as string) === "saflii_court" || (displayCandidate?.type as string) === "uk_court" || (displayCandidate?.type as string) === "malaysia_court" || (displayCandidate?.type as string) === "singapore_court" || (displayCandidate?.type as string) === "philippines_court") && (
                   <button
                     onClick={() => {
                       if (!displayCandidate) return;
@@ -1941,6 +1962,10 @@ export default function CandidatesPage() {
                         ? `/admin/uk-court-report?id=${displayCandidate.id}`
                         : (displayCandidate.type as string) === "malaysia_court"
                         ? `/admin/malaysia-court-report?id=${displayCandidate.id}`
+                        : (displayCandidate.type as string) === "singapore_court"
+                        ? `/admin/singapore-court-report?id=${displayCandidate.id}`
+                        : (displayCandidate.type as string) === "philippines_court"
+                        ? `/admin/philippines-court-report?id=${displayCandidate.id}`
                         : (displayCandidate.type as string) === "passport"
                         ? `/admin/passport-report?id=${displayCandidate.id}`
                         : (displayCandidate.type as string) === "digital_address"
